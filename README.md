@@ -1,27 +1,56 @@
 # Schattenfänger
 
-Ein chaotisches Browserspiel in einer einzigen HTML-Datei. Zum Spielen `schattenfaenger.html` im Browser öffnen, eine Installation ist nicht nötig.
+**Ein chaotisches Browserspiel über Licht und Schatten.** Du bist ein kleines Schattenwesen auf einem sonnigen Innenhof. Die Sonne wandert im Kreis, und mit ihr wandert jeder Schatten. Bleib im Dunkeln, weich allem aus, was das Chaos-Rad dir entgegenwirft, und besiege nach jeder Stufe einen Boss.
 
-Du steuerst ein kleines Schattenwesen über einen Innenhof. Die Sonne wandert im Kreis, die Schatten der Säulen wandern mit. Im Licht verlierst du Kraft, im Schatten lädst du auf. Bei null Kraft bist du verdampft.
+## Spielen
 
-## Was im Spiel passiert
+1. `schattenfaenger.html` herunterladen oder das Repo klonen.
+2. Die Datei per Doppelklick im Browser öffnen.
 
-- **Chaos-Rad:** Alle paar Sekunden wird ein zufälliges Ereignis ausgelöst, zum Beispiel Erdbeben, Lasergitter, zweite Sonne, Suchraketen oder Mondfinsternis.
-- **Bosse:** Nach jeder Stufe kommt ein Boss: Prisma, Käferkönigin oder Sonnenstier. Nur ein Dash schadet ihm. Nach 20 Sekunden zieht er ohne Belohnung wieder ab.
-- **Über 40 gute und schlechte Sachen:** Schirm, Blasenschild, Schattenklon, Magnet, Portale, dazu Fallen, Käfer, Sägen, Laser und mehr. Die komplette Liste steht auf der Seite unter dem Spielfeld.
-- **Letzte Kraft:** Unter 20 % Kraft läuft alles in Zeitlupe.
+Es gibt nichts zu installieren. Das ganze Spiel steckt in dieser einen Datei.
+
+## So funktioniert es
+
+- **Licht kostet Kraft.** Im Sonnenlicht sinkt deine Kraftleiste schnell, im Schatten lädt sie langsam wieder auf. Bei null bist du verdampft.
+- **Die Schatten wandern.** Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht gerade kommt.
+- **Stufen:** Alle 12 Sekunden steigt die Stufe. Eine Säule stürzt ein, eine neue wächst woanders, und danach kommt ein Boss.
+- **Punkte:** 10 pro Sekunde, dazu Tau, Goldtau, Kombos und Boss-Siege.
+
+## Features
+
+- **Chaos-Rad:** Alle paar Sekunden wird ein Ereignis ausgelost, zum Beispiel Erdbeben, Lasergitter, zweite Sonne, Suchraketen, Glassäulen, Sturmböe oder Mondfinsternis. Meistens ist es gemein, manchmal gut.
+- **Drei Bosse**, die sich abwechseln:
+  - **Prisma** schießt drehende Laser in alle Richtungen.
+  - **Käferkönigin** schießt Ringe aus Lichtkugeln und ruft Käfer.
+  - **Sonnenstier** stürmt auf dich los und zerlegt Säulen. Nach dem Aufprall an der Wand ist er benommen, dann zählt ein Dash doppelt.
+- **Dash:** Ein schneller Sprung, der dich kurz unverwundbar macht. Er ist die einzige Waffe gegen Bosse.
+- **Über 40 gute und schlechte Sachen:** Schirm, Blasenschild, Schattenklon, Magnet, Portale, Frostkristall, dazu Fallen wie Umkehrpilz und Säuretropfen, Käfer, Sägeblätter, Laser und mehr. Die komplette Liste mit Symbolen steht im Spiel unter dem Spielfeld.
+- **Säulen als Deckung:** Säulen werfen Schatten und halten außerdem Laser, Lichtkugeln und Raketen auf.
+- **Letzte Kraft:** Unter 20 % Kraft läuft die Welt in Zeitlupe.
+- **Boss üben:** Auf dem Startbildschirm kannst du direkt bei jedem Boss starten.
 
 ## Steuerung
 
-| Aktion | Taste |
-| --- | --- |
-| Laufen | WASD oder Pfeiltasten, oder linke Maustaste gedrückt halten |
-| Dash | Rechtsklick (Richtung Maus), Shift oder Leertaste (Laufrichtung) |
-| Dash am Handy | Dash-Knopf unter dem Spielfeld |
-| Neustart | Leertaste nach dem Spiel |
+| Aktion | Tastatur | Maus | Handy |
+| --- | --- | --- | --- |
+| Laufen | WASD oder Pfeiltasten | Linke Taste gedrückt halten | Finger aufs Feld halten |
+| Dash | Shift oder Leertaste (Laufrichtung) | Rechtsklick (Richtung Maus) | Dash-Knopf |
+| Neustart | Leertaste | Knopf „Nochmal“ | Knopf „Nochmal“ |
 
-Mit „Boss üben“ auf dem Startbildschirm startest du direkt bei einem Boss.
+## Tipps
+
+- Dashe gegen den Sonnenstier, während er benommen an der Wand steht.
+- Lock Suchraketen gegen eine Säule.
+- Der Magnet zieht auch Fallen an, also Vorsicht in der Nähe von Säuretropfen.
+- Hol Tau schnell hintereinander, dann steigt die Kombo bis ×5.
 
 ## Technik
 
-Reines HTML, CSS und JavaScript mit Canvas. Nur die Schriften werden von Google Fonts geladen. Der Rekord wird im `localStorage` des Browsers gespeichert.
+- Reines HTML, CSS und JavaScript, gezeichnet auf einem `<canvas>`.
+- Keine Bibliotheken. Nur die Schriften kommen von Google Fonts.
+- Der Rekord wird im `localStorage` des Browsers gespeichert.
+- Helles und dunkles Design folgen der Systemeinstellung.
+
+## Verwandt
+
+[Kippwaage](https://github.com/sxrg1u/kippwaggen) ist ein zweites kleines Spiel aus derselben Reihe.
