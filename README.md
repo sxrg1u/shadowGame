@@ -1,4 +1,4 @@
-# Schattenfänger
+# Shady
 
 **Ein chaotisches Browserspiel über Licht und Schatten.** Du bist ein kleines Schattenwesen auf einem sonnigen Innenhof. Die Sonne wandert im Kreis, und mit ihr wandert jeder Schatten. Bleib im Dunkeln, weich allem aus, was das Chaos-Rad dir entgegenwirft, besiege nach jeder Stufe einen Boss und bau dir mit Upgrade-Karten deine eigene Runde.
 
