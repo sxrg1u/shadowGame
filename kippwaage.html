@@ -1,0 +1,434 @@
+<title>Kippwaage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --bg:#E6EBEF; --panel:#F5F7F9; --ink:#1B2430; --muted:#5A6777; --line:#C8D0D8;
+  --brass:#A67821; --brass-soft:#E3C98C; --iron:#39424E; --iron-text:#F1F3F5;
+  --danger:#BE3F2A; --ok:#2E7A55; --balloon:#3B78AE; --balloon-text:#FFFFFF;
+  --display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#10151B; --panel:#18202A; --ink:#E3E8ED; --muted:#93A1B0; --line:#2B3643;
+    --brass:#D6A94B; --brass-soft:#5C4A22; --iron:#8A97A6; --iron-text:#10151B;
+    --danger:#E56A52; --ok:#5DB68B; --balloon:#6AA6DB; --balloon-text:#10151B;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#10151B; --panel:#18202A; --ink:#E3E8ED; --muted:#93A1B0; --line:#2B3643;
+  --brass:#D6A94B; --brass-soft:#5C4A22; --iron:#8A97A6; --iron-text:#10151B;
+  --danger:#E56A52; --ok:#5DB68B; --balloon:#6AA6DB; --balloon-text:#10151B;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding:24px 16px 40px}
+.wrap{max-width:820px;margin:0 auto;display:grid;gap:28px;grid-template-columns:minmax(0,440px) minmax(0,1fr);align-items:start}
+@media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr);max-width:440px}}
+header{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,8vw,3.6rem);line-height:.9;letter-spacing:.01em;margin:0;text-transform:uppercase}
+header p{margin:0;color:var(--muted)}
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.hud div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+.hud span{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hud b{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums;font-weight:600}
+#nextVal.neg{color:var(--balloon)}
+.stage{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+canvas{display:block;width:100%;aspect-ratio:400/560;max-width:100%;touch-action:manipulation;cursor:pointer}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px;padding:28px;background:color-mix(in srgb,var(--panel) 84%,transparent);backdrop-filter:blur(2px)}
+.overlay h2{font-family:var(--display);font-weight:800;font-size:2.4rem;line-height:1;margin:0;text-transform:uppercase;text-wrap:balance}
+.overlay p{margin:0;max-width:30ch;color:var(--ink)}
+.overlay .stat{font-family:var(--mono);color:var(--muted)}
+button{font:600 15px var(--body);border-radius:6px;cursor:pointer}
+.primary{background:var(--ink);color:var(--panel);border:0;padding:12px 22px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.controls button{background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:14px 0;font-size:16px}
+.controls button:active{background:var(--brass-soft)}
+button:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel)}
+aside h3{font-family:var(--display);font-weight:700;font-size:1.4rem;text-transform:uppercase;letter-spacing:.02em;margin:0 0 8px}
+aside section+section{margin-top:24px}
+aside ul{margin:0;padding-left:18px;display:grid;gap:6px}
+aside p{margin:0;color:var(--muted)}
+.legend{display:grid;gap:10px}
+.legend div{display:flex;gap:10px;align-items:center}
+.chip{flex:none;width:34px;height:24px;display:grid;place-items:center;font:600 12px var(--mono)}
+.chip.w{background:var(--iron);color:var(--iron-text);clip-path:polygon(18% 0,82% 0,100% 100%,0 100%)}
+.chip.b{background:var(--balloon);color:var(--balloon-text);border-radius:50%;width:26px;height:26px;margin-inline:4px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kippwaage</h1>
+    <p>Verteile die Gewichte. Kippt die Waage, ist Schluss.</p>
+  </header>
+
+  <main>
+    <div class="hud">
+      <div><span>Punkte</span><b id="score">0</b></div>
+      <div><span>Rekord</span><b id="best">0</b></div>
+      <div><span>Nächstes</span><b id="nextVal">–</b></div>
+    </div>
+    <div class="stage">
+      <canvas id="game" aria-label="Spielfeld der Kippwaage"></canvas>
+      <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Halte die Waage im Lot</h2>
+        <p id="ovText">Gewichte fallen von oben. Schick jedes nach links oder rechts, bevor es die gestrichelte Linie erreicht.</p>
+        <p class="stat" id="ovStat" hidden></p>
+        <button class="primary" id="startBtn">Spiel starten</button>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btnL" aria-label="Nach links">← Links</button>
+      <button id="btnR" aria-label="Nach rechts">Rechts →</button>
+    </div>
+  </main>
+
+  <aside>
+    <section>
+      <h3>Regeln</h3>
+      <ul>
+        <li>Ein Unterschied von mehr als <b>15 kg</b> zwischen den Schalen lässt die Waage kippen.</li>
+        <li>Jedes platzierte Teil gibt 1 Punkt. Genau ausgeglichen gibt es <b>+3</b>.</li>
+        <li>Wer zu lange zögert, dem nimmt der Zufall die Wahl ab.</li>
+        <li>Die Gewichte werden schwerer und fallen schneller.</li>
+      </ul>
+    </section>
+    <section>
+      <h3>Teile</h3>
+      <div class="legend">
+        <div><span class="chip w">7</span><p>Eisengewicht, 1 bis 12 kg. Drückt die Schale nach unten.</p></div>
+        <div><span class="chip b">−3</span><p>Ballon, ab 6 Punkten. Zieht seine Schale nach oben.</p></div>
+      </div>
+    </section>
+    <section>
+      <h3>Steuerung</h3>
+      <p><kbd>←</kbd> <kbd>→</kbd> oder <kbd>A</kbd> <kbd>D</kbd>, auf dem Handy die Knöpfe oder die linke bzw. rechte Hälfte des Spielfelds antippen. <kbd>Leertaste</kbd> startet neu.</p>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const W = 400, H = 560;
+  const PIV = { x: 200, y: 240 }, ARM = 140, STR = 100, PANW = 112;
+  const MAX = 15, MAXANG = 0.36, DECIDE_Y = 150;
+  const BW = 24, BH = 18, COLS = 4, ROWS = 5;
+
+  const cv = document.getElementById('game');
+  const ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const overlay = $('overlay');
+
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('kippwaage-best') || '0', 10) || 0; } catch (e) {}
+  $('best').textContent = best;
+
+  function fit() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  let C = {};
+  function readColors() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ['panel','ink','muted','line','brass','brass-soft','iron','iron-text','danger','ok','balloon','balloon-text'])
+      C[k] = cs.getPropertyValue('--' + k).trim();
+  }
+
+  function makeItem(score) {
+    if (score >= 6 && Math.random() < 0.16) return { kind: 'b', w: -(2 + Math.floor(Math.random() * 3)) };
+    const top = Math.min(4 + Math.floor(score / 3), 12);
+    return { kind: 'w', w: 1 + Math.floor(Math.random() * top) };
+  }
+  const sum = a => a.reduce((s, i) => s + i.w, 0);
+
+  let S;
+  function reset(mode) {
+    S = { mode, pans: { '-1': [], '1': [] }, angle: 0, falling: null, next: makeItem(0),
+          score: 0, speed: 80, msg: null, spawnIn: 0.4, tipDir: 0, t: 0 };
+    if (mode === 'ready') { // Beispielzustand für den Startbildschirm
+      S.pans['-1'] = [{kind:'w',w:4},{kind:'w',w:3},{kind:'w',w:2}];
+      S.pans['1'] = [{kind:'w',w:6},{kind:'w',w:5}];
+    }
+    updateHud();
+  }
+  const diff = () => sum(S.pans['1']) - sum(S.pans['-1']);
+
+  function updateHud() {
+    $('score').textContent = S.score;
+    const n = $('nextVal');
+    n.textContent = S.mode === 'play' ? (S.next.w > 0 ? S.next.w + ' kg' : '−' + (-S.next.w) + ' kg') : '–';
+    n.classList.toggle('neg', S.mode === 'play' && S.next.w < 0);
+  }
+
+  function start() {
+    reset('play');
+    overlay.hidden = true;
+    cv.focus?.();
+  }
+
+  function gameOver() {
+    S.mode = 'over';
+    S.tipDir = Math.sign(diff());
+    S.falling = null;
+    if (S.score > best) {
+      best = S.score; $('best').textContent = best;
+      try { localStorage.setItem('kippwaage-best', String(best)); } catch (e) {}
+    }
+    updateHud();
+    setTimeout(() => {
+      $('ovTitle').textContent = 'Gekippt!';
+      $('ovText').textContent = 'Die ' + (S.tipDir > 0 ? 'rechte' : 'linke') + ' Schale war ' + Math.abs(diff()) + ' kg schwerer.';
+      $('ovStat').hidden = false;
+      $('ovStat').textContent = S.score + ' Punkte · Rekord ' + best;
+      $('startBtn').textContent = 'Nochmal';
+      overlay.hidden = false;
+      $('startBtn').focus();
+    }, 700);
+  }
+
+  function choose(side) {
+    if (S.mode !== 'play' || !S.falling) return;
+    if (S.falling.y < DECIDE_Y) S.falling.side = side;
+  }
+
+  function panPos(side, a = S.angle) {
+    const ex = PIV.x + side * ARM * Math.cos(a);
+    const ey = PIV.y + side * ARM * Math.sin(a);
+    return { x: ex, y: ey + STR };
+  }
+  function weightsOn(side) { return S.pans[side].filter(i => i.kind === 'w'); }
+  function stackH(side) { return Math.min(Math.ceil(weightsOn(side).length / COLS), ROWS) * (BH + 2); }
+
+  function flash(text, color) { S.msg = { text, color, t: 1.4 }; }
+
+  function update(dt) {
+    S.t += dt;
+    const target = S.mode === 'over' ? S.tipDir * 0.62 : Math.max(-1.1, Math.min(1.1, diff() / MAX)) * MAXANG;
+    S.angle += (target - S.angle) * Math.min(1, dt * (S.mode === 'over' ? 3 : 5));
+    if (S.msg) { S.msg.t -= dt; if (S.msg.t <= 0) S.msg = null; }
+    if (S.mode !== 'play') return;
+
+    if (!S.falling) {
+      S.spawnIn -= dt;
+      if (S.spawnIn <= 0) {
+        S.falling = { ...S.next, x: PIV.x, y: -30, side: 0 };
+        S.next = makeItem(S.score);
+        updateHud();
+      }
+      return;
+    }
+    const f = S.falling;
+    f.y += S.speed * dt;
+    if (!f.side && f.y >= DECIDE_Y) {
+      f.side = Math.random() < 0.5 ? -1 : 1;
+      flash('Zu spät! Zufall entscheidet', C.muted);
+    }
+    if (f.side) {
+      const tx = panPos(f.side).x;
+      const step = 560 * dt;
+      f.x = Math.abs(tx - f.x) <= step ? tx : f.x + Math.sign(tx - f.x) * step;
+      const p = panPos(f.side);
+      const landY = f.kind === 'w' ? p.y - stackH(f.side) - 13 : p.y - 110;
+      if (f.y >= landY && Math.abs(f.x - p.x) < 1) land(f);
+    }
+  }
+
+  function land(f) {
+    S.pans[f.side].push({ kind: f.kind, w: f.w });
+    S.falling = null;
+    S.score += 1;
+    const d = diff();
+    if (Math.abs(d) > MAX) { updateHud(); gameOver(); return; }
+    if (d === 0) { S.score += 3; flash('Im Lot! +3', C.ok); }
+    else if (Math.abs(d) >= MAX - 3) flash('Achtung, ' + Math.abs(d) + ' kg Unterschied', C.danger);
+    S.speed = Math.min(80 + S.score * 4, 270);
+    S.spawnIn = 0.25;
+    updateHud();
+  }
+
+  // ---------- Zeichnen ----------
+  function drawWeight(x, y, w, h, label) {
+    const inset = w * 0.18;
+    ctx.fillStyle = C.iron;
+    ctx.beginPath();
+    ctx.moveTo(x - w/2 + inset, y - h/2); ctx.lineTo(x + w/2 - inset, y - h/2);
+    ctx.lineTo(x + w/2, y + h/2); ctx.lineTo(x - w/2, y + h/2); ctx.closePath(); ctx.fill();
+    // Griff
+    ctx.strokeStyle = C.iron; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y - h/2, w * 0.14, Math.PI, 0); ctx.stroke();
+    ctx.fillStyle = C['iron-text'];
+    ctx.font = `600 ${Math.round(h * 0.6)}px "IBM Plex Mono", monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+  }
+  function drawBalloon(x, y, r, label, anchor) {
+    if (anchor) {
+      ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, y + r);
+      ctx.quadraticCurveTo(x + 6, (y + r + anchor.y) / 2, anchor.x, anchor.y); ctx.stroke();
+    }
+    ctx.fillStyle = C.balloon;
+    ctx.beginPath(); ctx.ellipse(x, y, r, r * 1.12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 3, y + r * 1.12 + 3); ctx.lineTo(x + 3, y + r * 1.12 + 3); ctx.lineTo(x, y + r * 1.05); ctx.fill();
+    ctx.fillStyle = C['balloon-text'];
+    ctx.font = `600 ${Math.round(r * 0.85)}px "IBM Plex Mono", monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+  }
+
+  function drawPan(side) {
+    const a = S.angle, p = panPos(side);
+    const ex = PIV.x + side * ARM * Math.cos(a), ey = PIV.y + side * ARM * Math.sin(a);
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(p.x - PANW/2 + 4, p.y); ctx.lineTo(ex, ey); ctx.lineTo(p.x + PANW/2 - 4, p.y);
+    ctx.stroke();
+    // Schale
+    ctx.fillStyle = C.brass;
+    ctx.beginPath();
+    ctx.moveTo(p.x - PANW/2, p.y); ctx.lineTo(p.x + PANW/2, p.y);
+    ctx.quadraticCurveTo(p.x + PANW/2 - 8, p.y + 14, p.x, p.y + 14);
+    ctx.quadraticCurveTo(p.x - PANW/2 + 8, p.y + 14, p.x - PANW/2, p.y);
+    ctx.fill();
+
+    // Gewichte stapeln
+    const ws = weightsOn(side);
+    const maxShow = COLS * ROWS;
+    const hidden = Math.max(0, ws.length - maxShow);
+    const shown = ws.slice(hidden);
+    shown.forEach((it, i) => {
+      const col = i % COLS, row = Math.floor(i / COLS);
+      const x = p.x - (COLS - 1) * (BW + 2) / 2 + col * (BW + 2);
+      const y = p.y - BH/2 - 1 - row * (BH + 2);
+      drawWeight(x, y, BW, BH, String(it.w));
+    });
+    if (hidden) {
+      ctx.fillStyle = C.muted; ctx.font = '500 11px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('+' + hidden + ' darunter', p.x, p.y - stackH(side) - 12);
+    }
+    // Ballone
+    S.pans[side].filter(i => i.kind === 'b').forEach((b, i) => {
+      const bx = p.x - 28 + (i % 3) * 28;
+      const by = p.y - 112 - Math.floor(i / 3) * 18 + Math.sin(S.t * 2 + i) * 3;
+      drawBalloon(bx, by, 12, String(b.w).replace('-', '−'), { x: p.x + (i % 3 - 1) * 30, y: p.y });
+    });
+    // Summe
+    ctx.fillStyle = C.ink; ctx.font = '600 15px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(sum(S.pans[side]) + ' kg', p.x, p.y + 20);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function draw() {
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, W, H);
+
+    // Entscheidungslinie
+    ctx.strokeStyle = C.line; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.moveTo(16, DECIDE_Y); ctx.lineTo(W - 16, DECIDE_Y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.muted; ctx.font = '500 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right'; ctx.fillText('bis hier entscheiden', W - 16, DECIDE_Y - 5);
+
+    // Ständer
+    ctx.fillStyle = C.iron;
+    ctx.fillRect(PIV.x - 5, PIV.y, 10, 470 - PIV.y);
+    ctx.beginPath();
+    ctx.moveTo(PIV.x - 70, 488); ctx.lineTo(PIV.x + 70, 488);
+    ctx.lineTo(PIV.x + 52, 468); ctx.lineTo(PIV.x - 52, 468); ctx.fill();
+
+    drawPan(-1); drawPan(1);
+
+    // Balken
+    ctx.save(); ctx.translate(PIV.x, PIV.y); ctx.rotate(S.angle);
+    ctx.fillStyle = C.brass; ctx.fillRect(-ARM - 6, -4, (ARM + 6) * 2, 8);
+    ctx.fillStyle = C.panel;
+    for (let i = -6; i <= 6; i++) if (i) ctx.fillRect(i * 20 - 0.5, -2, 1, 4);
+    // Zeiger
+    ctx.fillStyle = C.ink;
+    ctx.beginPath(); ctx.moveTo(-3, -4); ctx.lineTo(3, -4); ctx.lineTo(0, -46); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(PIV.x, PIV.y, 6, 0, Math.PI * 2); ctx.fill();
+    // Skala über dem Drehpunkt
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(PIV.x, PIV.y, 52, -Math.PI/2 - MAXANG, -Math.PI/2 + MAXANG); ctx.stroke();
+    ctx.strokeStyle = C.danger; ctx.lineWidth = 3;
+    for (const s of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(PIV.x, PIV.y, 52, -Math.PI/2 + s * MAXANG * 0.8, -Math.PI/2 + s * MAXANG, s < 0);
+      ctx.stroke();
+    }
+
+    // Fallendes Teil
+    const f = S.falling;
+    if (f) {
+      if (f.side) {
+        const p = panPos(f.side);
+        ctx.strokeStyle = C['brass-soft']; ctx.lineWidth = 2; ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(f.x, f.y + 16); ctx.lineTo(p.x, p.y - stackH(f.side)); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (f.kind === 'w') drawWeight(f.x, f.y, 36, 26, String(f.w));
+      else drawBalloon(f.x, f.y, 15, String(f.w).replace('-', '−'));
+    }
+
+    // Unterschied-Anzeige
+    const d = diff(), mx = 60, mw = W - 120, my = 516;
+    ctx.fillStyle = C.line; ctx.fillRect(mx, my, mw, 6);
+    ctx.fillStyle = C.danger;
+    ctx.fillRect(mx, my, mw * 3 / 30, 6); ctx.fillRect(mx + mw - mw * 3 / 30, my, mw * 3 / 30, 6);
+    const pos = mx + mw / 2 + Math.max(-1, Math.min(1, d / MAX)) * mw / 2;
+    ctx.fillStyle = Math.abs(d) >= MAX - 3 ? C.danger : C.ink;
+    ctx.beginPath(); ctx.moveTo(pos, my - 2); ctx.lineTo(pos - 6, my - 10); ctx.lineTo(pos + 6, my - 10); ctx.fill();
+    ctx.fillStyle = C.muted; ctx.font = '500 11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Unterschied ' + Math.abs(d) + ' / ' + MAX + ' kg', W / 2, my + 24);
+
+    // Meldung
+    if (S.msg) {
+      ctx.globalAlpha = Math.min(1, S.msg.t * 2);
+      ctx.fillStyle = S.msg.color || C.ink;
+      ctx.font = '800 24px "Big Shoulders Display", "Arial Narrow", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(S.msg.text.toUpperCase(), W / 2, 40);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ---------- Schleife ----------
+  let last = performance.now(), colorTick = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    colorTick -= dt; if (colorTick <= 0) { readColors(); colorTick = 0.5; }
+    update(dt); draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Eingabe ----------
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { choose(-1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { choose(1); e.preventDefault(); }
+    else if ((e.key === ' ' || e.key === 'Enter') && S.mode !== 'play' && document.activeElement?.tagName !== 'BUTTON') { start(); e.preventDefault(); }
+  });
+  cv.addEventListener('pointerdown', e => {
+    if (S.mode !== 'play') return;
+    const r = cv.getBoundingClientRect();
+    choose((e.clientX - r.left) / r.width < 0.5 ? -1 : 1);
+  });
+  $('btnL').addEventListener('click', () => choose(-1));
+  $('btnR').addEventListener('click', () => choose(1));
+  $('startBtn').addEventListener('click', start);
+
+  readColors();
+  reset('ready');
+  requestAnimationFrame(loop);
+})();
+</script>
