@@ -437,6 +437,7 @@ input.text{font:700 16px var(--body);padding:10px 12px;border-radius:8px;border:
       <label class="set-row"><span><b>Ton an</b><small>Taste <kbd>M</kbd> schaltet jederzeit um</small></span><input type="checkbox" class="switch" id="setSound"></label>
       <label class="set-row"><span><b>Bildschirmwackeln</b><small>Bei Treffern, Beben und Explosionen</small></span><input type="checkbox" class="switch" id="setShake"></label>
       <label class="set-row"><span><b>Grelle Blitze</b><small>Aus: Blitzlicht und Donner werden abgedämpft</small></span><input type="checkbox" class="switch" id="setFlash"></label>
+      <div class="set-row"><span><b>Sprache</b><small>Sprache des Spiels</small></span><div class="seg" id="langSeg" role="group" aria-label="Sprache"><button data-lang-set="en">English</button><button data-lang-set="de">Deutsch</button></div></div>
       <div class="set-row"><span><b>Design</b><small>Hell, dunkel oder wie dein System</small></span><div class="seg" id="themeSeg" role="group" aria-label="Design"><button data-theme-set="system">System</button><button data-theme-set="light">Hell</button><button data-theme-set="dark">Dunkel</button></div></div>
       <label class="set-row"><span><b>Spielername</b><small>Für Duelle und die Bestenliste</small></span><input class="text" id="setName" maxlength="14" style="width:170px" autocomplete="off" spellcheck="false"></label>
       <div class="set-row"><span><b>Fortschritt zurücksetzen</b><small>Löscht Punkte, Erfolge, Statistik und Garderobe</small></span><button class="btn small warn" id="resetBtn">Zurücksetzen</button></div>
@@ -517,6 +518,8 @@ const COL = { lit:'#F4CF63', tile:'#EABF4A', shade:'#3F4C6B', shadeTile:'#394562
               magnet:'#D9463B', boots:'#2B8FD6', seed:'#5E8C3A', heart:'#D6304F', frost:'#3AA5E0', shrink:'#F08A24',
               thunder:'#6C5CE7', shroom:'#9B3FC0', acid:'#B6E04A', honey:'#C98A1B', portal:'#9B7CF0', good:'#5FBE90' };
 const $ = id => document.getElementById(id);
+let LANG = 'en';
+const tr = (de, en) => LANG === 'de' ? de : en;
 const cv = $('game');
 const ctx = cv.getContext('2d');
 
@@ -537,7 +540,7 @@ const rand = (a, b) => a + rng() * (b - a);
 const fx = (a, b) => a + Math.random() * (b - a);
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const pick = arr => arr[Math.floor(rng() * arr.length)];
-const fmt = n => Math.floor(n).toLocaleString('de-DE');
+const fmt = n => Math.floor(n).toLocaleString(LANG === 'de' ? 'de-DE' : 'en-US');
 const dpr = () => Math.min(window.devicePixelRatio || 1, 3);
 
 // ---------- Lexikon ----------
@@ -1011,7 +1014,7 @@ function creatureCanvas(skin, hat, size, el, t) {
 
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
-const DEF_SETTINGS = { music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal' };
+const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal' };
 function freshProfile() {
   return {
     v: 2, wallet: 0, settings: { ...DEF_SETTINGS },
@@ -1040,7 +1043,7 @@ function loadProfile() {
   return p;
 }
 let P = loadProfile();
-if (!P.settings.name) P.settings.name = 'Schatten' + (10 + Math.floor(Math.random() * 90));
+if (!P.settings.name) P.settings.name = 'Shady' + (10 + Math.floor(Math.random() * 90));
 function save() { try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) {} }
 let achDirty = false;
 function stat(k, n = 1) { P.stats[k] = (P.stats[k] || 0) + n; achDirty = true; }
@@ -1312,6 +1315,260 @@ const Sound = (() => {
   return { init, sfx, music, volumes, setLevel: l => { level = l; } };
 })();
 
+// ---------- Sprachen ----------
+// Der Quelltext ist deutsch. Englisch kommt aus diesen Tabellen (nach Kennung) und aus STATIC_EN (feste Texte im HTML).
+// Objekte wie GOOD, RULES oder UPGRADES werden beim Sprachwechsel umgeschrieben, damit der restliche Code unverändert .name und .desc lesen kann.
+const EN = {
+  lex: {
+    dew: ['Dew drop', 'Only lies in sunlight. 50 points times combo.'],
+    gold: ['Golden dew', 'Rare. 200 points.'],
+    umbrella: ['Umbrella', '5 s of your own shade. Also protects against bugs, glass, sparks and the lighthouse.'],
+    crystal: ['Moonstone', 'Instantly +35 energy.'],
+    hourglass: ['Hourglass', 'Everything runs in slow motion for 5 s.'],
+    cloud: ['Cloud', 'Drifts across the yard, its shadow moves along.'],
+    magnet: ['Magnet', 'For 6 s everything near you flies toward you. Traps too, sadly.'],
+    boots: ['Turbo boots', 'Almost twice as fast for 5 s.'],
+    bomb: ['Shadow bomb', 'Drops a big puddle of shade at your spot for 8 s.'],
+    seed: ['Pillar seed', 'Instantly grows a new pillar, right between you and the sun.'],
+    heart: ['Heart', 'An extra life, 2 at most (upgrades can raise this).'],
+    star: ['Double star', 'Double points for 8 s.'],
+    frost: ['Frost crystal', 'Freezes all enemies for 4 s, the boss too.'],
+    shrink: ['Shrink potion', 'Tiny for 6 s. Harder to hit and fits into narrow shadows.'],
+    thunder: ['Thunderclap', 'Destroys all bugs and magpies, 15 points each.'],
+    portal: ['Portals', 'Two gates. Walk into one and come out of the other.'],
+    eclipse: ['Eclipse', 'Chaos wheel: the whole yard is shade for 4 s.'],
+    rain: ['Dew rain', 'Chaos wheel: suddenly 8 dew drops lie around.'],
+    bubble: ['Bubble shield', 'Absorbs the next 3 hits: lasers, bugs, sparks, light orbs and bosses.'],
+    dashy: ['Dash frenzy', 'Dash with almost no cooldown for 6 s.'],
+    loot: ['Boss loot', 'Every defeated boss drops a heart or a moonstone plus a random extra.'],
+    decoy: ['Shadow clone', 'A double for 6 s. Bugs, missiles and the burning glass chase it instead of you.'],
+    spear: ['Shadow spear', 'Hits the boss for 2 damage right away. Without a boss it gives 100 points.'],
+    spikes: ['Spike armor', 'For 6 s every touch destroys bugs and missiles and hurts bosses, even without a dash.'],
+    clover: ['Lucky clover', 'The next 3 spins of the chaos wheel are good.'],
+    lootrain: ['Loot rain', 'Chaos wheel: 3 random extras fall from the sky.'],
+    bug: ['Light bug', 'Chases you. Costs 18 energy and pushes you away.'],
+    hot: ['Hot tile', 'Flashes first, then burns even in the shade.'],
+    lens: ['Burning glass', 'From level 2. A bright spot that follows you.'],
+    noon: ['High noon', 'Chaos wheel: all shadows shrink for 4 s.'],
+    crumble: ['Collapse', 'A pillar disappears at every level change.'],
+    shroom: ['Reversal mushroom', 'Trap. Your controls are inverted for 5 s, dash too.'],
+    acid: ['Acid drop', 'Trap that looks like dew. −25 energy and −100 points.'],
+    honey: ['Honey puddle', 'Chaos wheel: sticky, you move at half speed.'],
+    meteor: ['Solar sparks', 'Chaos wheel: red circles warn of the impact, then the ground burns.'],
+    beam: ['Lighthouse', 'Chaos wheel: a light beam sweeps the yard and burns even in the shade.'],
+    sun2: ['Second sun', 'Chaos wheel: two suns for 7 s. You are only safe where both shadows overlap.'],
+    wind: ['Gale', 'Chaos wheel: the wind pushes you around for 4 s.'],
+    swarm: ['Bug swarm', 'Chaos wheel: 5 bugs at once.'],
+    quake: ['Earthquake', 'Chaos wheel: all pillars jump to new places.'],
+    flash: ['Flashbang', 'Chaos wheel: for a moment everything is white and you can barely see.'],
+    magpie: ['Magpie', 'Chaos wheel: steals dew and items. Touch it and it flies away (+30).'],
+    lasergrid: ['Laser grid', 'Chaos wheel: dashed lines across the yard, lasers fire right after. −15 per hit.'],
+    turret: ['Laser turret', 'Chaos wheel: a turret with a laser that spins in circles.'],
+    shots: ['Light orbs', 'Bosses shoot orbs. −12 per hit, pillars block them.'],
+    saw: ['Saw blades', 'Chaos wheel: two saws bounce off walls and pillars for 8 s. −15.'],
+    missile: ['Homing missiles', 'Chaos wheel: they chase you in curves. −20. Lure them into a pillar or dash through.'],
+    vortex: ['Light vortex', 'Chaos wheel: pulls you in for 5 s, out of your shade.'],
+    glass: ['Glass pillars', 'Chaos wheel: half of the pillars turn transparent for 5 s and cast no shadow.'],
+    prisma: ['Prisma', 'Levels 2, 5, 8 … Floats around the yard and fires spinning lasers in all directions.'],
+    queen: ['Beetle Queen', 'Levels 3, 6, 9 … Circles the middle, fires rings of light orbs and summons bugs.'],
+    bull: ['Sun Bull', 'Levels 4, 7, 10 … Aims with a red line and charges. Smashes pillars. After hitting the wall he is dazed, and a dash counts double.'],
+    core: ['Sun Core', 'Final boss of the campaign, every 10 levels in Endless. Fights in three phases: lasers first, then orb rings, finally he charges.'],
+  },
+  rules: {
+    traps: ['Traps only', 'Only traps show up. In return dew counts triple.'],
+    twosun: ['Double sun', 'Two suns all the time. Where only one shadow falls, it burns half as hard.'],
+    bugs: ['Bug plague', 'Three times as many bugs. Bugs you dash through give triple points.'],
+    chaos: ['Pure chaos', 'The chaos wheel spins every 3 seconds.'],
+    tiny: ['Tiny', 'You are tiny all the time, but everything else is faster.'],
+    rush: ['Boss rush', 'Levels last only 6 seconds, bosses have one life less.'],
+    mirror: ['Mirror world', 'Your controls are inverted all the time.'],
+    glass: ['Glass cannon', 'No hearts and at most 60 energy. In return double points.'],
+    dashfever: ['Dash fever', 'The dash recharges almost instantly, but the sun burns 30% harder.'],
+    summer: ['High summer', 'Shadows are 35% shorter, dew gives twice as much energy.'],
+    clouds: ['Cloudy day', 'Clouds keep drifting by, but the sun races.'],
+    night: ['Moonlit night', 'Shadows are 40% longer. The burning glass chases you from the start, twice as fast.'],
+  },
+  ups: {
+    dashcd: ['Quick dash', 'Your dash recharges 22% faster.'],
+    trail: ['Shadow trail', 'Your dash leaves a trail of shade that lasts 3 s.'],
+    linger: ['Lingering shade', 'Shadow bomb, trail and umbrella last 50% longer.'],
+    longshadow: ['Long shadows', 'Pillars cast 20% longer shadows.'],
+    heart: ['Extra heart', '+1 heart right away and one more heart slot.'],
+    armor: ['Thick skin', 'Hits cost 20% less energy.'],
+    cream: ['Sunscreen', 'Sunlight burns 15% less.'],
+    feet: ['Nimble feet', 'You run 12% faster.'],
+    regen: ['Shade bath', 'In the shade your energy recharges 50% faster.'],
+    dewmag: ['Dew magnet', 'Dew near you flies to you on its own.'],
+    heavy: ['Heavy dash', 'Dash hits deal 1 more damage to bosses.'],
+    twin: ['Double dash', 'Two dash charges instead of one.'],
+    longdash: ['Long jump', 'Your dash flies 30% farther.'],
+    blade: ['Shadow blade', 'Your dash slices through light orbs and saw blades.'],
+    shieldgen: ['Bubble spring', 'Every 20 s you get a bubble shield if you have none.'],
+    combo: ['Combo master', 'The dew combo goes up to ×8 and lasts longer.'],
+    greed: ['Gold rush', '+25% on all points.'],
+    lucky: ['Lucky streak', 'The chaos wheel brings good things more often.'],
+    phoenix: ['Phoenix', 'When a heart saves you, you get full energy and everything freezes for 2 s.'],
+    architect: ['Architect', 'Instantly 2 new pillars, and no pillar collapses anymore.'],
+  },
+  ach: {
+    first: ['First steps', 'Play your first run.'],
+    bug10: ['Bug scare', 'Dash through 10 bugs.'],
+    bug100: ['Exterminator', 'Dash through 100 bugs.'],
+    clean: ['Untouched', 'Defeat a boss without being hit.'],
+    prisma: ['Prism breaker', 'Defeat Prisma.'],
+    queen: ['Regicide', 'Defeat the Beetle Queen.'],
+    bull: ['Bullfighter', 'Defeat the Sun Bull.'],
+    core: ['Solar eclipse', 'Defeat the Sun Core.'],
+    campaign: ['Hero of the Yard', 'Win the campaign.'],
+    hard: ['Indestructible', 'Win the campaign on Hard.'],
+    boss25: ['Boss hunter', 'Defeat 25 bosses in total.'],
+    spear: ['Spear throw', 'Finish a boss with the shadow spear.'],
+    combo: ['Combo king', 'Reach a dew combo of ×5.'],
+    dew100: ['Dew catcher', 'Collect 100 dew drops.'],
+    survive: ['Tough shadow', 'Survive 3 minutes in one run.'],
+    lvl15: ['Marathon', 'Reach level 15 in Endless mode.'],
+    score10k: ['Point hunter', '10,000 points in one run.'],
+    score30k: ['High score hero', '30,000 points in one run.'],
+    rich: ['Treasure room', 'Collect 100,000 points in total.'],
+    daily1: ["Day's work", 'Complete a daily challenge.'],
+    streak3: ['Keep going', 'Complete the challenge 3 days in a row.'],
+    missile10: ['Missile defense', 'Destroy 10 homing missiles.'],
+    close: ['Close call', 'Drop below 3 energy and get back above 50.'],
+    cards10: ['Card player', 'Pick 10 upgrades in total.'],
+    build5: ['Fully equipped', 'Collect 5 upgrades in one run.'],
+    fashion: ['Fashionista', 'Own 6 skins or hats.'],
+    duel: ['Duelist', 'Win an online duel.'],
+    traps: ['Bad luck', 'Step into 20 traps.'],
+  },
+  skin: { schatten: 'Shadow', mitternacht: 'Midnight', pflaume: 'Plum', moos: 'Moss', tinte: 'Ink', glut: 'Ember', geist: 'Ghost', honig: 'Honey', stier: 'Bull blood', sternen: 'Stardust', regenbogen: 'Rainbow', gold: 'Golden shadow' },
+  hat: { none: 'No hat', zylinder: 'Top hat', party: 'Party hat', bommel: 'Bobble hat', blume: 'Little flower', pirat: 'Pirate hat', propeller: 'Propeller cap', zauberer: 'Wizard hat',
+         diadem: 'Prisma tiara', krone: 'Beetle crown', hoerner: 'Bull horns', heiligenschein: 'Halo', schlafmuetze: 'Nightcap', sonnenkrone: 'Sun crown' },
+  req: { geist: 'Defeat Prisma 3×', honig: 'Defeat the Beetle Queen 3×', stier: 'Defeat the Sun Bull 3×', sternen: 'Win the campaign', gold: 'Defeat 25 bosses',
+         diadem: 'Defeat Prisma', krone: 'Defeat the Beetle Queen', hoerner: 'Defeat the Sun Bull', heiligenschein: 'Defeat a boss without being hit', schlafmuetze: 'Complete 3 daily challenges', sonnenkrone: 'Defeat the Sun Core' },
+  diff: { easy: ['Easy', 'Sun and hits hurt less. 75% points.'], normal: ['Normal', 'How the game is meant to be played.'], hard: ['Hard', 'More heat, harder hits. 130% points.'] },
+  rar: { c: 'Common', r: 'Rare', e: 'Epic' },
+  ev: { 'Mittagssonne': 'High noon', 'Zweite Sonne': 'Second sun', 'Sturmböe': 'Gale', 'Käferschwarm': 'Bug swarm', 'Sonnenfunken': 'Solar sparks', 'Erdbeben': 'Earthquake', 'Blitzlicht': 'Flashbang',
+        'Leuchtturm': 'Lighthouse', 'Elstern': 'Magpies', 'Honigregen': 'Honey rain', 'Lasergitter': 'Laser grid', 'Laserturm': 'Laser turret', 'Sägeblätter': 'Saw blades', 'Suchraketen': 'Homing missiles',
+        'Lichtwirbel': 'Light vortex', 'Glassäulen': 'Glass pillars', 'Beuteregen': 'Loot rain', 'Mondfinsternis': 'Eclipse', 'Tauregen': 'Dew rain' },
+};
+const evLabel = k => (LANG === 'en' && EN.ev[k]) || k;
+const bossLabel = type => { const e = BOSS_INFO.find(x => x[0] === type); return e ? e[1] : type; };
+
+function applyDataLang() {
+  const en = LANG === 'en';
+  const swap = (o, nameKey, descKey, pair) => {
+    if (!o._de) o._de = { n: o[nameKey], d: descKey ? o[descKey] : null };
+    o[nameKey] = en && pair ? pair[0] : o._de.n;
+    if (descKey) o[descKey] = en && pair ? pair[1] : o._de.d;
+  };
+  for (const list of [GOOD, BAD, BOSS_INFO]) for (const e of list) {
+    if (!e._de) e._de = [e[1], e[2]];
+    const x = EN.lex[e[0]];
+    e[1] = en && x ? x[0] : e._de[0]; e[2] = en && x ? x[1] : e._de[1];
+  }
+  for (const r of RULES) swap(r, 'name', 'desc', EN.rules[r.id]);
+  for (const u of UPGRADES) swap(u, 'name', 'desc', EN.ups[u.id]);
+  for (const a of ACH) swap(a, 'name', 'desc', EN.ach[a.id]);
+  for (const s of SKINS) {
+    swap(s, 'name', null, EN.skin[s.id] && [EN.skin[s.id]]);
+    if (s.req) { if (!s.req._de) s.req._de = s.req.text; s.req.text = en && EN.req[s.id] ? EN.req[s.id] : s.req._de; }
+  }
+  for (const h of HATS) {
+    swap(h, 'name', null, EN.hat[h.id] && [EN.hat[h.id]]);
+    if (h.req) { if (!h.req._de) h.req._de = h.req.text; h.req.text = en && EN.req[h.id] ? EN.req[h.id] : h.req._de; }
+  }
+  for (const k in DIFF) swap(DIFF[k], 'name', 'note', EN.diff[k]);
+  for (const k in RARITY) { if (!RARITY[k]._de) RARITY[k]._de = RARITY[k][0]; RARITY[k][0] = en ? EN.rar[k] : RARITY[k]._de; }
+  for (const b of BOSSES.concat([CORE])) { const x = EN.lex[b.type]; swap(b, 'name', null, x && [x[0]]); }
+}
+
+// Feste Texte im HTML: deutscher Text (getrimmt) -> englischer Text. Wird per Textknoten getauscht.
+const STATIC_EN = {
+  // Anzeige
+  'Punkte': 'Score', 'Rekord': 'Best', 'Stufe': 'Level', 'Leben': 'Lives', 'Kraft': 'Energy', 'Gegner': 'Opponent', 'lebt': 'alive',
+  'Pause': 'Pause', 'Spielfeld von Shady': 'Shady playfield',
+  // Hauptmenü
+  'Ein Spiel über Licht und Schatten': 'A game of light and shadow',
+  'Du bist ein kleines Schattenwesen. Die Sonne wandert, das Chaos-Rad dreht sich, und nach jeder Stufe wartet ein Boss.': 'You are a little shadow creature. The sun keeps moving, the chaos wheel keeps spinning, and after every level a boss is waiting.',
+  'Menü': 'Menu', 'Hauptmenü': 'Main menu', 'Spielen': 'Play', 'Kampagne · Endlos · Täglich': 'Campaign · Endless · Daily',
+  'Mehrspieler': 'Multiplayer', 'Online-Duell': 'Online duel', 'Garderobe': 'Wardrobe', 'Skins & Hüte': 'Skins & hats',
+  'Erfolge & Statistik': 'Achievements & stats', 'Einstellungen': 'Settings', 'Anleitung': 'How to play',
+  'Punktekonto': 'Points balance', 'Heute': 'Today', 'Herausforderung starten': 'Start challenge',
+  'Tipp:': 'Tip:', 'pausiert,': 'pauses,', 'schaltet den Ton': 'toggles sound',
+  // Modusauswahl
+  'Spielmodus wählen': 'Choose a game mode', 'Zurück': 'Back', 'Schwierigkeit': 'Difficulty', 'Leicht': 'Easy', 'Normal': 'Normal', 'Schwer': 'Hard',
+  'Kampagne': 'Campaign', 'Endlos': 'Endless', 'Täglich': 'Daily',
+  '10 Stufen und 9 Bosse. Am Ende wartet der Sonnenkern. Besieg ihn und du gewinnst.': '10 levels and 9 bosses. The Sun Core waits at the end. Defeat him and you win.',
+  'Kein Ende. Jede Stufe wird härter, alle 10 Stufen kommt der Sonnenkern. Wie weit schaffst du es?': 'No end. Every level gets harder, and every 10 levels the Sun Core shows up. How far can you get?',
+  'Boss üben': 'Practice boss', 'Käferkönigin': 'Beetle Queen', 'Sonnenstier': 'Sun Bull', 'Sonnenkern': 'Sun Core',
+  // Mehrspieler
+  'Mehrspieler': 'Multiplayer',
+  'Zwei Spieler, derselbe Innenhof. Ihr startet mit denselben Säulen, jeder in seiner eigenen Welt, und seht euch als Geist. Jeder besiegte Boss schickt dem anderen einen Angriff. Wer länger überlebt, gewinnt.': 'Two players, the same yard. You both start with the same pillars, each in your own world, and see each other as a ghost. Every defeated boss sends an attack to the other. Whoever survives longer wins.',
+  'Dein Name': 'Your name', 'Raum erstellen': 'Create room', 'oder beitreten': 'or join', 'Raumcode': 'Room code', 'Beitreten': 'Join',
+  'Einladungslink kopieren': 'Copy invite link', 'Duell starten': 'Start duel', 'Raum verlassen': 'Leave room',
+  // Garderobe
+  'Konto': 'Balance', 'Fahr über ein Teil, um es anzuprobieren.': 'Hover over an item to try it on.', 'Skins': 'Skins', 'Hüte': 'Hats',
+  // Erfolge
+  'Erfolge und Statistik': 'Achievements and stats', 'Erfolge': 'Achievements', 'Statistik': 'Stats', 'Bestenliste': 'Leaderboard',
+  // Einstellungen
+  'Musik': 'Music', 'Lautstärke der Hintergrundmusik': 'Background music volume', 'Effekte': 'Effects', 'Lautstärke der Geräusche': 'Sound effects volume',
+  'Ton an': 'Sound on', 'Taste': 'Key', 'schaltet jederzeit um': 'toggles it at any time',
+  'Bildschirmwackeln': 'Screen shake', 'Bei Treffern, Beben und Explosionen': 'On hits, quakes and explosions',
+  'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht und Donner werden abgedämpft': 'Off: flashbang and thunder are toned down',
+  'Sprache': 'Language', 'Sprache des Spiels': 'Game language',
+  'Design': 'Theme', 'Hell, dunkel oder wie dein System': 'Light, dark or like your system', 'System': 'System', 'Hell': 'Light', 'Dunkel': 'Dark',
+  'Spielername': 'Player name', 'Für Duelle und die Bestenliste': 'For duels and the leaderboard',
+  'Fortschritt zurücksetzen': 'Reset progress', 'Löscht Punkte, Erfolge, Statistik und Garderobe': 'Deletes points, achievements, stats and wardrobe', 'Zurücksetzen': 'Reset',
+  // Anleitung
+  'Anleitung und Lexikon': 'How to play and lexicon', 'Regeln': 'Rules', 'Lexikon': 'Lexicon',
+  'Licht kostet Kraft.': 'Light costs energy.',
+  'Im Sonnenlicht sinkt deine Kraftleiste schnell, im Schatten lädt sie langsam wieder auf. Bei null bist du verdampft, außer du hast noch ein Herz.': 'In sunlight your energy bar drops fast, in the shade it slowly recharges. At zero you evaporate, unless you still have a heart.',
+  'Die Schatten wandern.': 'The shadows move.',
+  'Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht kommt.': 'The sun moves in a circle and gets faster with every level. The little sun at the edge shows where the light is coming from.',
+  'Stufen und Bosse.': 'Levels and bosses.',
+  'Alle 12 Sekunden steigt die Stufe, eine Säule stürzt ein und ein Boss erscheint. Nur ein Dash schadet ihm. Nach 20 Sekunden zieht er ohne Belohnung wieder ab.': 'Every 12 seconds the level goes up, a pillar collapses and a boss appears. Only a dash hurts him. After 20 seconds he leaves again without a reward.',
+  'Upgrades.': 'Upgrades.',
+  'Nach jedem besiegten Boss ziehst du drei Karten und nimmst eine. So spielt sich jede Runde anders.': 'After every defeated boss you draw three cards and pick one. That makes every run play differently.',
+  'Chaos-Rad.': 'Chaos wheel.',
+  'Alle paar Sekunden wird ein Ereignis ausgelost, meistens ein gemeines, manchmal ein gutes.': 'Every few seconds an event is drawn, mostly a nasty one, sometimes a good one.',
+  'Punkte.': 'Points.',
+  '10 pro Sekunde, dazu Tau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem Konto. Damit kaufst du Skins und Hüte. Manche gibt es nur für Boss-Siege.': '10 per second, plus dew, combos and boss victories. After every run your points go to your balance. You use them to buy skins and hats. Some can only be earned by beating bosses.',
+  'Letzte Kraft.': 'Last stand.',
+  'Unter 20 % Kraft läuft die Welt in Zeitlupe, damit du noch einen Schatten erreichst.': 'Below 20% energy the world slows down so you can still reach a shadow.',
+  'Laufen': 'Move', 'oder Pfeiltasten. Mit Maus oder Finger aufs Feld drücken und halten.': 'or arrow keys. Press and hold on the field with mouse or finger.',
+  'oder': 'or', 'Leertaste': 'Space', 'in Laufrichtung, Rechtsklick in Richtung Maus, auf dem Handy der Dash-Knopf.': 'in walking direction, right-click toward the mouse, on mobile the Dash button.',
+  'Upgrade': 'Upgrade', 'oder anklicken.': 'or click a card.',
+  '. Ton an und aus mit': '. Sound on and off with',
+  // Lexikon
+  'Bosse': 'Bosses', 'nach jeder Stufe': 'after every level', 'Gut': 'Good', 'einsammeln': 'collect', 'Schlecht': 'Bad', 'ausweichen': 'dodge',
+  // Pause, Upgrade, Ergebnis
+  'Weiter': 'Resume', 'Aufgeben': 'Give up', 'Upgrade wählen': 'Choose an upgrade', 'Boss besiegt': 'Boss defeated', 'Wähl ein Upgrade': 'Choose an upgrade',
+  'Ergebnis': 'Result', 'Verdampft': 'Evaporated', 'Nochmal': 'Again',
+};
+const origText = new WeakMap(), origAttr = new WeakMap();
+const ATTRS = ['aria-label', 'placeholder', 'title'];
+function translateStatic() {
+  const en = LANG === 'en';
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = []; let n;
+  while ((n = w.nextNode())) { const p = n.parentNode && n.parentNode.nodeName; if (p !== 'SCRIPT' && p !== 'STYLE') nodes.push(n); }
+  for (const node of nodes) {
+    let de = origText.get(node);
+    if (de === undefined) { if (!(node.nodeValue.trim() in STATIC_EN)) continue; de = node.nodeValue; origText.set(node, de); }
+    const k = de.trim();
+    node.nodeValue = en ? de.replace(k, STATIC_EN[k]) : de;
+  }
+  for (const el of document.body.querySelectorAll('[aria-label],[placeholder],[title]')) {
+    let saved = origAttr.get(el);
+    for (const a of ATTRS) {
+      if (!el.hasAttribute(a)) continue;
+      if (!saved) { saved = {}; origAttr.set(el, saved); }
+      if (saved[a] === undefined) { if (!(el.getAttribute(a) in STATIC_EN)) continue; saved[a] = el.getAttribute(a); }
+      el.setAttribute(a, en ? STATIC_EN[saved[a]] : saved[a]);
+    }
+  }
+}
+
 // ---------- Spielwelt ----------
 function overlaps(a, b, pad) {
   return a.x < b.x + b.w + pad && a.x + a.w + pad > b.x && a.y < b.y + b.h + pad && a.y + a.h + pad > b.y;
@@ -1417,7 +1674,7 @@ function hit(amount, text, extra) {
   if (S.bubble > 0) {
     S.bubble--; S.inv = 0.5; S.shake = Math.max(S.shake, 0.2);
     sparks(S.p.x, S.p.y, '#6FC3FF', 14);
-    flash(S.bubble ? 'Schild blockt! Noch ' + S.bubble : 'Schild zerbrochen!', '#6FC3FF');
+    flash(S.bubble ? tr('Schild blockt! Noch ', 'Shield blocks! Left: ') + S.bubble : tr('Schild zerbrochen!', 'Shield broken!'), '#6FC3FF');
     Sound.sfx('block');
     return false;
   }
@@ -1514,7 +1771,7 @@ function spawnBoss(b) {
   S.boss = { ...b, x, y, r: core ? 30 : 26, hp, maxHp: hp, inv: 0, t: 0, enter: 1, time, maxTime: time, atk: 1.5, phase: 0,
              state: b.type === 'bull' ? 'aim' : 'move', aim: 1.6, tx: S.p.x, ty: S.p.y };
   S.bossClean = true;
-  S.banner = { text: (final ? 'Endboss: ' : 'Boss: ') + b.name, good: false, t: 2.4, head: 'ACHTUNG' };
+  S.banner = { text: (final ? tr('Endboss: ', 'Final boss: ') : 'Boss: ') + b.name, good: false, t: 2.4, head: tr('ACHTUNG', 'WARNING') };
   S.shake = 0.6;
   Sound.sfx('boss'); Sound.music('boss');
 }
@@ -1534,7 +1791,7 @@ function defeatBoss(B) {
     const n = makePillar(S.pillars, S.p); if (n) S.pillars.push(n);
   }
   S.boss = null;
-  S.banner = { text: 'Boss besiegt! +' + fmt(p), good: true, t: 2.4, head: S.bossClean ? 'OHNE TREFFER' : 'SIEG' };
+  S.banner = { text: tr('Boss besiegt! +', 'Boss defeated! +') + fmt(p), good: true, t: 2.4, head: S.bossClean ? tr('OHNE TREFFER', 'NO HITS TAKEN') : tr('SIEG', 'VICTORY') };
   Sound.sfx('bossDown');
   if (isDuel()) Net.attack('boss');
   if (final) { S.winT = 2.2; S.grace = 99; Sound.music(null); }
@@ -1574,7 +1831,7 @@ function bullAct(B, dt, ef, v) {
     const i = S.pillars.findIndex(r => B.x > r.x - B.r && B.x < r.x + r.w + B.r && B.y > r.y - B.r && B.y < r.y + r.h + B.r);
     if (i >= 0) {
       const r = S.pillars[i]; sparks(r.x + r.w / 2, r.y + r.h / 2, COL.top, 18); S.pillars.splice(i, 1); S.shake = 0.5;
-      flash((B.type === 'core' ? 'Der Kern' : 'Der Stier') + ' zerlegt eine Säule!', COL.warn); Sound.sfx('boom');
+      flash(B.type === 'core' ? tr('Der Kern zerlegt eine Säule!', 'The Core smashes a pillar!') : tr('Der Stier zerlegt eine Säule!', 'The Bull smashes a pillar!'), COL.warn); Sound.sfx('boom');
     }
     if (B.x < B.r || B.x > W - B.r || B.y < B.r || B.y > H - B.r) {
       B.x = Math.max(B.r, Math.min(W - B.r, B.x)); B.y = Math.max(B.r, Math.min(H - B.r, B.y));
@@ -1603,7 +1860,7 @@ function updateBoss(dt, ef) {
     if (ph !== B.phase) {
       B.phase = ph; B.atk = 1.4;
       if (ph === 2) { B.state = 'aim'; B.aim = 1.4; }
-      S.banner = { text: 'Sonnenkern · Phase ' + (ph + 1), good: false, t: 1.8, head: 'ACHTUNG' };
+      S.banner = { text: bossLabel('core') + ' · Phase ' + (ph + 1), good: false, t: 1.8, head: tr('ACHTUNG', 'WARNING') };
       S.shake = 0.7; sparks(B.x, B.y, COL.hot, 24); Sound.sfx('phase');
     }
     if (ph === 0) prismaAct(B, dt, ef, 4 + (S.level > 12 ? 1 : 0), 2.8, 0.6);
@@ -1617,14 +1874,14 @@ function updateBoss(dt, ef) {
       const dmg = (B.state === 'stun' ? 2 : 1) + (S.dash ? up('heavy') : 0);
       S.dash = null; B.hp -= dmg; B.inv = 0.5; B.spearHit = false; S.shake = 0.45; S.inv = 0.4;
       sparks(B.x, B.y, COL.white, 18);
-      flash(dmg > 1 ? 'Volltreffer ×' + dmg + '!' : 'Treffer!', '#5FBE90');
+      flash(dmg > 1 ? tr('Volltreffer ×', 'Critical hit ×') + dmg + '!' : tr('Treffer!', 'Hit!'), '#5FBE90');
       Sound.sfx('bossHit');
-    } else if (!on('shield')) hit(20, 'Boss-Treffer!');
+    } else if (!on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
     S.p.x = B.x + dx / d * (B.r + pr() + 14); S.p.y = B.y + dy / d * (B.r + pr() + 14);
     resolve();
   }
   if (B.hp <= 0) defeatBoss(B);
-  else if (B.time <= 0) { S.boss = null; flash('Der Boss zieht ab', '#98A1B4'); Sound.music('game'); }
+  else if (B.time <= 0) { S.boss = null; flash(tr('Der Boss zieht ab', 'The boss leaves'), '#98A1B4'); Sound.music('game'); }
 }
 
 // ---------- Chaos-Rad ----------
@@ -1681,14 +1938,14 @@ function spinWheel() {
   const pool = EVENTS.filter(e => e.min <= S.level && (wantGood ? e.good : !e.good) && !(e.skip && e.skip()));
   const ev = pick(pool.length ? pool : EVENTS);
   ev.run();
-  S.banner = { text: ev.name, good: !!ev.good, t: 2.2 };
+  S.banner = { text: evLabel(ev.name), good: !!ev.good, t: 2.2 };
   Sound.sfx('wheel', !!ev.good);
 }
 function receiveAttack(name) {
   const ev = EVENTS.find(e => e.name === name);
   if (!ev) return;
   ev.run();
-  S.banner = { text: name, good: false, t: 2.4, head: 'ANGRIFF VON ' + (Net.opp ? Net.opp.name : 'GEGNER').toUpperCase() };
+  S.banner = { text: evLabel(name), good: false, t: 2.4, head: tr('ANGRIFF VON ', 'ATTACK FROM ') + (Net.opp ? Net.opp.name : tr('GEGNER', 'OPPONENT')).toUpperCase() };
   Sound.sfx('alarm');
 }
 
@@ -1711,46 +1968,46 @@ function collect(it) {
   if (trap) { stat('traps'); Sound.sfx('trap'); }
   else { stat('items'); Sound.sfx(it.kind === 'gold' ? 'gold' : 'pickup'); }
   switch (it.kind) {
-    case 'umbrella': S.E.shield = S.shieldMax = 5 * lingerF(); flash('Schirm! ' + Math.round(S.shieldMax) + ' s geschützt', COL.umbrella); break;
-    case 'crystal': S.energy = Math.min(maxEnergy(), S.energy + 35); flash('Mondstein +35 Kraft', COL.crystal); break;
-    case 'hourglass': S.E.slow = 5; flash('Sanduhr! Zeitlupe', '#5FBE90'); break;
-    case 'gold': { const p = pts(200); S.score += p; flash('Goldtau +' + p, COL.gold); break; }
+    case 'umbrella': S.E.shield = S.shieldMax = 5 * lingerF(); flash(tr('Schirm! ' + Math.round(S.shieldMax) + ' s geschützt', 'Umbrella! Protected for ' + Math.round(S.shieldMax) + ' s'), COL.umbrella); break;
+    case 'crystal': S.energy = Math.min(maxEnergy(), S.energy + 35); flash(tr('Mondstein +35 Kraft', 'Moonstone +35 energy'), COL.crystal); break;
+    case 'hourglass': S.E.slow = 5; flash(tr('Sanduhr! Zeitlupe', 'Hourglass! Slow motion'), '#5FBE90'); break;
+    case 'gold': { const p = pts(200); S.score += p; flash(tr('Goldtau +', 'Golden dew +') + p, COL.gold); break; }
     case 'magnet': S.E.magnet = 6; flash('Magnet!', COL.magnet); break;
     case 'boots': S.E.boots = 5; flash('Turbo!', COL.boots); break;
-    case 'bomb': { const life = 8 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 58, life, max: life }); flash('Schattenbombe!', '#8E9CC2'); break; }
+    case 'bomb': { const life = 8 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 58, life, max: life }); flash(tr('Schattenbombe!', 'Shadow bomb!'), '#8E9CC2'); break; }
     case 'seed': {
       const d = dirOf(S.az), cx = S.p.x - d.x * 40, cy = S.p.y - d.y * 40;
       S.pillars.push({ x: Math.max(4, Math.min(W - 32, cx - 14)), y: Math.max(4, Math.min(H - 32, cy - 14)), w: 28, h: 28, crumble: 0, grow: 0.4 });
-      resolve(); flash('Säule wächst!', '#8BC34A'); break;
+      resolve(); flash(tr('Säule wächst!', 'A pillar grows!'), '#8BC34A'); break;
     }
     case 'heart':
-      if (maxHearts() > 0) { S.hearts = Math.min(maxHearts(), S.hearts + 1); flash('Extraleben!', COL.heart); }
-      else { S.energy = Math.min(maxEnergy(), S.energy + 35); flash('+35 Kraft', COL.heart); }
+      if (maxHearts() > 0) { S.hearts = Math.min(maxHearts(), S.hearts + 1); flash(tr('Extraleben!', 'Extra life!'), COL.heart); }
+      else { S.energy = Math.min(maxEnergy(), S.energy + 35); flash(tr('+35 Kraft', '+35 energy'), COL.heart); }
       break;
-    case 'star': S.E.star = 8; flash('Doppelte Punkte!', COL.gold); break;
-    case 'frost': S.E.frost = 4; flash('Alles eingefroren!', COL.frost); break;
-    case 'shrink': S.E.shrink = 6; flash('Winzig!', COL.shrink); break;
+    case 'star': S.E.star = 8; flash(tr('Doppelte Punkte!', 'Double points!'), COL.gold); break;
+    case 'frost': S.E.frost = 4; flash(tr('Alles eingefroren!', 'Everything frozen!'), COL.frost); break;
+    case 'shrink': S.E.shrink = 6; flash(tr('Winzig!', 'Tiny!'), COL.shrink); break;
     case 'thunder': {
       const n = S.bugs.length + S.magpies.length;
       for (const b of S.bugs) sparks(b.x, b.y, COL.bug, 6);
       for (const b of S.magpies) sparks(b.x, b.y, COL.white, 6);
       S.bugs = []; S.magpies = []; S.score += pts(15 * n); S.shake = 0.5; S.E.zap = 0.25;
       stat('bugs', n); Sound.sfx('thunder');
-      flash('Donnerschlag! ' + n + ' weg', COL.thunder); break;
+      flash(tr('Donnerschlag! ' + n + ' weg', 'Thunderclap! ' + n + ' gone'), COL.thunder); break;
     }
-    case 'shroom': S.E.invert = 5; S.hurt = 0.3; flash('Umkehrpilz! Alles verdreht', COL.shroom); break;
-    case 'bubble': S.bubble = 3; flash('Blasenschild ×3', '#6FC3FF'); break;
-    case 'dashy': S.E.dashy = 6; S.charges = maxCharges(); S.dashCd = 0; flash('Dauerdash!', '#3FC7C4'); break;
-    case 'decoy': S.decoy = { x: S.p.x, y: S.p.y, life: 6 }; flash('Schattenklon!', '#C9B8FF'); break;
+    case 'shroom': S.E.invert = 5; S.hurt = 0.3; flash(tr('Umkehrpilz! Alles verdreht', 'Reversal mushroom! Everything is inverted'), COL.shroom); break;
+    case 'bubble': S.bubble = 3; flash(tr('Blasenschild ×3', 'Bubble shield ×3'), '#6FC3FF'); break;
+    case 'dashy': S.E.dashy = 6; S.charges = maxCharges(); S.dashCd = 0; flash(tr('Dauerdash!', 'Dash frenzy!'), '#3FC7C4'); break;
+    case 'decoy': S.decoy = { x: S.p.x, y: S.p.y, life: 6 }; flash(tr('Schattenklon!', 'Shadow clone!'), '#C9B8FF'); break;
     case 'spear':
       if (S.boss && S.boss.enter <= 0) {
         S.boss.hp -= 2; S.boss.inv = 0.4; S.boss.spearHit = S.boss.hp <= 0;
-        sparks(S.boss.x, S.boss.y, '#6D5BD0', 18); S.shake = 0.4; flash('Speer trifft den Boss!', '#C9B8FF'); Sound.sfx('bossHit');
-      } else { const p = pts(100); S.score += p; flash('Schattenspeer +' + p, '#C9B8FF'); }
+        sparks(S.boss.x, S.boss.y, '#6D5BD0', 18); S.shake = 0.4; flash(tr('Speer trifft den Boss!', 'Spear hits the boss!'), '#C9B8FF'); Sound.sfx('bossHit');
+      } else { const p = pts(100); S.score += p; flash(tr('Schattenspeer +', 'Shadow spear +') + p, '#C9B8FF'); }
       break;
-    case 'spikes': S.E.spikes = 6; flash('Stachelpanzer!', '#B8C0CF'); break;
-    case 'clover': S.lucky = 3; flash('Glücksklee! 3× Glück', '#5FBE90'); break;
-    case 'acid': hit(25, 'Säure!', ' · −100 P'); S.score = Math.max(0, S.score - 100); sparks(it.x, it.y, COL.acid, 10); break;
+    case 'spikes': S.E.spikes = 6; flash(tr('Stachelpanzer!', 'Spike armor!'), '#B8C0CF'); break;
+    case 'clover': S.lucky = 3; flash(tr('Glücksklee! 3× Glück', 'Lucky clover! 3× luck'), '#5FBE90'); break;
+    case 'acid': hit(25, tr('Säure!', 'Acid!'), tr(' · −100 P', ' · −100 pts')); S.score = Math.max(0, S.score - 100); sparks(it.x, it.y, COL.acid, 10); break;
   }
 }
 
@@ -1789,7 +2046,7 @@ function dailyDone() {
     P.streak.n = P.streak.last === shiftDay(key, -1) ? P.streak.n + 1 : 1;
     P.streak.last = key; P.streak.best = Math.max(P.streak.best, P.streak.n);
   }
-  toast('Tagesziel geschafft', '+' + fmt(DAILY_REWARD) + ' Punkte aufs Konto', 'calendar');
+  toast(tr('Tagesziel geschafft', 'Daily goal reached'), tr('+' + fmt(DAILY_REWARD) + ' Punkte aufs Konto', '+' + fmt(DAILY_REWARD) + ' points added to your balance'), 'calendar');
   save();
 }
 
@@ -1862,7 +2119,7 @@ function update(dt) {
   if (S.comboT > 0) { S.comboT -= dt; if (S.comboT <= 0) S.combo = 0; }
   if (up('shieldgen') && S.bubble === 0) {
     S.shieldGen -= dt;
-    if (S.shieldGen <= 0) { S.bubble = 1; S.shieldGen = 20; flash('Blasenquelle: Schild!', '#6FC3FF'); Sound.sfx('block'); }
+    if (S.shieldGen <= 0) { S.bubble = 1; S.shieldGen = 20; flash(tr('Blasenquelle: Schild!', 'Bubble spring: shield!'), '#6FC3FF'); Sound.sfx('block'); }
   }
 
   // Chaos-Rad und Angriffe aus dem Duell
@@ -1945,7 +2202,7 @@ function update(dt) {
     m.warn -= dt * (ef > 0 ? 1 : 0);
     if (m.warn <= 0) {
       m.done = true; S.shake = Math.max(S.shake, 0.3); sparks(m.x, m.y, COL.hot, 14); Sound.sfx('boom');
-      if (dist(m, S.p) < m.r + pr() && !on('shield')) hit(22, 'Funkentreffer!');
+      if (dist(m, S.p) < m.r + pr() && !on('shield')) hit(22, tr('Funkentreffer!', 'Spark hit!'));
       const gx = Math.floor(m.x / CELL), gy = Math.floor(m.y / CELL);
       if (!S.hot.some(h => h.gx === gx && h.gy === gy)) S.hot.push({ gx, gy, warn: 0, life: 4 });
     }
@@ -1973,7 +2230,7 @@ function update(dt) {
     if (s.x < -20 || s.x > W + 20 || s.y < -20 || s.y > H + 20 || inPillar(s.x, s.y, 0)) s.life = 0;
     else if (dist(s, S.p) < pr() + 5) {
       if (S.dash) { if (up('blade')) { s.life = 0; sparks(s.x, s.y, '#C9B8FF', 6); S.score += pts(10); } }
-      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(12, 'Lichtkugel!'); }
+      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(12, tr('Lichtkugel!', 'Light orb!')); }
     }
   }
   S.shots = S.shots.filter(s => s.life > 0);
@@ -1989,9 +2246,9 @@ function update(dt) {
     s.y += s.vy * dt * ef;
     if (s.y < 12 || s.y > H - 12 || inPillar(s.x, s.y, 6)) { s.y -= s.vy * dt * ef; s.vy = -s.vy; }
     if (dist(s, S.p) < pr() + 11) {
-      if (on('spikes') || (S.dash && up('blade'))) { s.life = 0; sparks(s.x, s.y, '#DDE3EC', 14); const p = pts(30); flash('Säge zerbrochen +' + p, '#B8C0CF'); S.score += p; Sound.sfx('bossHit'); }
+      if (on('spikes') || (S.dash && up('blade'))) { s.life = 0; sparks(s.x, s.y, '#DDE3EC', 14); const p = pts(30); flash(tr('Säge zerbrochen +', 'Saw destroyed +') + p, '#B8C0CF'); S.score += p; Sound.sfx('bossHit'); }
       else if (Math.random() < dt * 20) sparks(s.x, s.y, COL.sun, 3);
-      if (s.life > 0 && !on('shield')) hit(15, 'Säge!');
+      if (s.life > 0 && !on('shield')) hit(15, tr('Säge!', 'Saw!'));
     }
   }
   S.saws = S.saws.filter(s => s.life > 0);
@@ -2010,8 +2267,8 @@ function update(dt) {
     if (S.decoy && dist(m, S.decoy) < 12) boom = true;
     if (!boom && dist(m, S.p) < pr() + 8) {
       boom = true;
-      if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash('Rakete zerstört +' + p, '#5FBE90'); stat('missiles'); }
-      else if (!on('shield')) hit(20, 'Rakete!');
+      if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash(tr('Rakete zerstört +', 'Missile destroyed +') + p, '#5FBE90'); stat('missiles'); }
+      else if (!on('shield')) hit(20, tr('Rakete!', 'Missile!'));
     }
     if (boom) { m.dead = true; sparks(m.x, m.y, COL.hot, 16); S.shake = Math.max(S.shake, 0.25); Sound.sfx('boom'); }
   }
@@ -2045,10 +2302,10 @@ function update(dt) {
       if (on('shield') || S.dash || on('spikes')) {
         const p = pts(20 * (ruleOn('bugs') ? 3 : 1));
         S.score += p; sparks(b.x, b.y, COL.bug, 8);
-        flash((S.dash ? 'Weggedasht +' : 'Abgewehrt +') + p, S.dash ? '#5FBE90' : COL.umbrella);
+        flash((S.dash ? tr('Weggedasht +', 'Dashed away +') : tr('Abgewehrt +', 'Fended off +')) + p, S.dash ? '#5FBE90' : COL.umbrella);
         stat('bugs'); if (S.dash) stat('bugsDashed');
         Sound.sfx('pop');
-      } else { if (hit(18, 'Autsch!')) { S.p.x += dx / d * 26; S.p.y += dy / d * 26; resolve(); } sparks(b.x, b.y, COL.bug, 10); }
+      } else { if (hit(18, tr('Autsch!', 'Ouch!'))) { S.p.x += dx / d * 26; S.p.y += dy / d * 26; resolve(); } sparks(b.x, b.y, COL.bug, 10); }
     }
   }
   S.bugs = S.bugs.filter(b => b.life > 0);
@@ -2093,7 +2350,7 @@ function update(dt) {
       S.combo = Math.min(comboMax(), S.combo + 1); S.comboT = 3.5 + 1.5 * up('combo');
       const p = pts(50 * S.combo * (ruleOn('traps') ? 3 : 1));
       S.score += p; S.energy = Math.min(maxEnergy(), S.energy + 8 * (ruleOn('summer') ? 2 : 1));
-      flash('+' + p + (S.combo > 1 ? '  Kombo ×' + S.combo : ''), COL.dew);
+      flash('+' + p + (S.combo > 1 ? tr('  Kombo ×', '  Combo ×') + S.combo : ''), COL.dew);
       stat('dews'); statMax('maxCombo', S.combo); Sound.sfx('dew', S.combo);
       if (isDuel() && before < 5 && S.combo >= 5) Net.attack('combo');
     }
@@ -2117,8 +2374,8 @@ function update(dt) {
     const v = 95 * ef;
     g.x += dx / d * v * dt; g.y += (dy / d * v + Math.sin(S.t * 6 + g.ph) * 20 * ef) * dt;
     g.face = dx < 0 ? -1 : 1;
-    if (g.target && dist(g, g.target) < 10) { g.target.life = 0; g.carry++; flash('Elster klaut!', COL.warn); g.target = null; Sound.sfx('chirp'); }
-    if (dist(g, S.p) < pr() + 11) { g.life = 0; const p = pts(30); S.score += p; sparks(g.x, g.y, COL.white, 8); flash('Elster verscheucht +' + p, '#5FBE90'); Sound.sfx('chirp'); }
+    if (g.target && dist(g, g.target) < 10) { g.target.life = 0; g.carry++; flash(tr('Elster klaut!', 'Magpie steals!'), COL.warn); g.target = null; Sound.sfx('chirp'); }
+    if (dist(g, S.p) < pr() + 11) { g.life = 0; const p = pts(30); S.score += p; sparks(g.x, g.y, COL.white, 8); flash(tr('Elster verscheucht +', 'Magpie scared off +') + p, '#5FBE90'); Sound.sfx('chirp'); }
   }
   S.magpies = S.magpies.filter(g => g.life > 0 && g.x > -60 && g.x < W + 60);
 
@@ -2161,7 +2418,7 @@ function update(dt) {
     S.pillars = S.pillars.filter(r => !r.doomed);
     const n = makePillar(S.pillars, S.p); if (n) S.pillars.push(n);
     S.level++; S.levelIn = ruleOn('rush') ? 6 : 12;
-    flash('Stufe ' + (S.level + 1), COL.warn);
+    flash(tr('Stufe ', 'Level ') + (S.level + 1), COL.warn);
     statMax('maxLevel', S.level + 1);
     if (S.cfg.mode === 'endless') statMax('endlessLevel', S.level + 1);
     Sound.sfx('level'); Sound.setLevel(S.level);
@@ -2175,7 +2432,7 @@ function update(dt) {
       S.hearts--; S.energy = ph ? maxEnergy() : Math.min(55, maxEnergy()); S.E.shield = S.shieldMax = ph ? 3 : 2; S.shake = 0.6;
       if (ph) S.E.frost = 2;
       S.closeArmed = false; stat('revives');
-      sparks(S.p.x, S.p.y, COL.heart, 16); flash(ph ? 'Phönix! Volle Kraft' : 'Zweites Leben!', COL.heart); Sound.sfx('revive');
+      sparks(S.p.x, S.p.y, COL.heart, 16); flash(ph ? tr('Phönix! Volle Kraft', 'Phoenix! Full energy') : tr('Zweites Leben!', 'Second life!'), COL.heart); Sound.sfx('revive');
     } else { finish(false); return; }
   }
   if (S.pickT > 0) { S.pickT -= dt; if (S.pickT <= 0) openPick(); }
@@ -2560,14 +2817,14 @@ function draw() {
 
   // Anzeigen
   if (S.mode === 'play' || S.mode === 'pick' || S.mode === 'pause') {
-    const tag = S.cfg.mode === 'daily' && S.rule ? ' · ' + RULE_BY[S.rule].name : S.cfg.mode === 'campaign' ? ' von 10' : '';
-    textOut('Stufe ' + (S.level + 1) + tag, 12, 22, COL.white, MONO);
-    if (S.energy < 20) textOut('Letzte Kraft: Zeitlupe', W - 12, H - 32, COL.warn, MONO, 'right');
+    const tag = S.cfg.mode === 'daily' && S.rule ? ' · ' + RULE_BY[S.rule].name : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
+    textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
+    if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 32, COL.warn, MONO, 'right');
     const ready = S.charges > 0;
-    textOut(ready ? (maxCharges() > 1 ? 'Dash ×' + S.charges : 'Dash bereit') : 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
+    textOut(ready ? (maxCharges() > 1 ? 'Dash ×' + S.charges : tr('Dash bereit', 'Dash ready')) : 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
-      textOut(B.name + (B.state === 'stun' ? ' · benommen' : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
+      textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
       ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(bx - 2, by - 2, bw + 4, 14);
       ctx.fillStyle = COL.warn; ctx.fillRect(bx, by, bw * Math.max(0, B.hp) / B.maxHp, 8);
       if (isFinite(B.maxTime)) {
@@ -2576,23 +2833,23 @@ function draw() {
       }
     }
     const list = [];
-    const lab = { shield: ['Schirm', COL.umbrella], slow: ['Sanduhr', '#5FBE90'], magnet: ['Magnet', COL.magnet], boots: ['Turbo', '#6FB8F0'],
-                  star: ['Punkte ×2', COL.gold], frost: ['Frost', COL.frost], shrink: ['Winzig', COL.shrink], invert: ['Verdreht', '#C98AE6'],
-                  eclipse: ['Finsternis', '#8E9CC2'], sun2: ['Zwei Sonnen', COL.sun], wind: ['Sturm', COL.white], noon: ['Mittag', COL.sun],
-                  dashy: ['Dauerdash', '#3FC7C4'], spikes: ['Stacheln', '#B8C0CF'] };
+    const lab = { shield: [tr('Schirm', 'Umbrella'), COL.umbrella], slow: [tr('Sanduhr', 'Hourglass'), '#5FBE90'], magnet: ['Magnet', COL.magnet], boots: ['Turbo', '#6FB8F0'],
+                  star: [tr('Punkte ×2', 'Points ×2'), COL.gold], frost: ['Frost', COL.frost], shrink: [tr('Winzig', 'Tiny'), COL.shrink], invert: [tr('Verdreht', 'Inverted'), '#C98AE6'],
+                  eclipse: [tr('Finsternis', 'Eclipse'), '#8E9CC2'], sun2: [tr('Zwei Sonnen', 'Two suns'), COL.sun], wind: [tr('Sturm', 'Gale'), COL.white], noon: [tr('Mittag', 'Noon'), COL.sun],
+                  dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'] };
     for (const k in lab) if (on(k)) list.push([lab[k][0] + ' ' + S.E[k].toFixed(1) + ' s', lab[k][1]]);
-    if (S.bubble > 0) list.push(['Schild ×' + S.bubble, '#6FC3FF']);
-    if (S.decoy) list.push(['Klon ' + S.decoy.life.toFixed(1) + ' s', '#C9B8FF']);
-    if (S.lucky > 0) list.push(['Glück ×' + S.lucky, '#5FBE90']);
-    if (S.combo > 1) list.push(['Kombo ×' + S.combo, COL.dew]);
+    if (S.bubble > 0) list.push([tr('Schild ×', 'Shield ×') + S.bubble, '#6FC3FF']);
+    if (S.decoy) list.push([tr('Klon ', 'Clone ') + S.decoy.life.toFixed(1) + ' s', '#C9B8FF']);
+    if (S.lucky > 0) list.push([tr('Glück ×', 'Luck ×') + S.lucky, '#5FBE90']);
+    if (S.combo > 1) list.push([tr('Kombo ×', 'Combo ×') + S.combo, COL.dew]);
     list.forEach((f, i) => textOut(f[0], 12, H - 14 - i * 18, f[1], MONO));
   }
   if (S.mode === 'count') {
     const n = Math.ceil(S.countT), k = S.countT - Math.floor(S.countT);
     ctx.globalAlpha = 0.35 + 0.65 * k;
-    textOut(n > 0 ? String(n) : 'LOS!', W / 2, H / 2 + 26, '#F4CF63', '800 ' + Math.round(56 + (1 - k) * 18) + 'px "Unbounded", "Arial Black", sans-serif', 'center');
+    textOut(n > 0 ? String(n) : tr('LOS!', 'GO!'), W / 2, H / 2 + 26, '#F4CF63', '800 ' + Math.round(56 + (1 - k) * 18) + 'px "Unbounded", "Arial Black", sans-serif', 'center');
     ctx.globalAlpha = 1;
-    textOut('Duell gegen ' + (Net.opp ? Net.opp.name : '…'), W / 2, H / 2 - 50, '#FFFFFF', '800 15px "Unbounded", "Arial Black", sans-serif', 'center');
+    textOut(tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…'), W / 2, H / 2 - 50, '#FFFFFF', '800 15px "Unbounded", "Arial Black", sans-serif', 'center');
   }
   if (S.msg) {
     ctx.globalAlpha = Math.min(1, S.msg.t * 2);
@@ -2604,7 +2861,7 @@ function draw() {
     ctx.globalAlpha = Math.max(0, k);
     ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(0, H / 2 - 38, W, 64);
     ctx.fillStyle = b.good ? '#5FBE90' : COL.warn; ctx.fillRect(0, H / 2 - 38, W, 3); ctx.fillRect(0, H / 2 + 23, W, 3);
-    textOut(b.head || 'CHAOS-RAD', W / 2, H / 2 - 16, '#98A1B4', '700 11px "JetBrains Mono", monospace', 'center');
+    textOut(b.head || tr('CHAOS-RAD', 'CHAOS WHEEL'), W / 2, H / 2 - 16, '#98A1B4', '700 11px "JetBrains Mono", monospace', 'center');
     textOut(b.text, W / 2, H / 2 + 12, b.good ? '#5FBE90' : '#F4CF63', '800 24px "Unbounded", "Arial Black", sans-serif', 'center');
     ctx.globalAlpha = 1;
   }
@@ -2634,14 +2891,14 @@ function updateOppBar() {
   setText('oppScore', fmt(o.score || 0));
   const e = o.alive ? Math.max(0, Math.min(100, o.energy ?? 100)) : 0;
   if (hc.oppE !== e) { hc.oppE = e; $('oppEnergy').style.width = e + '%'; }
-  setText('oppState', o.left ? 'getrennt' : o.finished ? 'gewonnen' : o.alive ?'Stufe ' + ((o.level || 0) + 1) : 'verdampft');
+  setText('oppState', o.left ? tr('getrennt', 'disconnected') : o.finished ? tr('gewonnen', 'won') : o.alive ? tr('Stufe ', 'Level ') + ((o.level || 0) + 1) : tr('verdampft', 'evaporated'));
 }
 function updateMuteBtn() {
   const m = P.settings.muted;
   $('muteBtn').innerHTML = `<svg><use href="#i-${m ? 'mute' : 'sound'}"/></svg>`;
-  $('muteBtn').setAttribute('aria-label', m ? 'Ton an' : 'Ton aus');
+  $('muteBtn').setAttribute('aria-label', m ? tr('Ton an', 'Sound on') : tr('Ton aus', 'Sound off'));
 }
-function toggleMute() { P.settings.muted = !P.settings.muted; Sound.init(); Sound.volumes(); updateMuteBtn(); save(); if (top() === 'scrSettings') renderSettings(); }
+function toggleMute() { P.settings.muted = !P.settings.muted; Sound.init(); Sound.volumes(); updateMuteBtn(); save(); if (top() === 'scrSettings') RENDER.scrSettings(); }
 function applyTheme() {
   const t = P.settings.theme;
   if (t === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
@@ -2667,7 +2924,7 @@ function checkAch() {
     if ((a.val(P.stats) || 0) >= a.goal) {
       P.ach[a.id] = Date.now();
       if (S && S.run) S.run.newAch.push(a.id);
-      toast('Erfolg freigeschaltet', a.name, a.icon); Sound.sfx('ach');
+      toast(tr('Erfolg freigeschaltet', 'Achievement unlocked'), a.name, a.icon); Sound.sfx('ach');
     }
   }
   for (const [kind, list] of [['skin', SKINS], ['hat', HATS]]) for (const it of list) {
@@ -2675,7 +2932,7 @@ function checkAch() {
     if (!it.req || P.seen[key] || (P.stats[it.req.stat] || 0) < it.req.n) continue;
     P.seen[key] = 1;
     if (S && S.run) S.run.newItems.push([kind, it.id]);
-    toast(kind === 'skin' ? 'Neuer Skin' : 'Neuer Hut', it.name, null, creatureCanvas(kind === 'skin' ? it.id : P.equip.skin, kind === 'hat' ? it.id : 'none', 38));
+    toast(kind === 'skin' ? tr('Neuer Skin', 'New skin') : tr('Neuer Hut', 'New hat'), it.name, null, creatureCanvas(kind === 'skin' ? it.id : P.equip.skin, kind === 'hat' ? it.id : 'none', 38));
     Sound.sfx('ach');
   }
 }
@@ -2701,11 +2958,12 @@ function back() { stack.pop(); show(); }
 function closeAll() { stack = []; show(true); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 function resetTo(id) { stack = [id]; show(); }
 
-const MODE_NAME = { campaign: 'Kampagne', endless: 'Endlos', daily: 'Tägliche Herausforderung', practice: 'Boss üben', duel: 'Online-Duell' };
+const MODE_NAME = { get campaign() { return tr('Kampagne', 'Campaign'); }, get endless() { return tr('Endlos', 'Endless'); }, get daily() { return tr('Tägliche Herausforderung', 'Daily challenge'); },
+                    get practice() { return tr('Boss üben', 'Practice boss'); }, get duel() { return tr('Online-Duell', 'Online duel'); } };
 function modeName() {
   const m = S.cfg.mode;
-  if (m === 'daily') return 'Täglich · ' + RULE_BY[S.rule].name;
-  if (m === 'duel') return 'Duell gegen ' + (Net.opp ? Net.opp.name : '…');
+  if (m === 'daily') return tr('Täglich · ', 'Daily · ') + RULE_BY[S.rule].name;
+  if (m === 'duel') return tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…');
   return MODE_NAME[m] + (m === 'campaign' || m === 'endless' || m === 'practice' ? ' · ' + S.diff.name : '');
 }
 function fmtTime(sec) {
@@ -2722,33 +2980,34 @@ RENDER.scrMain = () => {
   $('dailyName').textContent = di.rule.name;
   $('dailyDescMain').textContent = di.rule.desc;
   const st = streakNow();
-  $('dailyMetaMain').textContent = (dd.done ? 'Heute geschafft' + (dd.best ? ' · Bestwert ' + fmt(dd.best) : '') : 'Ziel: Stufe ' + DAILY_GOAL + ' · Belohnung ' + fmt(DAILY_REWARD) + ' Punkte') + (st ? ' · Serie: ' + st + (st === 1 ? ' Tag' : ' Tage') : '');
+  $('dailyMetaMain').textContent = (dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : tr('Ziel: Stufe ' + DAILY_GOAL + ' · Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Goal: level ' + DAILY_GOAL + ' · Reward ' + fmt(DAILY_REWARD) + ' points')) + (st ? tr(' · Serie: ' + st + (st === 1 ? ' Tag' : ' Tage'), ' · Streak: ' + st + (st === 1 ? ' day' : ' days')) : '');
   iconCanvas(di.rule.icon, 40, $('dailyIcon'));
 };
 
 RENDER.scrModes = () => {
   for (const b of $('diffSeg').children) b.setAttribute('aria-pressed', String(b.dataset.diff === P.settings.diff));
   $('diffNote').textContent = DIFF[P.settings.diff].note;
-  $('metaCampaign').textContent = P.best.campaign ? 'Rekord ' + fmt(P.best.campaign) + (P.stats.wins ? ' · ' + P.stats.wins + '× gewonnen' : '') : 'Noch nicht gespielt';
-  $('metaEndless').textContent = P.best.endless ? 'Rekord ' + fmt(P.best.endless) + (P.stats.endlessLevel ? ' · bis Stufe ' + P.stats.endlessLevel : '') : 'Noch nicht gespielt';
+  $('metaCampaign').textContent = P.best.campaign ? tr('Rekord ', 'Best ') + fmt(P.best.campaign) + (P.stats.wins ? tr(' · ' + P.stats.wins + '× gewonnen', ' · won ' + P.stats.wins + '×') : '') : tr('Noch nicht gespielt', 'Not played yet');
+  $('metaEndless').textContent = P.best.endless ? tr('Rekord ', 'Best ') + fmt(P.best.endless) + (P.stats.endlessLevel ? tr(' · bis Stufe ', ' · up to level ') + P.stats.endlessLevel : '') : tr('Noch nicht gespielt', 'Not played yet');
   const di = dailyInfo(), dd = P.daily[di.key] || {};
-  $('dailyName2').textContent = 'Täglich: ' + di.rule.name;
-  $('dailyDesc2').textContent = di.rule.desc + ' Erreiche Stufe ' + DAILY_GOAL + '. Immer auf Normal.';
-  $('metaDaily').textContent = dd.done ? 'Heute geschafft' + (dd.best ? ' · Bestwert ' + fmt(dd.best) : '') : dd.best ? 'Heute bisher ' + fmt(dd.best) : 'Belohnung ' + fmt(DAILY_REWARD) + ' Punkte';
+  $('dailyName2').textContent = tr('Täglich: ', 'Daily: ') + di.rule.name;
+  $('dailyDesc2').textContent = di.rule.desc + tr(' Erreiche Stufe ' + DAILY_GOAL + '. Immer auf Normal.', ' Reach level ' + DAILY_GOAL + '. Always on Normal.');
+  $('metaDaily').textContent = dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : dd.best ? tr('Heute bisher ', 'Today so far ') + fmt(dd.best) : tr('Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Reward ' + fmt(DAILY_REWARD) + ' points');
   iconCanvas(di.rule.icon, 36, $('dailyIcon2'));
   for (const c of document.querySelectorAll('.mode-card canvas[data-icon]')) iconCanvas(c.dataset.icon, 36, c);
   const coreOk = P.stats.core > 0 || P.stats.maxLevel >= 11;
   $('coreBtn').disabled = !coreOk;
-  $('coreBtn').title = coreOk ? '' : 'Erreich zuerst Stufe 11';
-  $('coreBtn').textContent = coreOk ? 'Sonnenkern' : 'Sonnenkern (ab Stufe 11)';
+  $('coreBtn').title = coreOk ? '' : tr('Erreich zuerst Stufe 11', 'Reach level 11 first');
+  $('coreBtn').textContent = coreOk ? bossLabel('core') : bossLabel('core') + tr(' (ab Stufe 11)', ' (from level 11)');
 };
 
+const wardLabel = (skin, hat) => SKIN_BY[skin].name + (hat !== 'none' ? tr(' mit ', ' with ') + HAT_BY[hat].name : '');
 let wTab = 'skin', wConfirm = null, wPrev = { skin: P.equip.skin, hat: P.equip.hat };
 RENDER.scrWardrobe = () => {
   $('walletWard').textContent = fmt(P.wallet);
   for (const b of document.querySelectorAll('[data-wtab]')) b.setAttribute('aria-selected', String(b.dataset.wtab === wTab));
   wPrev = { skin: P.equip.skin, hat: P.equip.hat };
-  $('wardName').textContent = SKIN_BY[P.equip.skin].name + (P.equip.hat !== 'none' ? ' mit ' + HAT_BY[P.equip.hat].name : '');
+  $('wardName').textContent = wardLabel(P.equip.skin, P.equip.hat);
   const focusId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.id : null;
   const grid = $('wardGrid'); grid.innerHTML = '';
   for (const it of (wTab === 'skin' ? SKINS : HATS)) {
@@ -2760,14 +3019,14 @@ RENDER.scrWardrobe = () => {
     b.appendChild(creatureCanvas(skin, hat, 64));
     const nm = document.createElement('b'); nm.textContent = it.name;
     const st = document.createElement('span');
-    if (eq) st.textContent = 'Angelegt';
-    else if (owned) st.textContent = 'Anlegen';
-    else if (it.cost) { st.textContent = conf ? 'Tippen zum Kaufen' : fmt(it.cost) + ' Punkte'; if (!conf) st.className = 'price'; }
+    if (eq) st.textContent = tr('Angelegt', 'Equipped');
+    else if (owned) st.textContent = tr('Anlegen', 'Equip');
+    else if (it.cost) { st.textContent = conf ? tr('Tippen zum Kaufen', 'Tap to buy') : fmt(it.cost) + tr(' Punkte', ' points'); if (!conf) st.className = 'price'; }
     else st.textContent = it.req.text + ' · ' + Math.min(P.stats[it.req.stat] || 0, it.req.n) + '/' + it.req.n;
     b.append(nm, st);
     b.setAttribute('aria-label', it.name + ', ' + st.textContent);
-    const prev = () => { wPrev = { skin, hat }; $('wardName').textContent = SKIN_BY[skin].name + (hat !== 'none' ? ' mit ' + HAT_BY[hat].name : ''); };
-    const unprev = () => { wPrev = { skin: P.equip.skin, hat: P.equip.hat }; $('wardName').textContent = SKIN_BY[P.equip.skin].name + (P.equip.hat !== 'none' ? ' mit ' + HAT_BY[P.equip.hat].name : ''); };
+    const prev = () => { wPrev = { skin, hat }; $('wardName').textContent = wardLabel(skin, hat); };
+    const unprev = () => { wPrev = { skin: P.equip.skin, hat: P.equip.hat }; $('wardName').textContent = wardLabel(P.equip.skin, P.equip.hat); };
     b.addEventListener('pointerenter', prev); b.addEventListener('focus', prev);
     b.addEventListener('pointerleave', unprev); b.addEventListener('blur', unprev);
     b.addEventListener('click', () => wardClick(it, owned));
@@ -2777,8 +3036,8 @@ RENDER.scrWardrobe = () => {
 };
 function wardClick(it, owned) {
   if (owned) { P.equip[wTab] = it.id; wConfirm = null; save(); Sound.sfx('pickup'); RENDER.scrWardrobe(); return; }
-  if (!it.cost) { Sound.sfx('deny'); toast('Noch gesperrt', it.req.text, 'target'); return; }
-  if (P.wallet < it.cost) { Sound.sfx('deny'); toast('Nicht genug Punkte', 'Dir fehlen noch ' + fmt(it.cost - P.wallet) + ' Punkte', 'loot'); return; }
+  if (!it.cost) { Sound.sfx('deny'); toast(tr('Noch gesperrt', 'Still locked'), it.req.text, 'target'); return; }
+  if (P.wallet < it.cost) { Sound.sfx('deny'); toast(tr('Nicht genug Punkte', 'Not enough points'), tr('Dir fehlen noch ' + fmt(it.cost - P.wallet) + ' Punkte', 'You need ' + fmt(it.cost - P.wallet) + ' more points'), 'loot'); return; }
   if (wConfirm !== it.id) { wConfirm = it.id; RENDER.scrWardrobe(); return; }
   P.wallet -= it.cost; P.owned[wTab].push(it.id); P.equip[wTab] = it.id; wConfirm = null;
   save(); Sound.sfx('buy'); checkAch(); RENDER.scrWardrobe();
@@ -2789,7 +3048,7 @@ RENDER.scrAch = () => {
   for (const b of document.querySelectorAll('[data-atab]')) b.setAttribute('aria-selected', String(b.dataset.atab === aTab));
   $('achView').hidden = aTab !== 'ach'; $('statsView').hidden = aTab !== 'stats'; $('topView').hidden = aTab !== 'top';
   const n = ACH.filter(a => P.ach[a.id]).length;
-  $('achSummary').textContent = aTab === 'ach' ? n + ' von ' + ACH.length + ' Erfolgen freigeschaltet.' : aTab === 'stats' ? 'Alles, was du bisher geschafft hast.' : 'Deine zehn besten Runden in Kampagne und Endlosmodus.';
+  $('achSummary').textContent = aTab === 'ach' ? tr(n + ' von ' + ACH.length + ' Erfolgen freigeschaltet.', n + ' of ' + ACH.length + ' achievements unlocked.') : aTab === 'stats' ? tr('Alles, was du bisher geschafft hast.', 'Everything you have achieved so far.') : tr('Deine zehn besten Runden in Kampagne und Endlosmodus.', 'Your ten best runs in campaign and endless mode.');
   if (aTab === 'ach') {
     const el = $('achView'); el.innerHTML = '';
     for (const a of ACH) {
@@ -2800,7 +3059,7 @@ RENDER.scrAch = () => {
       const b = document.createElement('b'); b.textContent = a.name;
       const p = document.createElement('p'); p.textContent = a.desc;
       tx.append(b, p);
-      if (done) { const s = document.createElement('p'); s.className = 'prog-t'; s.textContent = 'Geschafft am ' + new Date(P.ach[a.id]).toLocaleDateString('de-DE'); tx.appendChild(s); }
+      if (done) { const s = document.createElement('p'); s.className = 'prog-t'; s.textContent = tr('Geschafft am ', 'Unlocked on ') + new Date(P.ach[a.id]).toLocaleDateString(LANG === 'de' ? 'de-DE' : 'en-US'); tx.appendChild(s); }
       else if (a.goal > 1) {
         const bar = document.createElement('div'); bar.className = 'prog'; bar.innerHTML = `<i style="width:${Math.round(v / a.goal * 100)}%"></i>`;
         const s = document.createElement('p'); s.className = 'prog-t'; s.textContent = fmt(v) + ' / ' + fmt(a.goal);
@@ -2811,13 +3070,13 @@ RENDER.scrAch = () => {
   } else if (aTab === 'stats') {
     const s = P.stats;
     const rows = [
-      ['Runden gespielt', fmt(s.runs)], ['Spielzeit', fmtTime(s.time)], ['Punkte insgesamt', fmt(s.points)], ['Punktekonto', fmt(P.wallet)],
-      ['Bester Punktestand', fmt(s.bestScore)], ['Höchste Stufe', s.maxLevel || 0], ['Längste Runde', fmtTime(s.longest)], ['Kampagnen gewonnen', s.wins],
-      ['Bosse besiegt', fmt(s.bosses)], ['Prisma', s.prisma], ['Käferkönigin', s.queen], ['Sonnenstier', s.bull], ['Sonnenkern', s.core],
-      ['Bosse ohne Treffer', s.cleanBoss], ['Käfer weggedasht', fmt(s.bugsDashed)], ['Tautropfen', fmt(s.dews)], ['Größte Kombo', '×' + (s.maxCombo || 0)],
-      ['Dashes', fmt(s.dashes)], ['Treffer kassiert', fmt(s.hits)], ['Extras eingesammelt', fmt(s.items)], ['In Fallen getappt', fmt(s.traps)],
-      ['Raketen zerstört', fmt(s.missiles)], ['Upgrades gewählt', fmt(s.upgrades)], ['Von Herzen gerettet', fmt(s.revives)],
-      ['Duelle gewonnen', s.duelWins + ' von ' + s.duels], ['Tägliche geschafft', s.dailyDone], ['Serie jetzt / beste', streakNow() + ' / ' + P.streak.best],
+      [tr('Runden gespielt', 'Runs played'), fmt(s.runs)], [tr('Spielzeit', 'Play time'), fmtTime(s.time)], [tr('Punkte insgesamt', 'Total points'), fmt(s.points)], [tr('Punktekonto', 'Points balance'), fmt(P.wallet)],
+      [tr('Bester Punktestand', 'Best score'), fmt(s.bestScore)], [tr('Höchste Stufe', 'Highest level'), s.maxLevel || 0], [tr('Längste Runde', 'Longest run'), fmtTime(s.longest)], [tr('Kampagnen gewonnen', 'Campaigns won'), s.wins],
+      [tr('Bosse besiegt', 'Bosses defeated'), fmt(s.bosses)], [bossLabel('prisma'), s.prisma], [bossLabel('queen'), s.queen], [bossLabel('bull'), s.bull], [bossLabel('core'), s.core],
+      [tr('Bosse ohne Treffer', 'Bosses without a hit'), s.cleanBoss], [tr('Käfer weggedasht', 'Bugs dashed through'), fmt(s.bugsDashed)], [tr('Tautropfen', 'Dew drops'), fmt(s.dews)], [tr('Größte Kombo', 'Biggest combo'), '×' + (s.maxCombo || 0)],
+      ['Dashes', fmt(s.dashes)], [tr('Treffer kassiert', 'Hits taken'), fmt(s.hits)], [tr('Extras eingesammelt', 'Extras collected'), fmt(s.items)], [tr('In Fallen getappt', 'Traps stepped in'), fmt(s.traps)],
+      [tr('Raketen zerstört', 'Missiles destroyed'), fmt(s.missiles)], [tr('Upgrades gewählt', 'Upgrades picked'), fmt(s.upgrades)], [tr('Von Herzen gerettet', 'Saved by hearts'), fmt(s.revives)],
+      [tr('Duelle gewonnen', 'Duels won'), s.duelWins + tr(' von ', ' of ') + s.duels], [tr('Tägliche geschafft', 'Dailies completed'), s.dailyDone], [tr('Serie jetzt / beste', 'Streak now / best'), streakNow() + ' / ' + P.streak.best],
     ];
     $('statsView').innerHTML = '';
     for (const [k, v] of rows) { const d = document.createElement('div'); d.className = 'stat'; const a = document.createElement('span'); a.textContent = k; const b = document.createElement('b'); b.textContent = v; d.append(a, b); $('statsView').appendChild(d); }
@@ -2828,16 +3087,16 @@ RENDER.scrAch = () => {
       const h = document.createElement('h3'); h.textContent = MODE_NAME[m]; h.style.marginBottom = '8px';
       sec.appendChild(h);
       const list = P.top[m];
-      if (!list.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Noch keine Runde.'; sec.appendChild(p); }
+      if (!list.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = tr('Noch keine Runde.', 'No run yet.'); sec.appendChild(p); }
       else {
         const t = document.createElement('table'); t.className = 'top';
-        t.innerHTML = '<thead><tr><th>#</th><th class="r">Punkte</th><th class="r">Stufe</th><th>Modus</th><th>Datum</th></tr></thead>';
+        t.innerHTML = '<thead><tr><th>#</th><th class="r">' + tr('Punkte', 'Score') + '</th><th class="r">' + tr('Stufe', 'Level') + '</th><th>' + tr('Modus', 'Mode') + '</th><th>' + tr('Datum', 'Date') + '</th></tr></thead>';
         const tb = document.createElement('tbody');
         list.forEach((r, i) => {
-          const tr = document.createElement('tr');
-          const cells = [String(i + 1), fmt(r.s), String(r.l) + (r.w ? ' ★' : ''), (DIFF[r.df] || DIFF.normal).name, r.d.split('-').reverse().join('.')];
-          cells.forEach((c, j) => { const td = document.createElement('td'); td.textContent = c; if (j === 1 || j === 2) td.className = 'r'; tr.appendChild(td); });
-          tb.appendChild(tr);
+          const row = document.createElement('tr');
+          const cells = [String(i + 1), fmt(r.s), String(r.l) + (r.w ? ' ★' : ''), (DIFF[r.df] || DIFF.normal).name, LANG === 'de' ? r.d.split('-').reverse().join('.') : r.d];
+          cells.forEach((c, j) => { const td = document.createElement('td'); td.textContent = c; if (j === 1 || j === 2) td.className = 'r'; row.appendChild(td); });
+          tb.appendChild(row);
         });
         t.appendChild(tb); sec.appendChild(t);
       }
@@ -2855,6 +3114,7 @@ RENDER.scrSettings = () => {
   $('setFlash').checked = s.flashes;
   $('setName').value = s.name;
   for (const b of $('themeSeg').children) b.setAttribute('aria-pressed', String(b.dataset.themeSet === s.theme));
+  for (const b of $('langSeg').children) b.setAttribute('aria-pressed', String(b.dataset.langSet === LANG));
 };
 
 let hTab = 'rules', legendBuilt = false;
@@ -2873,7 +3133,7 @@ RENDER.scrHelp = () => {
   if (hTab === 'lex' && !legendBuilt) {
     legendBuilt = true;
     buildLegend(GOOD, $('legendGood')); buildLegend(BAD, $('legendBad')); buildLegend(BOSS_INFO, $('legendBoss'));
-    $('goodCount').textContent = GOOD.length + ' Sachen'; $('badCount').textContent = BAD.length + ' Sachen';
+    $('goodCount').textContent = GOOD.length + tr(' Sachen', ' things'); $('badCount').textContent = BAD.length + tr(' Sachen', ' things');
   }
 };
 
@@ -2893,9 +3153,9 @@ RENDER.scrMulti = () => {
       const s = document.createElement('small'); s.textContent = tag;
       li.append(b, s); ul.appendChild(li);
     };
-    row(P.equip.skin, P.equip.hat, P.settings.name, Net.role === 'host' ? 'Du · Gastgeber' : 'Du');
-    if (Net.opp && !Net.opp.left) row(Net.opp.skin, Net.opp.hat, Net.opp.name, Net.role === 'host' ? 'Gast' : 'Gastgeber');
-    else row(null, null, Net.role === 'host' ? 'Warte auf Mitspieler …' : 'Verbinde …', '', true);
+    row(P.equip.skin, P.equip.hat, P.settings.name, Net.role === 'host' ? tr('Du · Gastgeber', 'You · Host') : tr('Du', 'You'));
+    if (Net.opp && !Net.opp.left) row(Net.opp.skin, Net.opp.hat, Net.opp.name, Net.role === 'host' ? tr('Gast', 'Guest') : tr('Gastgeber', 'Host'));
+    else row(null, null, Net.role === 'host' ? tr('Warte auf Mitspieler …', 'Waiting for a player …') : tr('Verbinde …', 'Connecting …'), '', true);
     $('mpStart').hidden = !(Net.role === 'host' && Net.opp && !Net.opp.left);
   }
   const st = $('mpStatus');
@@ -2940,8 +3200,12 @@ function toMenu() {
 function pause() {
   if (!S || S.mode !== 'play' || top()) return;
   if (!isDuel()) S.mode = 'pause';
+  resetTo('scrPause');
+}
+RENDER.scrPause = () => {
+  if (!S || !S.cfg) return;
   $('pauseMode').textContent = modeName();
-  $('pauseNote').textContent = isDuel() ? 'Achtung: Im Duell läuft das Spiel weiter!' : S.upList.length ? 'Deine Upgrades in dieser Runde:' : 'Noch keine Upgrades. Besieg einen Boss, dann darfst du wählen.';
+  $('pauseNote').textContent = isDuel() ? tr('Achtung: Im Duell läuft das Spiel weiter!', 'Careful: the game keeps running in a duel!') : S.upList.length ? tr('Deine Upgrades in dieser Runde:', 'Your upgrades this run:') : tr('Noch keine Upgrades. Besieg einen Boss, dann darfst du wählen.', 'No upgrades yet. Defeat a boss, then you get to choose.');
   const box = $('pauseUps'); box.innerHTML = '';
   const counts = {};
   for (const id of S.upList) counts[id] = (counts[id] || 0) + 1;
@@ -2952,8 +3216,7 @@ function pause() {
     if (counts[id] > 1) { const i = document.createElement('i'); i.textContent = '×' + counts[id]; c.appendChild(i); }
     box.appendChild(c);
   }
-  resetTo('scrPause');
-}
+};
 function resume() { if (S.mode === 'pause') S.mode = 'play'; closeAll(); }
 function quit() {
   if (S.mode === 'over') return;
@@ -2964,9 +3227,9 @@ function quit() {
 
 function openPick() {
   pickCards = rollCards();
-  if (!pickCards.length) { const p = pts(500); S.score += p; flash('Alles voll aufgerüstet! +' + p, COL.gold); return; }
+  if (!pickCards.length) { const p = pts(500); S.score += p; flash(tr('Alles voll aufgerüstet! +', 'Fully upgraded! +') + p, COL.gold); return; }
   S.mode = 'pick';
-  $('pickEyebrow').textContent = 'Boss besiegt · ' + (S.upList.length ? S.upList.length + (S.upList.length === 1 ? ' Upgrade' : ' Upgrades') + ' bisher' : 'dein erstes Upgrade');
+  $('pickEyebrow').textContent = tr('Boss besiegt · ', 'Boss defeated · ') + (S.upList.length ? tr(S.upList.length + (S.upList.length === 1 ? ' Upgrade' : ' Upgrades') + ' bisher', S.upList.length + (S.upList.length === 1 ? ' upgrade' : ' upgrades') + ' so far') : tr('dein erstes Upgrade', 'your first upgrade'));
   const el = $('cards'); el.innerHTML = '';
   pickCards.forEach((u, i) => {
     const b = document.createElement('button'); b.className = 'card ' + u.rar;
@@ -2974,14 +3237,14 @@ function openPick() {
     const r = document.createElement('span'); r.className = 'rar'; r.textContent = RARITY[u.rar][0];
     const h = document.createElement('h3'); h.textContent = u.name;
     const p = document.createElement('p'); p.textContent = u.desc;
-    const l = document.createElement('span'); l.className = 'lvl'; l.textContent = u.max > 1 ? 'Stufe ' + (up(u.id) + 1) + ' von ' + u.max : 'Einmalig';
+    const l = document.createElement('span'); l.className = 'lvl'; l.textContent = u.max > 1 ? tr('Stufe ' + (up(u.id) + 1) + ' von ' + u.max, 'Level ' + (up(u.id) + 1) + ' of ' + u.max) : tr('Einmalig', 'One-time');
     const k = document.createElement('kbd'); k.textContent = i + 1;
     b.append(r, h, p, l, k);
     b.addEventListener('click', () => choose(i));
     el.appendChild(b);
   });
   pickTimer = isDuel() ? 8 : 0;
-  $('pickTimer').textContent = pickTimer ? 'Im Duell zählt die Zeit: noch 8 s' : '';
+  $('pickTimer').textContent = pickTimer ? tr('Im Duell zählt die Zeit: noch 8 s', 'Time counts in a duel: 8 s left') : '';
   resetTo('scrPick');
   Sound.sfx('deal');
 }
@@ -3041,45 +3304,45 @@ function showResults() {
   $('ovEyebrow').textContent = modeName();
   let title, text;
   if (duel) {
-    const out = duelOutcome(), name = o ? o.name : 'Dein Gegner';
-    title = out === 'win' ? 'Sieg!' : out === 'draw' ? 'Unentschieden' : 'Niederlage';
-    text = out === 'win' ? (o && o.left ? name + ' hat das Duell verlassen. Der Sieg gehört dir.' : name + ' ist zuerst verdampft. Du hast länger durchgehalten.')
-         : out === 'draw' ? 'Ihr seid fast gleichzeitig verdampft.'
-         : o && o.finished ? name + ' hat länger durchgehalten und gewinnt.'
-         : o && o.alive ? name + ' hält noch durch. Du bist zuerst verdampft.' : name + ' hat länger durchgehalten.';
-    if (Net.oppAgain && Net.role === 'host') text += ' ' + name + ' will eine Revanche!';
-    if (Net.meAgain && Net.role === 'guest') text += ' Warte, bis ' + name + ' die Revanche startet …';
+    const out = duelOutcome(), name = o ? o.name : tr('Dein Gegner', 'Your opponent');
+    title = out === 'win' ? tr('Sieg!', 'Victory!') : out === 'draw' ? tr('Unentschieden', 'Draw') : tr('Niederlage', 'Defeat');
+    text = out === 'win' ? (o && o.left ? tr(name + ' hat das Duell verlassen. Der Sieg gehört dir.', name + ' left the duel. The victory is yours.') : tr(name + ' ist zuerst verdampft. Du hast länger durchgehalten.', name + ' evaporated first. You lasted longer.'))
+         : out === 'draw' ? tr('Ihr seid fast gleichzeitig verdampft.', 'You both evaporated almost at the same time.')
+         : o && o.finished ? tr(name + ' hat länger durchgehalten und gewinnt.', name + ' lasted longer and wins.')
+         : o && o.alive ? tr(name + ' hält noch durch. Du bist zuerst verdampft.', name + ' is still going. You evaporated first.') : tr(name + ' hat länger durchgehalten.', name + ' lasted longer.');
+    if (Net.oppAgain && Net.role === 'host') text += tr(' ' + name + ' will eine Revanche!', ' ' + name + ' wants a rematch!');
+    if (Net.meAgain && Net.role === 'guest') text += tr(' Warte, bis ' + name + ' die Revanche startet …', ' Wait for ' + name + ' to start the rematch …');
   } else if (S.won) {
-    title = 'Sieg!';
-    text = 'Du hast den Sonnenkern besiegt und den Innenhof befreit. ' + fmtTime(S.t) + ' Minuten, ' + S.upList.length + ' Upgrades.';
+    title = tr('Sieg!', 'Victory!');
+    text = tr('Du hast den Sonnenkern besiegt und den Innenhof befreit. ' + fmtTime(S.t) + ' Minuten, ' + S.upList.length + ' Upgrades.', 'You defeated the Sun Core and freed the yard. ' + fmtTime(S.t) + ' minutes, ' + S.upList.length + ' upgrades.');
   } else if (S.quit) {
-    title = 'Aufgegeben';
-    text = 'Du hast nach ' + Math.floor(S.t) + ' Sekunden auf Stufe ' + (S.level + 1) + ' aufgehört. Deine Punkte zählen trotzdem.';
+    title = tr('Aufgegeben', 'Gave up');
+    text = tr('Du hast nach ' + Math.floor(S.t) + ' Sekunden auf Stufe ' + (S.level + 1) + ' aufgehört. Deine Punkte zählen trotzdem.', 'You stopped after ' + Math.floor(S.t) + ' seconds on level ' + (S.level + 1) + '. Your points still count.');
   } else {
-    title = 'Verdampft';
-    text = 'Du hast ' + Math.floor(S.t) + ' Sekunden Chaos überstanden und Stufe ' + (S.level + 1) + ' erreicht.';
+    title = tr('Verdampft', 'Evaporated');
+    text = tr('Du hast ' + Math.floor(S.t) + ' Sekunden Chaos überstanden und Stufe ' + (S.level + 1) + ' erreicht.', 'You survived ' + Math.floor(S.t) + ' seconds of chaos and reached level ' + (S.level + 1) + '.');
   }
-  if (m === 'daily') text += S.run.dailyDone ? ' Tagesziel geschafft!' : ' Fürs Tagesziel brauchst du Stufe ' + DAILY_GOAL + '.';
-  if (m === 'practice') text += ' Beim Üben gibt es nur die halben Punkte aufs Konto.';
+  if (m === 'daily') text += S.run.dailyDone ? tr(' Tagesziel geschafft!', ' Daily goal reached!') : tr(' Fürs Tagesziel brauchst du Stufe ' + DAILY_GOAL + '.', ' For the daily goal you need level ' + DAILY_GOAL + '.');
+  if (m === 'practice') text += tr(' Beim Üben gibt es nur die halben Punkte aufs Konto.', ' Practice runs only give half the points.');
   const t = $('ovTitle'); t.textContent = title;
-  if (R.rec && !duel) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'Neuer Rekord'; t.appendChild(b); }
+  if (R.rec && !duel) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = tr('Neuer Rekord', 'New record'); t.appendChild(b); }
   $('ovText').textContent = text;
   const tiles = $('ovTiles'); tiles.innerHTML = '';
-  tiles.append(tile('Punkte', fmt(R.sc), true), tile('Zeit', fmtTime(S.t)), tile('Stufe', String(S.level + 1)));
-  if (duel) tiles.append(tile(o ? o.name : 'Gegner', fmt(o ? o.score || 0 : 0)), tile('Bosse', String(S.bossKills)), tile('Aufs Konto', '+' + fmt(R.earned)));
-  else tiles.append(tile('Bosse', String(S.bossKills)), tile('Upgrades', String(S.upList.length)), tile('Aufs Konto', '+' + fmt(R.earned)));
+  tiles.append(tile(tr('Punkte', 'Score'), fmt(R.sc), true), tile(tr('Zeit', 'Time'), fmtTime(S.t)), tile(tr('Stufe', 'Level'), String(S.level + 1)));
+  if (duel) tiles.append(tile(o ? o.name : tr('Gegner', 'Opponent'), fmt(o ? o.score || 0 : 0)), tile(tr('Bosse', 'Bosses'), String(S.bossKills)), tile(tr('Aufs Konto', 'To balance'), '+' + fmt(R.earned)));
+  else tiles.append(tile(tr('Bosse', 'Bosses'), String(S.bossKills)), tile('Upgrades', String(S.upList.length)), tile(tr('Aufs Konto', 'To balance'), '+' + fmt(R.earned)));
   const nl = $('ovNew'); nl.innerHTML = '';
-  for (const id of S.run.newAch) { const c = document.createElement('span'); c.className = 'chip'; c.appendChild(iconCanvas(ACH_BY[id].icon, 22)); c.appendChild(document.createTextNode('Erfolg: ' + ACH_BY[id].name)); nl.appendChild(c); }
+  for (const id of S.run.newAch) { const c = document.createElement('span'); c.className = 'chip'; c.appendChild(iconCanvas(ACH_BY[id].icon, 22)); c.appendChild(document.createTextNode(tr('Erfolg: ', 'Achievement: ') + ACH_BY[id].name)); nl.appendChild(c); }
   for (const [kind, id] of S.run.newItems) {
     const c = document.createElement('span'); c.className = 'chip';
     c.appendChild(creatureCanvas(kind === 'skin' ? id : P.equip.skin, kind === 'hat' ? id : 'none', 22));
-    c.appendChild(document.createTextNode((kind === 'skin' ? 'Skin: ' : 'Hut: ') + (kind === 'skin' ? SKIN_BY[id] : HAT_BY[id]).name)); nl.appendChild(c);
+    c.appendChild(document.createTextNode((kind === 'skin' ? 'Skin: ' : tr('Hut: ', 'Hat: ')) + (kind === 'skin' ? SKIN_BY[id] : HAT_BY[id]).name)); nl.appendChild(c);
   }
   const again = $('againBtn'), connected = !!(Net.conn && Net.conn.open && o && !o.left);
   if (duel) {
-    again.textContent = Net.role === 'host' ? 'Revanche starten' : Net.meAgain ? 'Revanche angefragt' : 'Revanche anfragen';
+    again.textContent = Net.role === 'host' ? tr('Revanche starten', 'Start rematch') : Net.meAgain ? tr('Revanche angefragt', 'Rematch requested') : tr('Revanche anfragen', 'Request rematch');
     again.disabled = !connected || (Net.role === 'guest' && Net.meAgain);
-  } else { again.textContent = m === 'daily' ? 'Nochmal versuchen' : 'Nochmal'; again.disabled = false; }
+  } else { again.textContent = m === 'daily' ? tr('Nochmal versuchen', 'Try again') : tr('Nochmal', 'Again'); again.disabled = false; }
   if (top() === 'scrOver') { show(true); } else resetTo('scrOver');
 }
 function oppDied(m) {
@@ -3092,7 +3355,7 @@ function oppDied(m) {
   } else if (S.mode === 'play' || S.mode === 'count') {
     if (!S.duelWinT) {
       S.duelWinT = 1.8; S.grace = 99;
-      S.banner = { text: m.left ? o.name + ' ist weg' : o.name + ' ist verdampft!', good: true, t: 2.2, head: 'DU GEWINNST' };
+      S.banner = { text: m.left ? tr(o.name + ' ist weg', o.name + ' is gone') : tr(o.name + ' ist verdampft!', o.name + ' evaporated!'), good: true, t: 2.2, head: tr('DU GEWINNST', 'YOU WIN') };
       Sound.sfx('ach');
       if (S.mode === 'count') S.mode = 'play';
     }
@@ -3112,10 +3375,10 @@ const makeCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Mat
 const cleanName = s => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 14);
 function errText(e) {
   const t = e && e.type;
-  if (t === 'peer-unavailable') return 'Raum nicht gefunden. Stimmt der Code?';
-  if (t === 'browser-incompatible') return 'Dein Browser unterstützt kein WebRTC.';
-  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Der Vermittlungsserver ist nicht erreichbar. Bist du online?';
-  return 'Verbindung fehlgeschlagen' + (t ? ' (' + t + ')' : '') + '.';
+  if (t === 'peer-unavailable') return tr('Raum nicht gefunden. Stimmt der Code?', 'Room not found. Is the code right?');
+  if (t === 'browser-incompatible') return tr('Dein Browser unterstützt kein WebRTC.', 'Your browser does not support WebRTC.');
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return tr('Der Vermittlungsserver ist nicht erreichbar. Bist du online?', 'The matchmaking server is not reachable. Are you online?');
+  return tr('Verbindung fehlgeschlagen', 'Connection failed') + (t ? ' (' + t + ')' : '') + '.';
 }
 const Net = {
   peer: null, conn: null, role: null, code: '', opp: null, inMatch: false, ready: false, sendT: 0,
@@ -3142,12 +3405,12 @@ const Net = {
   fail(text) { this.teardown(); this.setStatus(text, true); },
   leave() { this.send({ t: 'bye' }); this.teardown(); this.setStatus(''); },
   async host() {
-    this.teardown(); this.role = 'host'; this.setStatus('Raum wird erstellt …', false, true);
-    try { await this.lib(); } catch (e) { return this.fail('Die Mehrspieler-Bibliothek ließ sich nicht laden. Bist du online?'); }
+    this.teardown(); this.role = 'host'; this.setStatus(tr('Raum wird erstellt …', 'Creating room …'), false, true);
+    try { await this.lib(); } catch (e) { return this.fail(tr('Die Mehrspieler-Bibliothek ließ sich nicht laden. Bist du online?', 'The multiplayer library could not be loaded. Are you online?')); }
     const tryOpen = n => {
       const code = makeCode(), peer = new window.Peer(PEER_PREFIX + code.toLowerCase(), { debug: 0 });
       this.peer = peer; this.code = code;
-      peer.on('open', () => { if (this.peer !== peer) return; this.ready = true; this.setStatus('Schick den Code an deinen Mitspieler.', false, false); });
+      peer.on('open', () => { if (this.peer !== peer) return; this.ready = true; this.setStatus(tr('Schick den Code an deinen Mitspieler.', 'Send the code to your opponent.'), false, false); });
       peer.on('connection', c => {
         if (this.peer !== peer) return;
         if (this.conn && this.conn.open) { c.on('open', () => { try { c.send({ t: 'full' }); } catch (e) {} setTimeout(() => c.close(), 400); }); return; }
@@ -3156,7 +3419,7 @@ const Net = {
       peer.on('error', e => {
         if (this.peer !== peer) return;
         if (e.type === 'unavailable-id' && n < 4) { try { peer.destroy(); } catch (x) {} tryOpen(n + 1); }
-        else if (e.type === 'peer-unavailable') this.setStatus('Mitspieler nicht erreichbar.', true);
+        else if (e.type === 'peer-unavailable') this.setStatus(tr('Mitspieler nicht erreichbar.', 'Player not reachable.'), true);
         else this.fail(errText(e));
       });
       peer.on('disconnected', () => { if (this.peer === peer && !peer.destroyed && !this.conn) try { peer.reconnect(); } catch (e) {} });
@@ -3164,14 +3427,14 @@ const Net = {
     tryOpen(0);
   },
   async join(code) {
-    this.teardown(); this.role = 'guest'; this.code = code; this.setStatus('Verbinde mit Raum ' + code + ' …', false, true);
-    try { await this.lib(); } catch (e) { return this.fail('Die Mehrspieler-Bibliothek ließ sich nicht laden. Bist du online?'); }
+    this.teardown(); this.role = 'guest'; this.code = code; this.setStatus(tr('Verbinde mit Raum ' + code + ' …', 'Connecting to room ' + code + ' …'), false, true);
+    try { await this.lib(); } catch (e) { return this.fail(tr('Die Mehrspieler-Bibliothek ließ sich nicht laden. Bist du online?', 'The multiplayer library could not be loaded. Are you online?')); }
     const peer = new window.Peer({ debug: 0 });
     this.peer = peer;
     peer.on('open', () => {
       if (this.peer !== peer) return;
       this.bind(peer.connect(PEER_PREFIX + code.toLowerCase(), { reliable: true }));
-      this.joinTimer = setTimeout(() => { if (this.peer === peer && !this.opp) this.fail('Keine Antwort vom Raum ' + code + '. Stimmt der Code?'); }, 15000);
+      this.joinTimer = setTimeout(() => { if (this.peer === peer && !this.opp) this.fail(tr('Keine Antwort vom Raum ' + code + '. Stimmt der Code?', 'No answer from room ' + code + '. Is the code right?')); }, 15000);
     });
     peer.on('error', e => { if (this.peer === peer) this.fail(errText(e)); });
   },
@@ -3187,12 +3450,12 @@ const Net = {
     switch (m.t) {
       case 'hello':
         clearTimeout(this.joinTimer);
-        this.opp = { name: cleanName(m.name) || 'Gegner', skin: SKIN_BY[m.skin] ? m.skin : 'schatten', hat: HAT_BY[m.hat] ? m.hat : 'none', alive: true, score: 0 };
-        this.setStatus(this.role === 'host' ? this.opp.name + ' ist da. Startklar!' : 'Verbunden. Warte, bis ' + this.opp.name + ' das Duell startet …', false, this.role !== 'host');
+        this.opp = { name: cleanName(m.name) || tr('Gegner', 'Opponent'), skin: SKIN_BY[m.skin] ? m.skin : 'schatten', hat: HAT_BY[m.hat] ? m.hat : 'none', alive: true, score: 0 };
+        this.setStatus(this.role === 'host' ? tr(this.opp.name + ' ist da. Startklar!', this.opp.name + ' is here. Ready to go!') : tr('Verbunden. Warte, bis ' + this.opp.name + ' das Duell startet …', 'Connected. Waiting for ' + this.opp.name + ' to start the duel …'), false, this.role !== 'host');
         Sound.sfx('join');
-        toast(this.role === 'host' ? 'Mitspieler da' : 'Verbunden', this.opp.name, null, creatureCanvas(this.opp.skin, this.opp.hat, 38));
+        toast(this.role === 'host' ? tr('Mitspieler da', 'Player joined') : tr('Verbunden', 'Connected'), this.opp.name, null, creatureCanvas(this.opp.skin, this.opp.hat, 38));
         break;
-      case 'full': this.fail('Der Raum ist schon voll.'); break;
+      case 'full': this.fail(tr('Der Raum ist schon voll.', 'The room is already full.')); break;
       case 'start': if (this.opp && Number.isFinite(m.seed)) startDuel(m.seed >>> 0); break;
       case 'st':
         if (this.opp && this.inMatch) {
@@ -3207,28 +3470,28 @@ const Net = {
       case 'won':
         if (this.opp && this.inMatch) { this.opp.score = +m.s || 0; this.opp.finished = true; if (top() === 'scrOver' && isDuel()) showResults(); }
         break;
-      case 'again': this.oppAgain = true; if (top() === 'scrOver' && isDuel()) showResults(); else toast('Revanche?', (this.opp ? this.opp.name : 'Dein Gegner') + ' will nochmal', 'decoy'); break;
+      case 'again': this.oppAgain = true; if (top() === 'scrOver' && isDuel()) showResults(); else toast(tr('Revanche?', 'Rematch?'), (this.opp ? this.opp.name : tr('Dein Gegner', 'Your opponent')) + tr(' will nochmal', ' wants to play again'), 'decoy'); break;
       case 'bye': this.onClose(); break;
     }
   },
   onClose() {
-    const o = this.opp, name = o ? o.name : 'Dein Gegner';
+    const o = this.opp, name = o ? o.name : tr('Dein Gegner', 'Your opponent');
     clearTimeout(this.joinTimer);
     this.conn = null;
     if (this.inMatch && o && isDuel()) {
       o.left = true;
       if (o.alive) oppDied({ s: o.score || 0, t: -1, left: true });
       else if (top() === 'scrOver') showResults();
-      toast('Verbindung getrennt', name + ' hat das Duell verlassen', 'decoy');
+      toast(tr('Verbindung getrennt', 'Disconnected'), tr(name + ' hat das Duell verlassen', name + ' left the duel'), 'decoy');
     } else this.opp = null;
-    if (this.role === 'host' && this.peer && !this.peer.destroyed) this.setStatus(name + ' ist gegangen. Warte auf einen neuen Mitspieler …', true);
-    else { const keepOpp = this.inMatch ? this.opp : null; const im = this.inMatch; this.teardown(); this.inMatch = im; this.opp = keepOpp; this.setStatus(name + ' hat die Verbindung getrennt.', true); }
+    if (this.role === 'host' && this.peer && !this.peer.destroyed) this.setStatus(tr(name + ' ist gegangen. Warte auf einen neuen Mitspieler …', name + ' has left. Waiting for a new player …'), true);
+    else { const keepOpp = this.inMatch ? this.opp : null; const im = this.inMatch; this.teardown(); this.inMatch = im; this.opp = keepOpp; this.setStatus(tr(name + ' hat die Verbindung getrennt.', name + ' disconnected.'), true); }
   },
   attack(kind) {
     const pool = kind === 'boss' ? ['Käferschwarm', 'Suchraketen', 'Lasergitter', 'Sonnenfunken', 'Sägeblätter', 'Glassäulen'] : ['Blitzlicht', 'Sturmböe', 'Honigregen', 'Elstern'];
     const k = pool[Math.floor(Math.random() * pool.length)];
     this.send({ t: 'atk', k });
-    flash('Angriff geschickt: ' + k, '#C9B8FF');
+    flash(tr('Angriff geschickt: ', 'Attack sent: ') + evLabel(k), '#C9B8FF');
   },
   startMatch() {
     if (!this.conn || !this.conn.open || !this.opp) return;
@@ -3285,23 +3548,24 @@ $('setSound').addEventListener('change', e => { P.settings.muted = !e.target.che
 $('setShake').addEventListener('change', e => { P.settings.shake = e.target.checked; save(); });
 $('setFlash').addEventListener('change', e => { P.settings.flashes = e.target.checked; save(); });
 $('themeSeg').addEventListener('click', e => { const b = e.target.closest('[data-theme-set]'); if (!b) return; P.settings.theme = b.dataset.themeSet; applyTheme(); save(); RENDER.scrSettings(); });
+$('langSeg').addEventListener('click', e => { const b = e.target.closest('[data-lang-set]'); if (!b) return; setLang(b.dataset.langSet); save(); Sound.sfx('click'); });
 const setName = v => { const n = cleanName(v); if (n) { P.settings.name = n; save(); } };
 $('setName').addEventListener('change', e => setName(e.target.value));
 $('mpName').addEventListener('change', e => setName(e.target.value));
 let resetArmed = 0;
 $('resetBtn').addEventListener('click', () => {
   const b = $('resetBtn');
-  if (!resetArmed) { resetArmed = setTimeout(() => { resetArmed = 0; b.textContent = 'Zurücksetzen'; }, 3500); b.textContent = 'Wirklich löschen?'; return; }
-  clearTimeout(resetArmed); resetArmed = 0; b.textContent = 'Zurücksetzen';
+  if (!resetArmed) { resetArmed = setTimeout(() => { resetArmed = 0; b.textContent = tr('Zurücksetzen', 'Reset'); }, 3500); b.textContent = tr('Wirklich löschen?', 'Really delete?'); return; }
+  clearTimeout(resetArmed); resetArmed = 0; b.textContent = tr('Zurücksetzen', 'Reset');
   const s = P.settings; P = freshProfile(); P.settings = s; save();
-  toast('Fortschritt gelöscht', 'Alles wieder auf Anfang', 'crumble');
+  toast(tr('Fortschritt gelöscht', 'Progress deleted'), tr('Alles wieder auf Anfang', 'Back to square one'), 'crumble');
 });
 
 $('mpHost').addEventListener('click', () => { setName($('mpName').value); Net.host(); RENDER.scrMulti(); });
 const doJoin = () => {
   setName($('mpName').value);
   const code = $('mpCode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (code.length !== 5) { Net.setStatus('Der Code hat 5 Zeichen.', true); return; }
+  if (code.length !== 5) { Net.setStatus(tr('Der Code hat 5 Zeichen.', 'The code has 5 characters.'), true); return; }
   Net.pendingCode = ''; Net.join(code); RENDER.scrMulti();
 };
 $('mpJoin').addEventListener('click', doJoin);
@@ -3309,8 +3573,8 @@ $('mpCode').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); 
 $('mpStart').addEventListener('click', () => Net.startMatch());
 $('mpLeave').addEventListener('click', () => { Net.leave(); RENDER.scrMulti(); });
 $('mpCopy').addEventListener('click', () => {
-  const link = location.protocol.startsWith('http') ? location.origin + location.pathname + '?raum=' + Net.code : Net.code;
-  const done = ok => Net.setStatus(ok ? (link === Net.code ? 'Code kopiert. Schick ihn an deinen Mitspieler.' : 'Link kopiert. Wer ihn öffnet, landet direkt in deinem Raum.') : 'Kopieren ging nicht. Schick einfach den Code ' + Net.code + '.', !ok);
+  const link = location.protocol.startsWith('http') ? location.origin + location.pathname + '?room=' + Net.code : Net.code;
+  const done = ok => Net.setStatus(ok ? (link === Net.code ? tr('Code kopiert. Schick ihn an deinen Mitspieler.', 'Code copied. Send it to your opponent.') : tr('Link kopiert. Wer ihn öffnet, landet direkt in deinem Raum.', 'Link copied. Whoever opens it lands straight in your room.')) : tr('Kopieren ging nicht. Schick einfach den Code ' + Net.code + '.', 'Copying failed. Just send the code ' + Net.code + '.'), !ok);
   if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => done(true), () => done(false)); else done(false);
 });
 
@@ -3369,7 +3633,7 @@ function loop(now) {
   if (S.mode === 'pick') {
     if (pickTimer > 0) {
       pickTimer -= dt;
-      $('pickTimer').textContent = 'Im Duell zählt die Zeit: noch ' + Math.max(0, Math.ceil(pickTimer)) + ' s';
+      $('pickTimer').textContent = tr('Im Duell zählt die Zeit: noch ', 'Time counts in a duel: ') + Math.max(0, Math.ceil(pickTimer)) + tr(' s', ' s left');
       if (pickTimer <= 0) choose(0);
     }
   } else if (S.mode !== 'pause') update(dt);
@@ -3382,14 +3646,30 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+// ---------- Sprache wechseln ----------
+function setLang(l) {
+  LANG = l === 'de' ? 'de' : 'en';
+  P.settings.lang = LANG;
+  document.documentElement.lang = LANG;
+  document.title = 'Shady';
+  const md = document.querySelector('meta[name="description"]');
+  if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. Mit Kampagne, Endlosmodus, täglicher Herausforderung, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. With campaign, endless mode, daily challenge, upgrades, wardrobe and online duel.');
+  applyDataLang(); translateStatic();
+  for (const k in hc) delete hc[k];
+  legendBuilt = false; for (const id of ['legendGood', 'legendBad', 'legendBoss']) $(id).innerHTML = '';
+  wConfirm = null; updateMuteBtn();
+  if (S && S.cfg) hud();
+  const t = top(); if (t && RENDER[t]) RENDER[t]();
+}
+
 // ---------- Start ----------
 (function boot() {
   const keysD = Object.keys(P.daily).sort();
   while (keysD.length > 40) delete P.daily[keysD.shift()];
   for (const k of ['skin', 'hat']) if (!isOwned(k, (k === 'skin' ? SKIN_BY : HAT_BY)[P.equip[k]] || {})) P.equip[k] = k === 'skin' ? 'schatten' : 'none';
-  applyTheme(); updateMuteBtn();
+  applyTheme(); setLang(P.settings.lang);
   reset('ready');
-  const q = new URLSearchParams(location.search).get('raum');
+  const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum');
   if (q) { Net.pendingCode = q.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); stack = ['scrMain', 'scrMulti']; show(); }
   else resetTo('scrMain');
   Sound.music('menu');

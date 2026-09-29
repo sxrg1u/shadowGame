@@ -78,6 +78,7 @@ Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https:
 - **Dash:** Ein schneller Sprung, der dich kurz unverwundbar macht. Er ist die einzige Waffe gegen Bosse.
 - **Über 40 gute und schlechte Sachen:** Schirm, Blasenschild, Schattenklon, Magnet, Portale, Frostkristall, dazu Fallen wie Umkehrpilz und Säuretropfen, Käfer, Sägeblätter, Laser und mehr. Die komplette Liste steht im Spiel unter **Anleitung → Lexikon**.
 - **Sound und Musik:** Eigene Musik für Menü, Spiel und Bosskampf, die mit jeder Stufe schneller wird, und Geräusche für alles, was passiert. Alles wird live im Browser erzeugt, es gibt keine Audiodateien.
+- **Zwei Sprachen:** Das Spiel startet auf Englisch. Unter Einstellungen → Sprache lässt es sich auf Deutsch umstellen. Die Wahl wird gespeichert.
 - **Einstellungen:** Lautstärke für Musik und Effekte, Bildschirmwackeln, grelle Blitze abdämpfen, helles oder dunkles Design, Spielername, Fortschritt zurücksetzen.
 
 ## Steuerung
