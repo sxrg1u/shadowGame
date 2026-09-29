@@ -4,7 +4,7 @@
 
 ## Spielen
 
-1. `schattenfaenger.html` herunterladen oder das Repo klonen.
+1. `index.html` herunterladen oder das Repo klonen.
 2. Die Datei per Doppelklick im Browser öffnen.
 
 Es gibt nichts zu installieren. Das ganze Spiel steckt in dieser einen Datei. Nur für das Online-Duell braucht es eine Internetverbindung.
