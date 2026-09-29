@@ -436,7 +436,7 @@ input.text{font:700 16px var(--body);padding:10px 12px;border-radius:8px;border:
       <label class="set-row"><span><b>Effekte</b><small>Lautstärke der Geräusche</small></span><input type="range" id="setSfx" min="0" max="100"></label>
       <label class="set-row"><span><b>Ton an</b><small>Taste <kbd>M</kbd> schaltet jederzeit um</small></span><input type="checkbox" class="switch" id="setSound"></label>
       <label class="set-row"><span><b>Bildschirmwackeln</b><small>Bei Treffern, Beben und Explosionen</small></span><input type="checkbox" class="switch" id="setShake"></label>
-      <label class="set-row"><span><b>Grelle Blitze</b><small>Aus: Blitzlicht und Donner werden abgedämpft</small></span><input type="checkbox" class="switch" id="setFlash"></label>
+      <label class="set-row"><span><b>Grelle Blitze</b><small>Aus: Blitzlicht, Donner und Farbchaos werden abgedämpft</small></span><input type="checkbox" class="switch" id="setFlash"></label>
       <div class="set-row"><span><b>Sprache</b><small>Sprache des Spiels</small></span><div class="seg" id="langSeg" role="group" aria-label="Sprache"><button data-lang-set="en">English</button><button data-lang-set="de">Deutsch</button></div></div>
       <div class="set-row"><span><b>Design</b><small>Hell, dunkel oder wie dein System</small></span><div class="seg" id="themeSeg" role="group" aria-label="Design"><button data-theme-set="system">System</button><button data-theme-set="light">Hell</button><button data-theme-set="dark">Dunkel</button></div></div>
       <label class="set-row"><span><b>Spielername</b><small>Für Duelle und die Bestenliste</small></span><input class="text" id="setName" maxlength="14" style="width:170px" autocomplete="off" spellcheck="false"></label>
@@ -456,7 +456,7 @@ input.text{font:700 16px var(--body);padding:10px 12px;border-radius:8px;border:
         <li><b>Die Schatten wandern.</b> Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht kommt.</li>
         <li><b>Stufen und Bosse.</b> Alle 12 Sekunden steigt die Stufe, eine Säule stürzt ein und ein Boss erscheint. Nur ein Dash schadet ihm. Nach 20 Sekunden zieht er ohne Belohnung wieder ab.</li>
         <li><b>Upgrades.</b> Nach jedem besiegten Boss ziehst du drei Karten und nimmst eine. So spielt sich jede Runde anders.</li>
-        <li><b>Chaos-Rad.</b> Alle paar Sekunden wird ein Ereignis ausgelost, meistens ein gemeines, manchmal ein gutes.</li>
+        <li><b>Chaos-Rad.</b> Alle paar Sekunden wird ein Ereignis ausgelöst, meistens ein gemeines, manchmal ein gutes.</li>
         <li><b>Punkte.</b> 10 pro Sekunde, dazu Tau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem Konto. Damit kaufst du Skins und Hüte. Manche gibt es nur für Boss-Siege.</li>
         <li><b>Letzte Kraft.</b> Unter 20 % Kraft läuft die Welt in Zeitlupe, damit du noch einen Schatten erreichst.</li>
       </ul>
@@ -596,6 +596,7 @@ const BAD = [
   ['missile','Suchraketen','Chaos-Rad: Verfolgen dich in Kurven. −20. Lock sie gegen eine Säule oder dashe hindurch.'],
   ['vortex','Lichtwirbel','Chaos-Rad: Zieht dich 5 s lang zu sich, raus aus deinem Schatten.'],
   ['glass','Glassäulen','Chaos-Rad: Die Hälfte der Säulen wird 5 s lang durchsichtig und wirft keinen Schatten.'],
+  ['colorchaos','Farbchaos','Chaos-Rad: Alle Farben geraten durcheinander und wechseln mehrmals pro Sekunde. Wird mit jeder Stufe schlimmer. Rein optisch. Mit „Grelle Blitze“ aus bleibt es sanft.'],
 ];
 const BOSS_INFO = [
   ['prisma','Prisma','Stufe 2, 5, 8 … Schwebt übers Feld und schießt drehende Laser in alle Richtungen.'],
@@ -696,6 +697,8 @@ function icon(c, k) {
     case 'vortex': c.strokeStyle = COL.sun; c.lineWidth = 2; c.beginPath(); for (let i = 0; i < 40; i++) { const a = i * 0.45, r = i * 0.28; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.stroke(); break;
     case 'glass': c.fillStyle = 'rgba(190,225,255,.7)'; c.strokeStyle = '#6FA8D6'; c.lineWidth = 2; c.fillRect(-10, -10, 20, 20); c.strokeRect(-10, -10, 20, 20);
       c.strokeStyle = '#fff'; c.beginPath(); c.moveTo(-6, 4); c.lineTo(4, -6); c.moveTo(-2, 7); c.lineTo(7, -2); c.stroke(); break;
+    case 'colorchaos': for (let i = 0; i < 6; i++) { c.fillStyle = `hsl(${i * 137 % 360} 85% 55%)`; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 11, i * TAU / 6 + i * 0.2, (i + 1) * TAU / 6 + 0.2); c.closePath(); c.fill(); }
+      c.fillStyle = COL.body; c.beginPath(); c.arc(0, 0, 3.5, 0, TAU); c.fill(); break;
     case 'flame': c.fillStyle = '#E2572B'; c.beginPath(); c.moveTo(0, -12); c.quadraticCurveTo(10, -2, 7, 5); c.quadraticCurveTo(4, 11, 0, 11); c.quadraticCurveTo(-4, 11, -7, 5); c.quadraticCurveTo(-10, -2, 0, -12); c.fill();
       c.fillStyle = COL.gold; c.beginPath(); c.moveTo(0, -3); c.quadraticCurveTo(5, 3, 3, 7); c.quadraticCurveTo(0, 10, -3, 7); c.quadraticCurveTo(-5, 3, 0, -3); c.fill(); break;
     case 'trophy': c.fillStyle = COL.gold; c.strokeStyle = '#8A5A00'; c.lineWidth = 1.3; c.lineJoin = 'round';
@@ -854,6 +857,7 @@ function drawCreature(c, x, y, R, o) {
     else { c.beginPath(); c.arc(x + s * ex, y - R * 0.22, er, 0, TAU); c.fill(); }
   }
   if (o.hat && o.hat !== 'none') {
+    if (o.ccHat) CC.el(o.ccHat);   // Farbchaos: der Hut ist ein eigenes Element
     c.globalAlpha = a0 * Math.max(alpha, 0.6);
     drawHat(c, o.hat, x, y - R - 1.4 * k + wob * 0.3, k, t);
   }
@@ -1012,6 +1016,21 @@ function creatureCanvas(skin, hat, size, el, t) {
   return c;
 }
 
+// ---------- Debug-Start (nur für automatische Screenshots) ----------
+// ?debug=1 startet direkt eine Runde mit festem Zufall und fester Bildrate, z. B.
+// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120 (screen=menu zeigt das Hauptmenü).
+// Nach „frames“ Bildern bleibt das Bild stehen. Ohne ?debug=1 ändert sich nichts. Im Debug-Modus wird nie gespeichert.
+const DEBUG = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('debug') !== '1') return null;
+  const num = (k, d) => { const v = parseInt(q.get(k), 10); return Number.isFinite(v) ? v : d; };
+  const d = { seed: num('seed', 1) >>> 0, level: Math.max(1, num('level', 1)), frames: num('frames', 1e9), event: q.get('event'), boss: q.get('boss'),
+              mode: q.get('mode') || 'endless', diff: q.get('diff') || 'normal', lang: q.get('lang'), flashes: q.get('flashes'), screen: q.get('screen') || 'play',
+              frame: 0, left: 0, done: false };
+  Math.random = mulberry32(d.seed ^ 0x9E3779B9);   // auch Effekte würfeln reproduzierbar
+  return d;
+})();
+
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
 const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal' };
@@ -1042,9 +1061,16 @@ function loadProfile() {
   }
   return p;
 }
-let P = loadProfile();
+let P = DEBUG ? freshProfile() : loadProfile();
 if (!P.settings.name) P.settings.name = 'Shady' + (10 + Math.floor(Math.random() * 90));
-function save() { try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) {} }
+if (DEBUG) {
+  const s = P.settings;
+  s.muted = true; s.shake = false;
+  if (DEBUG.lang) s.lang = DEBUG.lang;
+  if (DEBUG.flashes) s.flashes = DEBUG.flashes !== '0';
+  if (['easy', 'normal', 'hard'].includes(DEBUG.diff)) s.diff = DEBUG.diff;
+}
+function save() { if (DEBUG) return; try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) {} }
 let achDirty = false;
 function stat(k, n = 1) { P.stats[k] = (P.stats[k] || 0) + n; achDirty = true; }
 function statMax(k, v) { if (v > (P.stats[k] || 0)) { P.stats[k] = v; achDirty = true; } }
@@ -1053,10 +1079,11 @@ function dayKey(d = new Date()) { return d.getFullYear() + '-' + String(d.getMon
 function yesterdayKey() { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); }
 
 // ---------- Schwierigkeit ----------
+// cc: Farbchaos wirkt so viele Stufen schwächer (−) oder stärker (+)
 const DIFF = {
-  easy: { name: 'Leicht', burn: 0.75, dmg: 0.7, pts: 0.75, note: 'Sonne und Treffer tun weniger weh. 75 % Punkte.' },
-  normal: { name: 'Normal', burn: 1, dmg: 1, pts: 1, note: 'So ist das Spiel gedacht.' },
-  hard: { name: 'Schwer', burn: 1.25, dmg: 1.3, pts: 1.3, note: 'Mehr Hitze, härtere Treffer. 130 % Punkte.' },
+  easy: { name: 'Leicht', burn: 0.75, dmg: 0.7, pts: 0.75, cc: -1, note: 'Sonne und Treffer tun weniger weh. 75 % Punkte.' },
+  normal: { name: 'Normal', burn: 1, dmg: 1, pts: 1, cc: 0, note: 'So ist das Spiel gedacht.' },
+  hard: { name: 'Schwer', burn: 1.25, dmg: 1.3, pts: 1.3, cc: 1, note: 'Mehr Hitze, härtere Treffer. 130 % Punkte.' },
 };
 
 // ---------- Tägliche Herausforderung ----------
@@ -1369,6 +1396,7 @@ const EN = {
     missile: ['Homing missiles', 'Chaos wheel: they chase you in curves. −20. Lure them into a pillar or dash through.'],
     vortex: ['Light vortex', 'Chaos wheel: pulls you in for 5 s, out of your shade.'],
     glass: ['Glass pillars', 'Chaos wheel: half of the pillars turn transparent for 5 s and cast no shadow.'],
+    colorchaos: ['Color chaos', 'Chaos wheel: all colors go haywire and change several times per second. Gets worse with every level. Purely visual. With "Bright flashes" off it stays gentle.'],
     prisma: ['Prisma', 'Levels 2, 5, 8 … Floats around the yard and fires spinning lasers in all directions.'],
     queen: ['Beetle Queen', 'Levels 3, 6, 9 … Circles the middle, fires rings of light orbs and summons bugs.'],
     bull: ['Sun Bull', 'Levels 4, 7, 10 … Aims with a red line and charges. Smashes pillars. After hitting the wall he is dazed, and a dash counts double.'],
@@ -1449,7 +1477,7 @@ const EN = {
   rar: { c: 'Common', r: 'Rare', e: 'Epic' },
   ev: { 'Mittagssonne': 'High noon', 'Zweite Sonne': 'Second sun', 'Sturmböe': 'Gale', 'Käferschwarm': 'Bug swarm', 'Sonnenfunken': 'Solar sparks', 'Erdbeben': 'Earthquake', 'Blitzlicht': 'Flashbang',
         'Leuchtturm': 'Lighthouse', 'Elstern': 'Magpies', 'Honigregen': 'Honey rain', 'Lasergitter': 'Laser grid', 'Laserturm': 'Laser turret', 'Sägeblätter': 'Saw blades', 'Suchraketen': 'Homing missiles',
-        'Lichtwirbel': 'Light vortex', 'Glassäulen': 'Glass pillars', 'Beuteregen': 'Loot rain', 'Mondfinsternis': 'Eclipse', 'Tauregen': 'Dew rain' },
+        'Lichtwirbel': 'Light vortex', 'Glassäulen': 'Glass pillars', 'Beuteregen': 'Loot rain', 'Mondfinsternis': 'Eclipse', 'Tauregen': 'Dew rain', 'Farbchaos': 'Color chaos' },
 };
 const evLabel = k => (LANG === 'en' && EN.ev[k]) || k;
 const bossLabel = type => { const e = BOSS_INFO.find(x => x[0] === type); return e ? e[1] : type; };
@@ -1514,7 +1542,7 @@ const STATIC_EN = {
   'Musik': 'Music', 'Lautstärke der Hintergrundmusik': 'Background music volume', 'Effekte': 'Effects', 'Lautstärke der Geräusche': 'Sound effects volume',
   'Ton an': 'Sound on', 'Taste': 'Key', 'schaltet jederzeit um': 'toggles it at any time',
   'Bildschirmwackeln': 'Screen shake', 'Bei Treffern, Beben und Explosionen': 'On hits, quakes and explosions',
-  'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht und Donner werden abgedämpft': 'Off: flashbang and thunder are toned down',
+  'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht, Donner und Farbchaos werden abgedämpft': 'Off: flashbang, thunder and color chaos are toned down',
   'Sprache': 'Language', 'Sprache des Spiels': 'Game language',
   'Design': 'Theme', 'Hell, dunkel oder wie dein System': 'Light, dark or like your system', 'System': 'System', 'Hell': 'Light', 'Dunkel': 'Dark',
   'Spielername': 'Player name', 'Für Duelle und die Bestenliste': 'For duels and the leaderboard',
@@ -1530,7 +1558,7 @@ const STATIC_EN = {
   'Upgrades.': 'Upgrades.',
   'Nach jedem besiegten Boss ziehst du drei Karten und nimmst eine. So spielt sich jede Runde anders.': 'After every defeated boss you draw three cards and pick one. That makes every run play differently.',
   'Chaos-Rad.': 'Chaos wheel.',
-  'Alle paar Sekunden wird ein Ereignis ausgelost, meistens ein gemeines, manchmal ein gutes.': 'Every few seconds an event is drawn, mostly a nasty one, sometimes a good one.',
+  'Alle paar Sekunden wird ein Ereignis ausgelöst, meistens ein gemeines, manchmal ein gutes.': 'Every few seconds an event is drawn, mostly a nasty one, sometimes a good one.',
   'Punkte.': 'Points.',
   '10 pro Sekunde, dazu Tau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem Konto. Damit kaufst du Skins und Hüte. Manche gibt es nur für Boss-Siege.': '10 per second, plus dew, combos and boss victories. After every run your points go to your balance. You use them to buy skins and hats. Some can only be earned by beating bosses.',
   'Letzte Kraft.': 'Last stand.',
@@ -1926,6 +1954,8 @@ const EVENTS = [
     } },
   { name: 'Lichtwirbel', min: 0, run() { const s = freeSpot(120, false) || { x: W / 2, y: H / 2 }; S.vortex = { x: s.x, y: s.y, life: 5 }; } },
   { name: 'Glassäulen', min: 1, run() { for (const r of S.pillars) if (rng() < 0.5) r.glass = 5; } },
+  // Rein optisch, siehe CC weiter unten. Kommt mit steigender Stufe etwas häufiger und hält etwas länger.
+  { name: 'Farbchaos', id: 'colorchaos', min: 0, weight: () => CC.weight(), run() { S.E.colorchaos = Math.max(S.E.colorchaos || 0, CC.duration()); } },
   { name: 'Beuteregen', good: true, min: 0, run() {
       for (let i = 0; i < 3; i++) { const s = freeSpot(50, false); if (s) S.items.push({ x: s.x, y: s.y, kind: pick(['umbrella', 'crystal', 'bubble', 'star', 'magnet', 'boots', 'spikes', 'decoy', 'frost']), life: 9 }); }
     } },
@@ -1936,7 +1966,16 @@ function spinWheel() {
   const wantGood = S.lucky > 0 || rng() < 0.25 + 0.12 * up('lucky');
   if (S.lucky > 0) S.lucky--;
   const pool = EVENTS.filter(e => e.min <= S.level && (wantGood ? e.good : !e.good) && !(e.skip && e.skip()));
-  const ev = pick(pool.length ? pool : EVENTS);
+  startEvent(pickEvent(pool.length ? pool : EVENTS));
+}
+// Wie pick(), aber ein Ereignis mit weight() darf öfter drankommen (Standard: Gewicht 1)
+function pickEvent(pool) {
+  let tot = 0; for (const e of pool) tot += e.weight ? e.weight() : 1;
+  let r = rng() * tot;
+  for (const e of pool) { r -= e.weight ? e.weight() : 1; if (r < 0) return e; }
+  return pool[pool.length - 1];
+}
+function startEvent(ev) {
   ev.run();
   S.banner = { text: evLabel(ev.name), good: !!ev.good, t: 2.2 };
   Sound.sfx('wheel', !!ev.good);
@@ -2455,10 +2494,10 @@ function tiles(color) {
   for (let i = CELL; i < W; i += CELL) { ctx.moveTo(i + .5, 0); ctx.lineTo(i + .5, H); ctx.moveTo(0, i + .5); ctx.lineTo(W, i + .5); }
   ctx.stroke();
 }
-function shadeRegion(build, alpha) {
+function shadeRegion(build, alpha, id) {
   ctx.save(); ctx.globalAlpha = alpha ?? 1; ctx.beginPath(); build(); ctx.clip();
-  ctx.fillStyle = COL.shade; ctx.fillRect(0, 0, W, H);
-  tiles(COL.shadeTile);
+  CC.el('shade', id); ctx.fillStyle = COL.shade; ctx.fillRect(0, 0, W, H);
+  CC.el('shadeTile', id); tiles(COL.shadeTile);
   ctx.restore();
 }
 function pillarShadows(az) {
@@ -2487,25 +2526,232 @@ function drawSun(az, scale) {
 }
 const MONO = '700 13px "JetBrains Mono", monospace';
 
+// ---------- Farbchaos (Chaos-Rad) ----------
+// Stärke je Stufe. [a, b]: Wert auf Stufe 1–2 und ab Stufe „full“, dazwischen linear.
+// Die Stufe zählt wie im HUD (Stufe 1 = S.level 0) plus DIFF.cc (Leicht −1, Schwer +1).
+const CC_TUNE = {
+  full: 8,               // ab dieser Stufe volle Stärke: alle Elemente, 12 Wechsel pro Sekunde
+  rate: [3, 12],         // harte Farbwechsel pro Sekunde
+  share: [0.4, 1],       // Anteil der Elemente, die bei einem Wechsel eine Chaos-Farbe bekommen
+  spread: [60, 180],     // so weit (Grad) springen die Farbtöne der Elemente auseinander
+  jitter: [10, 50],      // zusätzlicher Versatz pro Farbe innerhalb eines Elements (Grad)
+  chroma: [0.1, 0.22],   // Mindestsättigung, damit auch Grau, Schwarz und Weiß bunt werden (YIQ)
+  sat: [1.2, 1.9],       // Sättigungsverstärkung (steigt bis Stufe 10 weiter)
+  extra: [0.04, 0.35],   // Chance pro Wechsel auf einen Extra-Effekt
+  extras: { shift: 1, swap: 3, invert: 5, flip: 6 },   // ab welcher Stufe welcher Extra-Effekt vorkommt
+  lumaGap: 0.8,          // Sekunden Pause nach Invertierung oder Hell-Dunkel-Umkehr (Blitzschutz)
+  calmRate: 2.5,         // „Grelle Blitze“ aus: höchstens so viele Wechsel pro Sekunde, weich überblendet, ohne Extras
+  dur: [5, 8],           // Dauer in Sekunden (Stufe 1 bis Stufe 11)
+  weight: [1, 1.8],      // Gewicht beim Auslosen (andere Ereignisse haben 1)
+};
+
+// Während Farbchaos läuft jede Farbe des Spielfelds durch CC.color(): fillStyle, strokeStyle, shadowColor und Verlaufsfarben
+// werden direkt am Kontext des Spielfelds abgefangen, HUD, Herzen, Kraftleiste, Hinweise und Karten bekommen Inline-Farben.
+// draw() meldet mit CC.el(name, i), welches Element gerade gezeichnet wird. Jedes Element würfelt pro Wechsel seinen eigenen Farbton.
+// Gedreht wird im YIQ-Farbraum: Die Helligkeit Y bleibt exakt gleich, nur Farbton und Sättigung springen. Das wirkt wild, flackert aber
+// nicht hell-dunkel. Nur Invertierung und Hell-Dunkel-Umkehr ändern Y, und die sind selten, dauern mindestens 0,4 s und haben eine Pause danach.
+// Ohne Farbchaos hängt nichts am Kontext, Optik und Tempo bleiben wie vorher. Hitboxen, Schaden und Regeln berührt das Ereignis nicht.
+const CC = (() => {
+  const proto = CanvasRenderingContext2D.prototype, PROPS = ['fillStyle', 'strokeStyle', 'shadowColor'];
+  const desc = Object.fromEntries(PROPS.map(k => [k, Object.getOwnPropertyDescriptor(proto, k)]));
+  const norm = document.createElement('canvas').getContext('2d');   // übersetzt jede CSS-Farbe in #rrggbb oder rgba()
+  const DOM_SEL = 'body, .hud > *, .hud span, .hud b, #hearts svg, #energy, .opp, .opp .tag, .opp b, .opp .bar i, .dashbtn, .toast, .toast span, .toast b, ' +
+                  '#scrPick, #scrPick .panel, #scrPick h2, #scrPick .eyebrow, #pickTimer, #cards .card, #cards h3, #cards p, #cards span, #cards kbd';
+  const DOM_CSS = [['background-color', 'background-color'], ['color', 'color'], ['border-top-color', 'border-color'], ['--rar', '--rar']];
+  const DOM_ICONS = '#cards canvas, .toast canvas';
+  const DEG = Math.PI / 180;
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const lerp = ([a, b], t) => a + (b - a) * t;
+  const lerpAng = (a, b, f) => a + ((((b - a) % 360) + 540) % 360 - 180) * f;
+  const mix = (a, b) => { let h = Math.imul(a ^ (b + 0x9E3779B9 | 0), 0x85EBCA6B); h ^= h >>> 13; h = Math.imul(h, 0xC2B2AE35); return (h ^ h >>> 16) >>> 0; };
+  const u = h => h / 4294967296;
+
+  let hooked = false, seed = 0, prng = Math.random, lastKey = null, lastK = null, extraEnd = 0, lumaFree = 0;
+  let name = '', idx = 0;
+  const st = { stage: 1, rate: 3, share: 1, spread: 0, jitter: 0, chroma: 0, sat: 1, calm: false, k: 0, f: 0, extra: null, shift: 0, perm: 0 };
+  const nameHash = new Map(), parsed = new Map(), cache = new Map(), elCache = new Map(), orig = new Map();
+  const reduced = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+
+  const stage = () => S.level + 1 + (S.diff.cc || 0);
+  const ramp = s => clamp01((s - 2) / (CC_TUNE.full - 2));
+
+  function parse(v) {
+    let c = parsed.get(v);
+    if (c !== undefined) return c;
+    norm.fillStyle = '#000'; norm.fillStyle = v;
+    const s = norm.fillStyle;
+    if (s[0] === '#') c = [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16), 1];
+    else { const m = s.match(/[\d.]+/g); c = m && m.length >= 4 ? [+m[0], +m[1], +m[2], +m[3]] : null; }
+    if (parsed.size > 4000) parsed.clear();
+    parsed.set(v, c);
+    return c;
+  }
+  // Zufallswerte eines Elements für Wechsel k: betroffen ja/nein, Farbtonversatz, Richtung für graue Farben
+  function roll(eh, k) {
+    const h = mix(mix(eh, k), seed);
+    return { on: u(h) < st.share ? 1 : 0, off: (u(mix(h, 1)) * 2 - 1) * st.spread, dir: u(mix(h, 2)) * 360 };
+  }
+  const baseHue = k => u(mix(k, seed ^ 0x5BD1E995)) * 360;
+  function elState(eh) {
+    let e = elCache.get(eh);
+    if (e) return e;
+    const a = roll(eh, st.k);
+    if (st.f) {   // weich: zum nächsten Wechsel hin überblenden
+      const b = roll(eh, st.k + 1), f = st.f;
+      e = { amt: a.on + (b.on - a.on) * f, hue: lerpAng(baseHue(st.k), baseHue(st.k + 1), f) + a.off + (b.off - a.off) * f, dir: lerpAng(a.dir, b.dir, f) };
+    } else e = { amt: a.on, hue: baseHue(st.k) + a.off, dir: a.dir };
+    elCache.set(eh, e);
+    return e;
+  }
+  // Die zentrale Chaos-Farbe: v ist eine beliebige CSS-Farbe, eh die Kennung des Elements
+  function recolor(v, eh) {
+    const c = parse(v);
+    if (!c || !c[3]) return v;
+    const E = elState(eh), ex = st.extra;
+    if (!E.amt && !ex) return v;
+    let r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
+    const y = 0.299 * r + 0.587 * g + 0.114 * b;
+    if (ex === 'swap') { const t = r; if (st.perm) { r = b; b = g; g = t; } else { r = g; g = b; b = t; } }   // Kanäle tauschen, Helligkeit bleibt unten trotzdem y
+    let i = 0.596 * r - 0.274 * g - 0.322 * b, q = 0.211 * r - 0.523 * g + 0.312 * b;
+    let C = Math.hypot(i, q), th = Math.atan2(q, i);
+    const cmin = st.chroma * E.amt;
+    if (C < cmin) { if (C < 0.03) th = E.dir * DEG; C = cmin; }
+    const hc = mix(eh, hashStr(v));
+    let jit = u(mix(hc, st.k)) * 2 - 1;
+    if (st.f) jit += (u(mix(hc, st.k + 1)) * 2 - 1 - jit) * st.f;
+    jit *= st.jitter;
+    th += (E.amt * (E.hue + jit) + (ex === 'shift' ? st.shift : 0)) * DEG;
+    C *= 1 + (st.sat - 1) * E.amt;
+    let Y = y;
+    if (ex === 'invert') { Y = 1 - y; th += Math.PI; }
+    else if (ex === 'flip') Y = 1 - y;
+    i = C * Math.cos(th); q = C * Math.sin(th);
+    // Zurück nach RGB. Ragt die Farbe aus dem Farbraum, wird nur die Sättigung gekürzt, damit Y exakt bleibt.
+    const dr = 0.956 * i + 0.621 * q, dg = -0.272 * i - 0.647 * q, db = -1.106 * i + 1.703 * q;
+    let k = 1;
+    for (const d of [dr, dg, db]) { if (d > 1e-6) k = Math.min(k, (1 - Y) / d); else if (d < -1e-6) k = Math.min(k, Y / -d); }
+    k = Math.max(0, k);
+    const R = Math.round((Y + k * dr) * 255), G = Math.round((Y + k * dg) * 255), B = Math.round((Y + k * db) * 255);
+    return c[3] >= 1 ? `rgb(${R},${G},${B})` : `rgba(${R},${G},${B},${c[3]})`;
+  }
+  function elHash() {
+    let h = nameHash.get(name);
+    if (h === undefined) { h = hashStr(name); nameHash.set(name, h); }
+    return (h ^ Math.imul(idx + 1, 0x9E3779B1)) >>> 0;
+  }
+  function color(v) {
+    const eh = elHash();
+    let m = cache.get(eh);
+    if (!m) { m = new Map(); cache.set(eh, m); }
+    let out = m.get(v);
+    if (out === undefined) { out = recolor(v, eh); m.set(v, out); }
+    return out;
+  }
+  function wrapGrad(g) { const add = g.addColorStop; g.addColorStop = (o, col) => add.call(g, o, color(col)); return g; }
+
+  function start() {
+    hooked = true; seed = (Math.random() * 4294967296) >>> 0; prng = mulberry32(seed);
+    lastKey = lastK = null; st.extra = null; extraEnd = lumaFree = 0;
+    for (const k of PROPS) Object.defineProperty(ctx, k, { configurable: true, get() { return desc[k].get.call(this); },
+      set(v) { desc[k].set.call(this, typeof v === 'string' ? color(v) : v); } });
+    ctx.createLinearGradient = function () { return wrapGrad(proto.createLinearGradient.apply(this, arguments)); };
+    ctx.createRadialGradient = function () { return wrapGrad(proto.createRadialGradient.apply(this, arguments)); };
+  }
+  function stop() {
+    hooked = false;
+    for (const k of PROPS) delete ctx[k];
+    delete ctx.createLinearGradient; delete ctx.createRadialGradient;
+    restoreDom(); cache.clear(); elCache.clear();
+  }
+  // Inline-Werte, die das Spiel selbst gesetzt hat (z. B. Herzfarben), merken und am Ende zurückschreiben
+  function setDom(el, prop, val) {
+    let o = orig.get(el);
+    if (!o) { o = {}; orig.set(el, o); }
+    if (!(prop in o)) o[prop] = el.style.getPropertyValue(prop);
+    el.style.setProperty(prop, val);
+  }
+  function restoreDom() {
+    for (const [el, o] of orig) for (const p in o) { if (o[p]) el.style.setProperty(p, o[p]); else el.style.removeProperty(p); }
+    orig.clear();
+  }
+  function domTick() {
+    restoreDom();   // erst die echten Farben lesen (Design, Warnfarben, Seltenheit), dann umfärben
+    const els = [...document.querySelectorAll(DOM_SEL)], icons = [...document.querySelectorAll(DOM_ICONS)];
+    const vals = els.map(el => { const cs = getComputedStyle(el); return DOM_CSS.map(([read]) => cs.getPropertyValue(read).trim()); });
+    els.forEach((el, n) => {
+      name = 'dom'; idx = n;
+      DOM_CSS.forEach(([, write], j) => { const v = vals[n][j]; if (v && v !== 'none') { const c = color(v); if (c !== v) setDom(el, write, c); } });
+    });
+    const ex = st.extra;
+    icons.forEach((el, n) => {
+      const E = elState(mix(0xC0FFEE, n));
+      const deg = Math.round(E.amt * E.hue + (ex === 'shift' ? st.shift : 0));
+      setDom(el, 'filter', `hue-rotate(${deg}deg) saturate(${st.sat.toFixed(2)})` + (ex === 'invert' ? ' invert(1)' : ex === 'flip' ? ' invert(1) hue-rotate(180deg)' : ''));
+    });
+  }
+  // Extra-Effekte würfeln (nur bei hartem Wechsel). Invertierung und Hell-Dunkel-Umkehr: mindestens 0,4 s, danach lumaGap Pause.
+  function newTick(t) {
+    if (st.extra && t >= extraEnd) {
+      if (st.extra === 'invert' || st.extra === 'flip') lumaFree = t + CC_TUNE.lumaGap;
+      st.extra = null;
+    }
+    if (st.calm || st.extra || prng() >= st.extraChance) return;
+    const X = CC_TUNE.extras, opts = [];
+    for (const e of ['shift', 'swap']) if (st.stage >= X[e]) opts.push(e);
+    if (t >= lumaFree) for (const e of ['invert', 'flip']) if (st.stage >= X[e]) opts.push(e);
+    if (!opts.length) return;
+    const e = opts[Math.floor(prng() * opts.length)], luma = e === 'invert' || e === 'flip';
+    st.extra = e; extraEnd = t + (luma ? 0.4 + prng() * 0.3 : 0.15 + prng() * 0.3);
+    st.shift = 90 + prng() * 180; st.perm = prng() < 0.5 ? 1 : 0;
+  }
+  // Einmal pro Bild vor draw(): an- und abschalten, Stärke aus der Stufe, Wechsel weiterzählen
+  function frame() {
+    const want = !!(S && S.E.colorchaos > 0);
+    if (!want) { if (hooked) stop(); return; }
+    if (!hooked) start();
+    const s = stage(), t = ramp(s);
+    st.stage = s; st.calm = !P.settings.flashes || !!(reduced && reduced.matches);
+    if (st.calm) st.extra = null;
+    st.rate = st.calm ? Math.min(CC_TUNE.calmRate, lerp(CC_TUNE.rate, t)) : lerp(CC_TUNE.rate, t);
+    st.share = lerp(CC_TUNE.share, t); st.spread = lerp(CC_TUNE.spread, t); st.jitter = lerp(CC_TUNE.jitter, t);
+    st.chroma = lerp(CC_TUNE.chroma, t); st.extraChance = lerp(CC_TUNE.extra, t);
+    st.sat = lerp(CC_TUNE.sat, clamp01((s - 1) / 9)) * (st.calm ? 0.85 : 1);
+    const pos = S.t * st.rate, k = Math.floor(pos);
+    st.k = k; st.f = st.calm ? pos - k : 0;
+    const key = st.calm ? pos : k;
+    if (key === lastKey) return;
+    lastKey = key; cache.clear(); elCache.clear();
+    if (k !== lastK) { lastK = k; newTick(S.t); }
+    domTick();
+  }
+  return {
+    frame, color,
+    el(n, i) { name = n; idx = i || 0; },   // welches Element zeichnet draw() gerade?
+    duration: () => lerp(CC_TUNE.dur, clamp01((stage() - 1) / 10)),
+    weight: () => lerp(CC_TUNE.weight, ramp(stage())),
+  };
+})();
+
 function draw() {
   const flashes = P.settings.flashes;
   ctx.save();
   if (S.shake > 0 && P.settings.shake) ctx.translate(fx(-1, 1) * S.shake * 9, fx(-1, 1) * S.shake * 9);
-  ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
-  tiles(COL.tile);
+  CC.el('yard'); ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
+  CC.el('tile'); tiles(COL.tile);
 
-  if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5); shadeRegion(pillarShadows(az2()), 0.5); }
-  else shadeRegion(pillarShadows(S.az), 1);
-  if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } });
+  if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5, 0); shadeRegion(pillarShadows(az2()), 0.5, 1); }
+  else shadeRegion(pillarShadows(S.az), 1, 0);
+  if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } }, 1, 2);
   if (S.puddles.length) shadeRegion(() => {
     for (const q of S.puddles) {
       const max = q.max || 8, r = q.r * Math.min(1, (max - q.life) * 4) * Math.min(1, q.life);
       if (r > 0.5) { ctx.moveTo(q.x + r, q.y); ctx.arc(q.x, q.y, r, 0, TAU); }
     }
-  });
+  }, 1, 3);
 
   // Honig
-  for (const h of S.honey) {
+  for (const [n, h] of S.honey.entries()) {
+    CC.el('honey', n);
     ctx.globalAlpha = Math.min(1, h.life) * 0.85;
     ctx.fillStyle = COL.honey;
     ctx.beginPath();
@@ -2516,8 +2762,9 @@ function draw() {
   ctx.globalAlpha = 1;
 
   // Heiße Fliesen
-  for (const h of S.hot) {
+  for (const [n, h] of S.hot.entries()) {
     const x = h.gx * CELL, y = h.gy * CELL;
+    CC.el('hot', n);
     if (h.warn > 0) {
       ctx.globalAlpha = 0.5 + 0.5 * Math.sin(S.t * 18);
       ctx.strokeStyle = COL.hot; ctx.lineWidth = 3; ctx.strokeRect(x + 2.5, y + 2.5, CELL - 5, CELL - 5);
@@ -2536,6 +2783,7 @@ function draw() {
   if (S.portals) {
     const Pp = S.portals;
     for (const q of [Pp.a, Pp.b]) {
+      CC.el('portal', q === Pp.a ? 0 : 1);
       ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(S.t * 3);
       ctx.globalAlpha = Pp.life < 2 && Math.floor(Pp.life * 8) % 2 === 0 ? 0.3 : 1;
       ctx.scale(1.3, 1.3); icon(ctx, 'portal'); ctx.restore();
@@ -2546,7 +2794,7 @@ function draw() {
   // Brennglas
   if (S.lens) {
     const Ln = S.lens, a = Ln.warn > 0 ? 0.35 + 0.3 * Math.sin(S.t * 20) : Math.min(1, Ln.life);
-    ctx.globalAlpha = a;
+    ctx.globalAlpha = a; CC.el('lens');
     const g = ctx.createRadialGradient(Ln.x, Ln.y, 2, Ln.x, Ln.y, Ln.r);
     g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.5, '#FFF6D0'); g.addColorStop(1, 'rgba(255,176,32,0.25)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(Ln.x, Ln.y, Ln.r, 0, TAU); ctx.fill();
@@ -2558,6 +2806,7 @@ function draw() {
   // Leuchtturmstrahl
   if (S.beam) {
     const B = S.beam, R = 800;
+    CC.el('beam');
     if (B.warn > 0) {
       ctx.strokeStyle = COL.warn; ctx.lineWidth = 2; ctx.setLineDash([8, 6]);
       ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.x + Math.cos(B.a) * R, B.y + Math.sin(B.a) * R); ctx.stroke(); ctx.setLineDash([]);
@@ -2573,26 +2822,29 @@ function draw() {
   }
 
   // Einschlagswarnungen
-  for (const m of S.meteors) {
+  for (const [n, m] of S.meteors.entries()) {
     const k = Math.max(0, Math.min(1, m.warn / 1.3));
+    CC.el('meteor', n);
     ctx.strokeStyle = COL.warn; ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]);
     ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = 'rgba(232,102,79,.25)'; ctx.beginPath(); ctx.arc(m.x, m.y, m.r * (1 - k), 0, TAU); ctx.fill();
   }
 
   // Tau und Hilfsmittel
-  for (const w of S.dews) { ctx.globalAlpha = Math.min(1, w.life); dropShape(ctx, w.x, w.y, 1 + Math.sin(S.t * 6 + w.x) * 0.12, COL.dew); }
+  for (const [n, w] of S.dews.entries()) { CC.el('dew', n); ctx.globalAlpha = Math.min(1, w.life); dropShape(ctx, w.x, w.y, 1 + Math.sin(S.t * 6 + w.x) * 0.12, COL.dew); }
   ctx.globalAlpha = 1;
-  for (const it of S.items) {
+  for (const [n, it] of S.items.entries()) {
     if (it.life < 2 && Math.floor(it.life * 8) % 2 === 0) continue;
     const bob = Math.sin(S.t * 4 + it.x) * 2;
+    CC.el('item', n);
     ctx.fillStyle = 'rgba(20,24,33,.25)'; ctx.beginPath(); ctx.ellipse(it.x, it.y + 12, 9, 3, 0, 0, TAU); ctx.fill();
     ctx.save(); ctx.translate(it.x, it.y + bob); icon(ctx, it.kind); ctx.restore();
   }
 
   // Säulen
-  for (const r of S.pillars) {
+  for (const [n, r] of S.pillars.entries()) {
     const blink = r.doomed && Math.floor(r.crumble * 8) % 2 === 0;
+    CC.el('pillar', n);
     const g = r.grow > 0 ? 1 - r.grow / 0.4 : 1;
     const cx = r.x + r.w / 2, cy = r.y + r.h / 2, w = r.w * g, h = r.h * g;
     const glass = r.glass > 0 && !(r.glass < 1 && Math.floor(r.glass * 10) % 2);
@@ -2605,6 +2857,7 @@ function draw() {
   // Lichtwirbel
   if (S.vortex) {
     const V = S.vortex;
+    CC.el('vortex');
     ctx.save(); ctx.translate(V.x, V.y); ctx.rotate(-S.t * 4);
     ctx.globalAlpha = Math.min(1, V.life) * 0.85;
     const g = ctx.createRadialGradient(0, 0, 2, 0, 0, 46);
@@ -2620,8 +2873,9 @@ function draw() {
   }
 
   // Laser
-  for (const L of S.lasers) {
+  for (const [n, L] of S.lasers.entries()) {
     const len = L.warn > 0 ? L.len : rayLen(L.x, L.y, L.a, L.len);
+    CC.el('laser', n);
     const ex = L.x + Math.cos(L.a) * len, ey = L.y + Math.sin(L.a) * len;
     if (L.warn > 0) {
       ctx.strokeStyle = 'rgba(232,64,64,' + (0.35 + 0.3 * Math.sin(S.t * 30)) + ')'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 6]);
@@ -2644,7 +2898,8 @@ function draw() {
 
   // Partikel
   const skinCol = (SKIN_BY[P.equip.skin] || SKINS[0]).body;
-  for (const q of S.parts) {
+  for (const [n, q] of S.parts.entries()) {
+    CC.el('part', n);
     ctx.globalAlpha = Math.max(0, q.life) * 0.8;
     if (q.ghost) {
       ctx.globalAlpha = q.life * 2.2; ctx.fillStyle = skinCol === 'rainbow' ? `hsl(${(S.t * 70) % 360} 62% 36%)` : skinCol;
@@ -2662,7 +2917,8 @@ function draw() {
   // Gegner im Duell als Geist
   const O = Net.opp;
   if (Net.inMatch && O && O.alive && O.dx != null && S.mode !== 'ready') {
-    drawCreature(ctx, O.dx, O.dy, PR, { skin: O.skin, hat: O.hat, t: S.t + 1.3, alpha: 0.42, eyeAlpha: 0.6 });
+    CC.el('ghost');
+    drawCreature(ctx, O.dx, O.dy, PR, { skin: O.skin, hat: O.hat, t: S.t + 1.3, alpha: 0.42, eyeAlpha: 0.6, ccHat: 'ghostHat' });
     ctx.globalAlpha = 0.85;
     textOut(O.name, O.dx, O.dy - 24, '#E9E3FF', '700 10px "JetBrains Mono", monospace', 'center');
     ctx.globalAlpha = 1;
@@ -2671,6 +2927,7 @@ function draw() {
   // Spielfigur
   if (S.mode !== 'ready') {
     const p = S.p, R = pr();
+    CC.el('aura');
     if (on('shield')) {
       const blink = S.E.shield < 1.5 && Math.floor(S.E.shield * 8) % 2 === 0;
       if (!blink) {
@@ -2702,12 +2959,14 @@ function draw() {
     if (on('boots')) { ctx.fillStyle = 'rgba(43,143,214,.35)'; ctx.beginPath(); ctx.arc(p.x, p.y + R, R * 1.2, 0, TAU); ctx.fill(); }
     if (on('magnet')) { ctx.strokeStyle = 'rgba(217,70,59,.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]); ctx.lineDashOffset = S.t * 40; ctx.beginPath(); ctx.arc(p.x, p.y, 40 + (S.t * 40 % 30), 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
     const alpha = (0.35 + 0.65 * S.energy / 100) * (S.hurt > 0 && Math.floor(S.hurt * 20) % 2 ? 0.3 : 1);
-    drawCreature(ctx, p.x, p.y, R, { skin: P.equip.skin, hat: P.equip.hat, t: S.t, alpha, eyeAlpha: 1,
+    CC.el('player');
+    drawCreature(ctx, p.x, p.y, R, { skin: P.equip.skin, hat: P.equip.hat, t: S.t, alpha, eyeAlpha: 1, ccHat: 'hat',
       tint: on('invert') ? COL.shroom : null, eyes: S.burn > 0 ? 'burn' : on('invert') ? 'dizzy' : S.mode === 'over' && S.won ? 'happy' : 'open' });
   }
 
   // Käfer
-  for (const b of S.bugs) {
+  for (const [n, b] of S.bugs.entries()) {
+    CC.el('bug', n);
     ctx.globalAlpha = Math.min(1, b.life);
     const g = 0.5 + 0.5 * Math.sin(S.t * 12 + b.ph);
     ctx.fillStyle = on('frost') ? 'rgba(143,211,255,.5)' : 'rgba(255,227,107,' + (0.25 + 0.2 * g) + ')';
@@ -2721,7 +2980,8 @@ function draw() {
   ctx.globalAlpha = 1;
 
   // Elstern
-  for (const g of S.magpies) {
+  for (const [n, g] of S.magpies.entries()) {
+    CC.el('magpie', n);
     ctx.save(); ctx.translate(g.x, g.y); ctx.scale(-(g.face || 1) * 1.2, 1.2);
     icon(ctx, 'magpie');
     const flap = on('frost') ? 0 : Math.sin(S.t * 18 + g.ph) * 6;
@@ -2733,26 +2993,30 @@ function draw() {
   // Schattenklon
   if (S.decoy) {
     const D = S.decoy;
+    CC.el('decoy');
     ctx.save(); ctx.translate(D.x, D.y + Math.sin(S.t * 6) * 1.5);
     if (D.life < 1.5 && Math.floor(D.life * 10) % 2) ctx.globalAlpha = 0.3;
     ctx.scale(0.95, 0.95); icon(ctx, 'decoy'); ctx.restore(); ctx.globalAlpha = 1;
   }
 
   // Sägeblätter
-  for (const s of S.saws) {
+  for (const [n, s] of S.saws.entries()) {
+    CC.el('saw', n);
     ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(S.t * 14);
     if (s.life < 1) ctx.globalAlpha = s.life;
     ctx.scale(1.1, 1.1); icon(ctx, 'saw'); ctx.restore(); ctx.globalAlpha = 1;
   }
 
   // Suchraketen
-  for (const m of S.missiles) {
+  for (const [n, m] of S.missiles.entries()) {
+    CC.el('missile', n);
     ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(m.a + 0.6);
     icon(ctx, 'missile'); ctx.restore();
   }
 
   // Lichtkugeln
-  for (const s of S.shots) {
+  for (const [n, s] of S.shots.entries()) {
+    CC.el('shot', n);
     ctx.fillStyle = 'rgba(255,227,107,.45)'; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.fill();
     ctx.fillStyle = '#FFF6D0'; ctx.strokeStyle = COL.sun; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, TAU); ctx.fill(); ctx.stroke();
   }
@@ -2760,6 +3024,7 @@ function draw() {
   // Boss
   if (S.boss) {
     const B = S.boss;
+    CC.el('boss');
     if (B.state === 'aim' && B.enter <= 0) {
       ctx.strokeStyle = 'rgba(232,64,64,' + (0.4 + 0.4 * Math.sin(S.t * 25)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
       ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.tx, B.ty); ctx.stroke(); ctx.setLineDash([]);
@@ -2776,17 +3041,19 @@ function draw() {
   }
 
   // Einschläge im Anflug
-  for (const m of S.meteors) {
+  for (const [n, m] of S.meteors.entries()) {
     if (m.warn > 0.8) continue;
     const k = m.warn / 0.8, mx = m.x + 160 * k, my = m.y - 220 * k;
+    CC.el('spark', n);
     ctx.strokeStyle = 'rgba(255,176,32,.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx + 24, my - 32); ctx.stroke();
     ctx.fillStyle = COL.hot; ctx.beginPath(); ctx.arc(mx, my, 7, 0, TAU); ctx.fill();
   }
 
   // Wolken
   const d = dirOf(S.az);
-  for (const c of S.clouds) {
+  for (const [n, c] of S.clouds.entries()) {
     const cx = c.x - d.x * 26, cy = c.y - d.y * 26;
+    CC.el('cloud', n);
     ctx.fillStyle = 'rgba(255,255,255,.55)';
     ctx.beginPath();
     ctx.ellipse(cx, cy, c.rx * 0.75, c.ry * 0.7, 0, 0, TAU);
@@ -2796,9 +3063,10 @@ function draw() {
   }
 
   // Sonne(n)
-  if (!on('eclipse')) { drawSun(S.az, on('noon') ? 1.6 : 1); if (sun2On()) drawSun(az2(), 1); }
+  if (!on('eclipse')) { CC.el('sun', 0); drawSun(S.az, on('noon') ? 1.6 : 1); CC.el('sun', 1); if (sun2On()) drawSun(az2(), 1); }
 
   // Überblendungen
+  CC.el('overlay');
   if (on('eclipse')) { ctx.fillStyle = 'rgba(12,15,26,.45)'; ctx.fillRect(-10, -10, W + 20, H + 20); }
   if (on('noonWarn')) { ctx.fillStyle = 'rgba(255,255,255,' + (flashes ? 0.18 + 0.12 * Math.sin(S.t * 25) : 0.15) + ')'; ctx.fillRect(-10, -10, W + 20, H + 20); }
   if (on('noon')) { ctx.fillStyle = 'rgba(255,240,200,.12)'; ctx.fillRect(-10, -10, W + 20, H + 20); }
@@ -2818,12 +3086,14 @@ function draw() {
   // Anzeigen
   if (S.mode === 'play' || S.mode === 'pick' || S.mode === 'pause') {
     const tag = S.cfg.mode === 'daily' && S.rule ? ' · ' + RULE_BY[S.rule].name : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
+    CC.el('text');
     textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
     if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 32, COL.warn, MONO, 'right');
     const ready = S.charges > 0;
     textOut(ready ? (maxCharges() > 1 ? 'Dash ×' + S.charges : tr('Dash bereit', 'Dash ready')) : 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
+      CC.el('bossBar');
       textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
       ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(bx - 2, by - 2, bw + 4, 14);
       ctx.fillStyle = COL.warn; ctx.fillRect(bx, by, bw * Math.max(0, B.hp) / B.maxHp, 8);
@@ -2836,13 +3106,13 @@ function draw() {
     const lab = { shield: [tr('Schirm', 'Umbrella'), COL.umbrella], slow: [tr('Sanduhr', 'Hourglass'), '#5FBE90'], magnet: ['Magnet', COL.magnet], boots: ['Turbo', '#6FB8F0'],
                   star: [tr('Punkte ×2', 'Points ×2'), COL.gold], frost: ['Frost', COL.frost], shrink: [tr('Winzig', 'Tiny'), COL.shrink], invert: [tr('Verdreht', 'Inverted'), '#C98AE6'],
                   eclipse: [tr('Finsternis', 'Eclipse'), '#8E9CC2'], sun2: [tr('Zwei Sonnen', 'Two suns'), COL.sun], wind: [tr('Sturm', 'Gale'), COL.white], noon: [tr('Mittag', 'Noon'), COL.sun],
-                  dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'] };
+                  dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'], colorchaos: [tr('Farbchaos', 'Color chaos'), '#E0457B'] };
     for (const k in lab) if (on(k)) list.push([lab[k][0] + ' ' + S.E[k].toFixed(1) + ' s', lab[k][1]]);
     if (S.bubble > 0) list.push([tr('Schild ×', 'Shield ×') + S.bubble, '#6FC3FF']);
     if (S.decoy) list.push([tr('Klon ', 'Clone ') + S.decoy.life.toFixed(1) + ' s', '#C9B8FF']);
     if (S.lucky > 0) list.push([tr('Glück ×', 'Luck ×') + S.lucky, '#5FBE90']);
     if (S.combo > 1) list.push([tr('Kombo ×', 'Combo ×') + S.combo, COL.dew]);
-    list.forEach((f, i) => textOut(f[0], 12, H - 14 - i * 18, f[1], MONO));
+    list.forEach((f, i) => { CC.el('status', i); textOut(f[0], 12, H - 14 - i * 18, f[1], MONO); });
   }
   if (S.mode === 'count') {
     const n = Math.ceil(S.countT), k = S.countT - Math.floor(S.countT);
@@ -2852,13 +3122,14 @@ function draw() {
     textOut(tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…'), W / 2, H / 2 - 50, '#FFFFFF', '800 15px "Unbounded", "Arial Black", sans-serif', 'center');
   }
   if (S.msg) {
+    CC.el('msg');
     ctx.globalAlpha = Math.min(1, S.msg.t * 2);
     textOut(S.msg.text, W / 2, S.boss && S.mode === 'play' ? 72 : 56, S.msg.color, '800 18px "Unbounded", "Arial Black", sans-serif', 'center');
     ctx.globalAlpha = 1;
   }
   if (S.banner) {
     const b = S.banner, k = Math.min(1, b.t * 2, (2.2 - b.t) * 6);
-    ctx.globalAlpha = Math.max(0, k);
+    ctx.globalAlpha = Math.max(0, k); CC.el('banner');
     ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(0, H / 2 - 38, W, 64);
     ctx.fillStyle = b.good ? '#5FBE90' : COL.warn; ctx.fillRect(0, H / 2 - 38, W, 3); ctx.fillRect(0, H / 2 + 23, W, 3);
     textOut(b.head || tr('CHAOS-RAD', 'CHAOS WHEEL'), W / 2, H / 2 - 16, '#98A1B4', '700 11px "JetBrains Mono", monospace', 'center');
@@ -3198,7 +3469,7 @@ function toMenu() {
   Sound.music('menu'); Sound.setLevel(0);
 }
 function pause() {
-  if (!S || S.mode !== 'play' || top()) return;
+  if (!S || S.mode !== 'play' || top() || DEBUG) return;   // Debug-Runden laufen auch ohne Fokus weiter
   if (!isDuel()) S.mode = 'pause';
   resetTo('scrPause');
 }
@@ -3629,7 +3900,11 @@ function drawHero(id, skin, hat, t) {
 }
 let last = performance.now();
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (DEBUG) {   // feste Bildrate, nach „frames“ Bildern bleibt alles stehen
+    if (DEBUG.left <= 0) { DEBUG.done = DEBUG.frame > 0; requestAnimationFrame(loop); return; }
+    DEBUG.left--; DEBUG.frame++; DEBUG.done = false; dt = 1 / 60; now = DEBUG.frame * 1000 / 60;
+  }
   if (S.mode === 'pick') {
     if (pickTimer > 0) {
       pickTimer -= dt;
@@ -3637,6 +3912,7 @@ function loop(now) {
       if (pickTimer <= 0) choose(0);
     }
   } else if (S.mode !== 'pause') update(dt);
+  CC.frame();
   draw();
   Net.tick(dt);
   if (achDirty) checkAch();
@@ -3674,8 +3950,27 @@ function setLang(l) {
   else resetTo('scrMain');
   Sound.music('menu');
   checkAch(); save();
+  if (DEBUG) debugStart();
   requestAnimationFrame(loop);
 })();
+
+// Debug-Start (siehe DEBUG oben): Runde mit fester Stufe, optional Boss und Ereignis. Die Figur ist unverwundbar,
+// damit sie beim Stillstehen nicht verdampft. Die Zeit läuft erst los, wenn die Schriften geladen sind.
+function debugStart() {
+  if (DEBUG.screen !== 'menu') {
+    startRun({ mode: DEBUG.mode, diff: P.settings.diff, seed: DEBUG.seed });
+    S.level = DEBUG.level - 1; S.grace = 1e9; Sound.setLevel(S.level);
+    const b = DEBUG.boss && (DEBUG.boss === 'core' ? CORE : BOSSES.find(x => x.type === DEBUG.boss));
+    if (b) spawnBoss(b);
+    const ev = DEBUG.event && EVENTS.find(e => e.id === DEBUG.event || e.name === DEBUG.event);
+    if (ev) startEvent(ev);
+    hud();
+  }
+  const go = () => { if (!DEBUG.frame && !DEBUG.left) DEBUG.left = DEBUG.frames; };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(go);
+  setTimeout(go, 4000);
+  window.shadyDebug = { get frame() { return DEBUG.frame; }, get done() { return DEBUG.done; }, advance(n) { DEBUG.left += n; DEBUG.done = false; } };
+}
 })();
 </script>
 </body>

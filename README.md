@@ -1,6 +1,27 @@
 # Shady
 
+### [▶ Jetzt spielen](https://sxrg1u.github.io/shady/)
+
 **Ein chaotisches Browserspiel über Licht und Schatten.** Du bist ein kleines Schattenwesen auf einem sonnigen Innenhof. Die Sonne wandert im Kreis, und mit ihr wandert jeder Schatten. Bleib im Dunkeln, weich allem aus, was das Chaos-Rad dir entgegenwirft, besiege nach jeder Stufe einen Boss und bau dir mit Upgrade-Karten deine eigene Runde.
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Hauptmenü von Shady mit dem Schriftzug „Shady“, den Menüknöpfen und der täglichen Herausforderung](screenshots/hauptmenue.png) | ![Normales Spiel auf Stufe 3: gelber Innenhof, dunkelblaue Schatten der Säulen, in der Mitte die kleine schwarze Spielfigur](screenshots/spiel-normal.png) |
+| *Das Hauptmenü* | *Ein normales Spiel ohne Chaos* |
+| ![Farbchaos auf Stufe 2: türkiser Innenhof, bunte Säulen, in der Mitte die Ankündigung „Chaos-Rad: Farbchaos“](screenshots/farbchaos-stufe-2.png) | ![Farbchaos auf Stufe 6: mintgrüner Innenhof, weinrote Schatten, Säulen und Anzeige in wild gemischten Farben](screenshots/farbchaos-stufe-6.png) |
+| *Farbchaos auf Stufe 2: Es geht los, nur ein Teil der Farben kippt* | *Farbchaos auf Stufe 6: Kaum noch etwas hat seine echte Farbe* |
+| ![Farbchaos auf Stufe 10 im Kampf gegen den Sonnenkern: rosa Innenhof, grüne Schatten, bunte Laser und ein gelber Endboss](screenshots/farbchaos-stufe-10-boss.png) | ![Animation: Farbchaos auf Stufe 8 mit gedämpften Blitzen, die Farben gleiten weich ineinander](screenshots/farbchaos.gif) |
+| *Farbchaos auf Stufe 10 im Bosskampf gegen den Sonnenkern* | *Farbchaos mit gedämpften Blitzen: weiche Übergänge statt harter Wechsel* |
+
+Die Bilder erzeugt [`tools/screenshots.mjs`](tools/screenshots.mjs) automatisch mit [Playwright](https://playwright.dev). Neu erzeugen (Node.js nötig, das Spiel selbst braucht nichts davon):
+
+```bash
+cd tools
+npm install
+npm run screenshots
+```
 
 ## Spielen
 
@@ -69,7 +90,8 @@ Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https:
 
 ## Features
 
-- **Chaos-Rad:** Alle paar Sekunden wird ein Ereignis ausgelost, zum Beispiel Erdbeben, Lasergitter, zweite Sonne, Suchraketen, Glassäulen, Sturmböe oder Mondfinsternis. Meistens ist es gemein, manchmal gut.
+- **Chaos-Rad:** Alle paar Sekunden wird ein Ereignis ausgelöst, zum Beispiel Erdbeben, Lasergitter, zweite Sonne, Suchraketen, Glassäulen, Sturmböe, Mondfinsternis oder Farbchaos. Meistens ist es gemein, manchmal gut.
+  - **Farbchaos:** Alle Farben geraten komplett durcheinander. Innenhof, Schatten, Säulen, Spielfigur, Gegner, Bosse, Anzeige und Karten bekommen jeweils einen eigenen, wild wechselnden Farbton, mehrmals pro Sekunde. Das wird mit jeder Stufe schlimmer: Auf Stufe 1 und 2 wechseln etwa 3-mal pro Sekunde nur manche Farben, ab Stufe 8 wechselt alles bis zu 12-mal pro Sekunde, dazu kommen invertierte Farben und vertauschte Farbkanäle. Das Ereignis ist rein optisch, Hitboxen und Regeln bleiben gleich. Wer unter Einstellungen **Grelle Blitze** ausschaltet, bekommt eine sanfte Version mit höchstens 2 bis 3 weichen Wechseln pro Sekunde und ohne Invertierung.
 - **Vier Bosse:**
   - **Prisma** schießt drehende Laser in alle Richtungen.
   - **Käferkönigin** schießt Ringe aus Lichtkugeln und ruft Käfer.
