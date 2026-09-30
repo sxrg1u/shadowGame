@@ -117,24 +117,24 @@ Kampagne, Endlos und Boss üben gibt es auf **Leicht**, **Normal** und **Schwer*
 
 ## Karten
 
-Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik.
+Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik. Die Karten sind von leicht nach schwer sortiert.
 
 | Karte | Besonderheit | So schaltest du sie frei |
 | --- | --- | --- |
 | **Innenhof** | Die Sonne wandert im Kreis, eckige Säulen werfen lange Schatten. | Von Anfang an |
-| **Garten** | Runde Bäume werfen weiche Schatten. Es gibt mehr Tau, aber die Käfer sind flinker. | Erreiche Stufe 4 |
-| **Dach** | Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken. | Besiege 5 Bosse |
-| **Keller** | Keine Sonne, nur Fackeln, die quer durch den Raum wandern. Eine davon jagt dich. Ihr Licht brennt stärker, und im Schatten erholst du dich langsamer. | Besiege 12 Bosse |
-| **Bahnhof** | Zwei Gleise queren den Bahnhof. Rote Gleise und ein Signal kündigen einen Zug an. Er fährt ein, hält ein paar Sekunden am Bahnsteig und wirft dabei einen langen Schatten, dann hupt er und fährt ab. Wer einem fahrenden Zug im Weg steht, bekommt Schaden (je nach Schwierigkeit) und wird weggeschleudert. | Stufe 6 auf dem Dach |
-| **Schiffsdeck** | Das Schiff schaukelt, alle Schatten schwingen hin und her, und das Deck neigt sich. Links und rechts ist Wasser hinter der Reling. Drei Masten tragen Segel, die im Takt auf- und zugehen, der mittlere ein grosses Segel mit Topsegel. | Stufe 6 im Bahnhof |
-| **Wüste** | Kaum Schutz: Kakteen werfen dünne Schatten, Dünen wandern langsam. Ein Sandsturm macht alles zu Schatten, aber du siehst kaum etwas, und der Wind schiebt dich. | Stufe 6 auf dem Schiffsdeck |
-| **Jahrmarkt** | Die Gondeln des Riesenrads werfen wandernde Schatten. Karussells drehen dich im Kreis. | Stufe 6 in der Wüste |
-| **Stadt bei Nacht** | Dunkel und sicher, bis eine Laterne flackert und angeht. Autoscheinwerfer fegen über die Strasse, und Autos schubsen dich weg. | Stufe 6 auf dem Jahrmarkt |
+| **Garten** | Runde Bäume werfen weiche Schatten. Es gibt mehr Tau, aber die Käfer sind flinker. | Stufe 6 im Innenhof |
+| **Jahrmarkt** | Die Gondeln des Riesenrads werfen wandernde Schatten. Karussells drehen dich im Kreis. | Stufe 6 im Garten |
+| **Schiffsdeck** | Das Schiff schaukelt, alle Schatten schwingen hin und her, und das Deck neigt sich. Links und rechts ist Wasser hinter der Reling. Drei Masten tragen Segel, die im Takt auf- und zugehen, der mittlere ein grosses Segel mit Topsegel. | Stufe 6 auf dem Jahrmarkt |
+| **Dach** | Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken. | Stufe 6 auf dem Schiffsdeck |
+| **Mond** | Geringe Schwerkraft: Du gleitest, und der Dash trägt fast doppelt so weit. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht, das halb so stark brennt. | Stufe 6 auf dem Dach |
+| **Wüste** | Kaum Schutz: Kakteen werfen dünne Schatten, Dünen wandern langsam. Ein Sandsturm macht alles zu Schatten, aber du siehst kaum etwas, und der Wind schiebt dich. | Stufe 6 auf dem Mond |
+| **Bahnhof** | Zwei Gleise queren den Bahnhof. Rote Gleise und ein Signal kündigen einen Zug an. Er fährt ein, hält ein paar Sekunden am Bahnsteig und wirft dabei einen langen Schatten, dann hupt er und fährt ab. Wer einem fahrenden Zug im Weg steht, bekommt Schaden (je nach Schwierigkeit) und wird weggeschleudert. | Stufe 6 in der Wüste |
+| **Stadt bei Nacht** | Dunkel und sicher, bis eine Laterne flackert und angeht. Autoscheinwerfer fegen über die Strasse, und Autos schubsen dich weg. | Stufe 6 im Bahnhof |
 | **Bibliothek** | Lange Regale werfen lange Schatten, der grosse Leuchter schwingt hin und her. Bücher fallen aus den Regalen und versperren Wege. | Stufe 6 in der Stadt |
-| **Spiegelsaal** | Keine Sonne. Lichtwerfer an den Wänden schicken grelle Strahlen durch den Saal, die an schwenkenden Spiegeln abprallen und fast doppelt so stark brennen wie Sonnenlicht. Säulen halten die Strahlen auf. Es gibt sechs breite Strahlen, alle zwei Stufen kommt einer dazu, bis zu zehn. | Stufe 6 in der Bibliothek |
-| **Mond** | Geringe Schwerkraft: Du gleitest, und der Dash trägt fast doppelt so weit. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht, das halb so stark brennt. | Stufe 6 im Spiegelsaal |
+| **Keller** | Keine Sonne, nur Fackeln, die quer durch den Raum wandern. Eine davon jagt dich. Ihr Licht brennt stärker, und im Schatten erholst du dich langsamer. | Stufe 6 in der Bibliothek |
+| **Spiegelsaal** | Keine Sonne. Lichtwerfer an den Wänden schicken grelle Strahlen durch den Saal, die an schwenkenden Spiegeln abprallen und fast doppelt so stark brennen wie Sonnenlicht. Säulen halten die Strahlen auf. Es gibt sechs breite Strahlen, alle zwei Stufen kommt einer dazu, bis zu zehn. | Stufe 6 im Keller |
 
-Nach **Spielen** siehst du alle Karten auf einen Blick. Tipp eine an, dann wählst du Schwierigkeit und Modus. Jede gesperrte Karte kannst du statt mit der Bedingung auch mit Punkten aus dem Punktekonto freischalten (1.500 bis 15.000 Punkte).
+Nach **Spielen** siehst du alle Karten auf einen Blick. Tipp eine an, dann wählst du Schwierigkeit und Modus. Jede gesperrte Karte kannst du statt mit der Bedingung auch mit Punkten aus dem Punktekonto freischalten (2.500 bis 30.000 Punkte). Karten, die du nach den alten Regeln schon freigeschaltet hattest, bleiben frei.
 
 Wer die Kampagne auf einer Karte gewinnt, bekommt dafür einen eigenen Skin und einen eigenen Hut, zum Beispiel Matrose und Kapitänsmütze auf dem Schiffsdeck oder Mondgestein und Raumhelm auf dem Mond.
 

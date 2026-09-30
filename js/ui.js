@@ -993,6 +993,7 @@ function setLang(l) {
   if (!MAP_BY[P.settings.map]) P.settings.map = 'yard';
   // Wer schon vor dem Tutorial gespielt hat, wird nicht mehr automatisch hineingeschickt.
   if (!P.tutDone && P.stats.runs > 0) P.tutDone = true;
+  keepOldMaps();
   applyTheme(); setLang(P.settings.lang);
   // Auf hohen Bildschirmen liegen die Herausforderungen gleich offen, sonst sind sie eine Zeile und klappen auf
   if (matchMedia('(min-height:1000px)').matches && matchMedia('(min-width:781px)').matches) { $('dailyCard').open = true; $('weeklyCard').open = true; }
