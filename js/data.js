@@ -27,6 +27,7 @@ function freshProfile() {
              dashes: 0, hits: 0, items: 0, traps: 0, missiles: 0, upgrades: 0, maxLevel: 0, endlessLevel: 0, maxCombo: 0,
              wins: 0, hardWins: 0, duels: 0, duelWins: 0, dailyDone: 0, cleanBoss: 0, longest: 0, bestScore: 0, revives: 0,
              close: 0, spearKill: 0, maxUpgradesRun: 0, eater: 0, dusk: 0, weeklyDone: 0, tutorial: 0,
+             anchorJumps: 0, parries: 0, reflectHits: 0,
              lvl_yard: 0, lvl_garden: 0, lvl_roof: 0, lvl_cellar: 0, play_yard: 0, play_garden: 0, play_roof: 0, play_cellar: 0 },
     ach: {}, owned: { skin: ['schatten'], hat: ['none'], trail: ['none'] }, equip: { skin: 'schatten', hat: 'none', trail: 'none' },
     seen: {}, daily: {}, weekly: {}, streak: { last: '', n: 0, best: 0 }, tutDone: false,
@@ -185,6 +186,9 @@ const ACH = [
   { id: 'weekly1', name: 'Wochenheld', icon: 'trophy', desc: 'Schaffe eine Wochenherausforderung.', goal: 1, val: s => s.weeklyDone },
   { id: 'weekly3', name: 'Stammgast', icon: 'loot', desc: 'Schaffe drei Wochenherausforderungen.', goal: 3, val: s => s.weeklyDone },
   { id: 'lvl25', name: 'Unermüdlich', icon: 'hourglass', desc: 'Erreiche Stufe 25 im Endlosmodus.', goal: 25, val: s => s.endlessLevel },
+  { id: 'parry25', name: 'Spiegelmeister', icon: 'crystal', desc: 'Pariere 25 Angriffe mit dem Spiegel.', goal: 25, val: s => s.parries },
+  { id: 'reflect', name: 'Retourkutsche', icon: 'prisma', desc: 'Triff 10-mal einen Boss mit seiner eigenen Lichtkugel.', goal: 10, val: s => s.reflectHits },
+  { id: 'anchor20', name: 'Zeitreisender', icon: 'portal', desc: 'Spring 20-mal zu deinem Schattenanker zurück.', goal: 20, val: s => s.anchorJumps },
   { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));

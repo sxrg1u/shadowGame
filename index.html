@@ -57,7 +57,7 @@
     <div class="bar"><i id="oppEnergy"></i></div><span id="oppState" class="tag">lebt</span>
   </div>
   <div class="stage"><canvas id="game" aria-label="Spielfeld von Shady"></canvas><button class="tut-skip" id="tutSkip" hidden>Tutorial überspringen</button></div>
-  <div class="touchbar"><button class="dashbtn" id="dashBtn">DASH</button></div>
+  <div class="touchbar"><button class="dashbtn alt" id="anchorBtn">ANKER</button><button class="dashbtn" id="dashBtn">DASH</button><button class="dashbtn alt" id="parryBtn">SPIEGEL</button></div>
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
@@ -211,7 +211,8 @@
       <ul>
         <li><b>Licht kostet Kraft.</b> Im Sonnenlicht sinkt deine Kraftleiste schnell, im Schatten lädt sie langsam wieder auf. Bei null bist du verdampft, außer du hast noch ein Herz.</li>
         <li><b>Die Schatten wandern.</b> Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht kommt.</li>
-        <li><b>Stufen und Bosse.</b> Alle 12 Sekunden steigt die Stufe, eine Säule stürzt ein und ein Boss erscheint. Nur ein Dash schadet ihm. Nach 20 Sekunden zieht er ohne Belohnung wieder ab.</li>
+        <li><b>Stufen und Bosse.</b> Alle 12 Sekunden steigt die Stufe, eine Säule stürzt ein und ein Boss erscheint. Ihm schaden ein Dash oder eine zurückgeschlagene Lichtkugel. Nach 20 Sekunden zieht er ohne Belohnung wieder ab.</li>
+        <li><b>Anker und Spiegel.</b> Der Schattenanker bringt dich zurück an einen sicheren Ort. Der Spiegel belohnt Timing: Wer genau im richtigen Moment pariert, schlägt Lichtkugeln zum Boss zurück und kann den Ansturm von Stier und Kern kontern.</li>
         <li><b>Upgrades.</b> Nach jedem besiegten Boss ziehst du drei Karten und nimmst eine. So spielt sich jede Runde anders.</li>
         <li><b>Chaos-Rad.</b> Alle paar Sekunden wird ein Ereignis ausgelöst, meistens ein gemeines, manchmal ein gutes.</li>
         <li><b>Punkte.</b> 10 pro Sekunde, dazu Tau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem Konto. Damit kaufst du Skins und Hüte. Manche gibt es nur für Boss-Siege.</li>
@@ -220,6 +221,8 @@
       <div class="keys">
         <b>Laufen</b><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> oder Pfeiltasten. Mit Maus oder Finger aufs Feld drücken und halten.</span>
         <b>Dash</b><span><kbd>Shift</kbd> oder <kbd>Leertaste</kbd> in Laufrichtung, Rechtsklick in Richtung Maus, auf dem Handy der Dash-Knopf.</span>
+        <b>Anker</b><span><kbd>E</kbd> setzt einen Anker, nochmal drücken springt zurück. Auf dem Handy der Anker-Knopf.</span>
+        <b>Spiegel</b><span><kbd>Q</kbd> genau vor einem Treffer: Lichtkugeln fliegen zum Boss zurück, Laser, Funken, Sägen und Raketen prallen ab. Rote Glutkugeln lassen sich nicht parieren. Auf dem Handy der Spiegel-Knopf.</span>
         <b>Upgrade</b><span><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> oder anklicken.</span>
         <b>Pause</b><span><kbd>Esc</kbd> oder <kbd>P</kbd>. Ton an und aus mit <kbd>M</kbd>.</span>
       </div>
