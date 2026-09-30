@@ -60,6 +60,13 @@ const GOOD = [
   ['spikes','Stachelpanzer','6 s lang zerstört jede Berührung Käfer und Raketen und verletzt Bosse, auch ohne Dash.'],
   ['clover','Glücksklee','Die nächsten 3 Drehungen des Chaos-Rads sind gut.'],
   ['lootrain','Beuteregen','Chaos-Rad: 3 zufällige Extras fallen vom Himmel.'],
+  ['shades','Sonnenbrille','5 s lang tut Licht nur halb so weh.'],
+  ['chalk','Schattenkreide','4 s lang malst du beim Laufen eine Schattenlinie hinter dir.'],
+  ['whistle','Wolkenpfeife','Ruft eine Wolke, die dir 8 s lang folgt. Nicht auf Karten ohne Himmel.'],
+  ['sunstop','Sonnenbremse','Die Sonne bleibt 6 s lang stehen. Auf dunklen Karten stehen alle Lichter still.'],
+  ['moondust','Mondstaub','5 s lang ist Nacht: überall Schatten und doppelte Punkte.'],
+  ['cloak','Tarnkappe','6 s lang sehen dich Käfer, Raketen und das Brennglas nicht.'],
+  ['chain','Kettenblitz','8 s lang springt ein Blitz vom weggedashten Käfer zu bis zu 4 weiteren.'],
 ];
 const BAD = [
   ['bug','Lichtkäfer','Jagt dich. Kostet 18 Kraft und stößt dich weg.'],
@@ -69,6 +76,13 @@ const BAD = [
   ['crumble','Einsturz','Bei jedem Stufenwechsel verschwindet eine Säule.'],
   ['shroom','Umkehrpilz','Falle. 5 s lang ist deine Steuerung verdreht, auch der Dash.'],
   ['acid','Säuretropfen','Falle, sieht aus wie Tau. −25 Kraft und −100 Punkte.'],
+  ['glare','Blendspiegel','Falle, sieht aus wie die Sonnenbrille (rote Gläser). 5 s lang brennt Licht doppelt.'],
+  ['splash','Kreidekleckse','Falle, sieht aus wie Schattenkreide (gelbe Kreide). Um dich glüht der Boden.'],
+  ['storm','Gewitterwolke','Falle, sieht aus wie die Wolkenpfeife (graue Wolke). Folgt dir 7 s und lässt Blitze einschlagen.'],
+  ['turbosun','Turbosonne','Falle, sieht aus wie die Sonnenbremse (Pfeile statt Pause). 6 s lang rast die Sonne.'],
+  ['noonbell','Mittagsglocke','Falle, sieht aus wie Mondstaub (orange Funken). 5 s kurze Schatten und halbe Punkte.'],
+  ['lure','Lockstoff','Falle, sieht aus wie die Tarnkappe (gelbe Spitze). Drei Käfer kommen, alle jagen dich doppelt so schnell.'],
+  ['leadboots','Bleischuhe','Falle, sieht aus wie Turboschuhe (graue Pfeile). 5 s lang langsam und kein Dash.'],
   ['honey','Honigpfütze','Chaos-Rad: Klebrig, du wirst halb so schnell.'],
   ['meteor','Sonnenfunken','Chaos-Rad: Rote Kreise warnen vor dem Einschlag, danach brennt der Boden.'],
   ['beam','Leuchtturm','Chaos-Rad: Ein Lichtstrahl dreht sich übers Feld und brennt sogar im Schatten.'],
@@ -147,6 +161,62 @@ function icon(c, k) {
     case 'portal': c.fillStyle = 'rgba(155,124,240,.35)'; c.beginPath(); c.arc(0, 0, 10, 0, TAU); c.fill(); c.strokeStyle = COL.portal; c.lineWidth = 3; c.stroke(); c.lineWidth = 1.5; c.beginPath(); c.arc(0, 0, 5, 0, Math.PI * 1.4); c.stroke(); break;
     case 'eclipse': c.fillStyle = COL.gold; c.beginPath(); c.arc(0, 0, 11, 0, TAU); c.fill(); c.fillStyle = COL.body; c.beginPath(); c.arc(1.5, -1, 9.5, 0, TAU); c.fill(); break;
     case 'rain': dropShape(c, -6, -3, 0.6, COL.dew); dropShape(c, 5, -5, 0.6, COL.dew); dropShape(c, 0, 6, 0.6, COL.dew); break;
+    // Neue Extras und ihre getarnten Fallen: Jede Falle sieht fast aus wie ihr gutes Gegenstück
+    case 'shades': case 'glare': {
+      disc(c, '#3FC7C4'); const bad = k === 'glare';
+      c.fillStyle = bad ? '#7A1F1F' : '#141821';
+      c.beginPath(); c.ellipse(-4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.ellipse(4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#141821'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-1, -0.5); c.quadraticCurveTo(0, -1.8, 1, -0.5); c.moveTo(-8, -0.5); c.lineTo(-10, -2.5); c.moveTo(8, -0.5); c.lineTo(10, -2.5); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(-5.5, -0.8, 1, 0, TAU); c.arc(3.1, -0.8, 1, 0, TAU); c.fill();
+      break;
+    }
+    case 'chalk': case 'splash': {
+      disc(c, '#8E9CC2'); c.save(); c.rotate(-0.7);
+      c.fillStyle = k === 'splash' ? '#FFE9A8' : '#F7F8FB'; c.fillRect(-7, -2.6, 14, 5.2);
+      c.fillStyle = k === 'splash' ? '#F0C24A' : '#C9CFDB'; c.fillRect(4, -2.6, 3, 5.2);
+      c.restore();
+      c.strokeStyle = '#141821'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-7, 8); c.quadraticCurveTo(-2, 5, 2, 8); c.stroke();
+      break;
+    }
+    case 'whistle': case 'storm': {
+      disc(c, '#6FB8F0');
+      c.fillStyle = k === 'storm' ? '#5B6376' : '#F7F8FB'; c.beginPath(); c.ellipse(-1, -3, 6.5, 3.8, 0, 0, TAU); c.ellipse(3.5, -4.5, 4, 3, 0, 0, TAU); c.fill();
+      if (k === 'storm') { c.fillStyle = '#FFE36B'; c.beginPath(); c.moveTo(1, -1); c.lineTo(-1.5, 2); c.lineTo(0.5, 2); c.lineTo(-0.5, 4); c.lineTo(2.5, 1); c.lineTo(0.5, 1); c.closePath(); c.fill(); }
+      c.fillStyle = '#D2D7E1'; c.strokeStyle = '#5B6376'; c.lineWidth = 1; c.beginPath(); c.ellipse(-2, 5.5, 5, 2.4, 0, 0, TAU); c.fill(); c.stroke();
+      c.fillRect(2.5, 4.2, 5, 2.6); c.strokeRect(2.5, 4.2, 5, 2.6);
+      break;
+    }
+    case 'sunstop': case 'turbosun': {
+      disc(c, '#F08A24'); c.fillStyle = '#FFE36B'; c.strokeStyle = '#FFE36B'; c.lineWidth = 1.5;
+      c.beginPath(); c.arc(0, 0, 4.2, 0, TAU); c.fill();
+      for (let i = 0; i < 8; i++) { const a = i * TAU / 8; c.beginPath(); c.moveTo(Math.cos(a) * 6, Math.sin(a) * 6); c.lineTo(Math.cos(a) * 8.5, Math.sin(a) * 8.5); c.stroke(); }
+      c.fillStyle = '#7A3A0A';
+      if (k === 'sunstop') { c.fillRect(-2.2, -2.4, 1.6, 4.8); c.fillRect(0.6, -2.4, 1.6, 4.8); }
+      else { c.beginPath(); c.moveTo(-2.6, -2.4); c.lineTo(0, 0); c.lineTo(-2.6, 2.4); c.moveTo(0, -2.4); c.lineTo(2.6, 0); c.lineTo(0, 2.4); c.strokeStyle = '#7A3A0A'; c.lineWidth = 1.2; c.stroke(); }
+      break;
+    }
+    case 'moondust': case 'noonbell': {
+      disc(c, '#1A1440'); c.fillStyle = '#F4F1E0';
+      c.beginPath(); c.arc(-1, 0, 6, Math.PI * 0.5, Math.PI * 1.5); c.quadraticCurveTo(-4, 0, -1, 6); c.fill();
+      c.fillStyle = k === 'noonbell' ? '#FF8A3A' : '#FFFFFF';
+      for (const [x, y, r] of [[4, -4, 1.4], [6, 1.5, 1], [2.5, 5, 1.2]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      break;
+    }
+    case 'cloak': case 'lure': {
+      disc(c, '#6D5BD0'); c.fillStyle = '#2B2F3A';
+      c.beginPath(); c.moveTo(-8, 4); c.quadraticCurveTo(-4, -2, 0, -8); c.quadraticCurveTo(4, -2, 8, 4); c.closePath(); c.fill();
+      c.fillStyle = k === 'lure' ? '#FFE36B' : '#C9B8FF'; c.beginPath(); c.arc(0, -8, 1.8, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(-3, 1, 0.9, 0, TAU); c.arc(3.5, -1.5, 0.9, 0, TAU); c.fill();
+      break;
+    }
+    case 'chain': {
+      disc(c, '#2472B3'); c.strokeStyle = '#9FE8FF'; c.lineWidth = 1.8;
+      c.beginPath(); c.moveTo(-7, -5); c.lineTo(-2, -1); c.lineTo(-4, 2); c.lineTo(2, 5); c.lineTo(0, 1); c.lineTo(7, -3); c.stroke();
+      c.fillStyle = '#FFE36B'; for (const [x, y] of [[-7, -5], [2, 5], [7, -3]]) { c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); }
+      break;
+    }
+    case 'leadboots':   // sieht aus wie die Turboschuhe, nur die Pfeile sind bleigrau
+      disc(c, COL.boots); c.strokeStyle = '#3A3F4A'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(-6, -5); c.lineTo(-1, 0); c.lineTo(-6, 5); c.moveTo(0, -5); c.lineTo(5, 0); c.lineTo(0, 5); c.stroke(); break;
     case 'cloud': c.fillStyle = COL.shade; c.beginPath(); c.ellipse(0, 2, 12, 7, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.ellipse(-2, -3, 8, 5, 0, 0, TAU); c.ellipse(4, -2, 6, 4, 0, 0, TAU); c.fill(); break;
     case 'bug': bugShape(c, 0, 0); break;
     case 'swarm': bugShape(c, -6, -4); bugShape(c, 6, -2); bugShape(c, 0, 6); break;

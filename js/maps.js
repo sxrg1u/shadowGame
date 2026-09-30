@@ -179,11 +179,11 @@ function updateMap(dt, sunDt, playing) {
     while (S.torches.length < want) S.torches.push(newTorch(S.torches.length));
     for (const T of S.torches) {
       if (T === S.torches[0] && playing) {   // die Jagdfackel läuft dir hinterher, Säulen zwischen euch helfen
-        const dx = S.p.x - T.x, dy = S.p.y - T.y, d = Math.hypot(dx, dy) || 1, v = (40 + lv() * 5) * sunDt;
+        const dx = S.p.x - T.x, dy = S.p.y - T.y, d = Math.hypot(dx, dy) || 1, v = (40 + lv() * 5) * sunDt * lightF();
         if (d > 30) { T.x += dx / d * v; T.y += dy / d * v; }
         continue;
       }
-      T.s += T.dir * (0.17 + lv() * 0.024) * sunDt;
+      T.s += T.dir * (0.17 + lv() * 0.024) * sunDt * lightF();
       // Fackeln weichen einander aus, damit nie zwei auf demselben Fleck stehen
       T.ox = (T.ox || 0) * (1 - Math.min(1, 0.5 * dt)); T.oy = (T.oy || 0) * (1 - Math.min(1, 0.5 * dt));
       for (const U of S.torches) {

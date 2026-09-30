@@ -108,7 +108,7 @@ function lightHits(L, px, py) {
   return rayLen(L.x, L.y, a, d) >= d - 1;
 }
 function darkLight(px, py) {
-  if (on('eclipse')) return 0;
+  if (on('eclipse') || on('night')) return 0;
   if (S.map.beams) return S.fx.beams.some(b => segDist(px, py, b.x1, b.y1, b.x2, b.y2) < BEAM_W) ? 1 : 0;
   for (const L of darkLights()) if (lightHits(L, px, py)) return 1;
   return 0;
@@ -146,6 +146,7 @@ function updateMapFx(dt, sunDt, playing) {
   const m = S.map, F = S.fx;
   S.casters = [];
   const cast = r => S.casters.push(r);
+  F.lt = (F.lt || 0) + dt * lightF();   // eigene Uhr der Lichter, Sonnenbremse und Turbosonne wirken darauf
 
   // Bahnhof: Züge kündigen sich mit roten Gleisen an und rasen dann durch
   if (F.trains) for (const T of F.trains) {
@@ -253,7 +254,7 @@ function updateMapFx(dt, sunDt, playing) {
   // Stadt: Laternen flackern, gehen an und wieder aus; Autos fahren mit Scheinwerfern
   if (m.id === 'city') {
     for (const l of F.lamps) {
-      if (playing || l.st !== 'off') l.t -= dt;
+      if (playing || l.st !== 'off') l.t -= dt * lightF();
       if (l.t > 0) continue;
       if (l.st === 'off') { l.st = 'warn'; l.t = 1.3; }
       else if (l.st === 'warn') { l.st = 'on'; l.t = rand(4, 7) + lv() * 0.3; }
@@ -281,7 +282,7 @@ function updateMapFx(dt, sunDt, playing) {
   // Bibliothek: Der Leuchter schwingt, Bücher fallen aus den Regalen
   if (m.id === 'library') {
     const C = F.chand, w = 0.52;
-    C.x = W / 2 + 178 * Math.sin(S.t * w); C.y = H / 2 - 8 + 28 * Math.cos(2 * S.t * w); C.r = 205 + lv() * 5;
+    C.x = W / 2 + 178 * Math.sin(F.lt * w); C.y = H / 2 - 8 + 28 * Math.cos(2 * F.lt * w); C.r = 205 + lv() * 5;
     const shelves = S.pillars.filter(r => r.shelf);
     if (playing) F.bookIn -= dt;
     if (F.bookIn <= 0 && shelves.length && S.pillars.filter(r => r.books).length < 6) {
@@ -309,12 +310,12 @@ function updateMapFx(dt, sunDt, playing) {
 
   // Spiegelsaal: Spiegel schwenken, Strahlen prallen an ihnen ab
   if (m.beams) {
-    for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(S.t * 0.5 + M.ph);
+    for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(F.lt * 0.5 + M.ph);
     const n = Math.min(EMITTERS.length, 6 + Math.floor(S.level / 2));
     F.beams = [];
     for (let i = 0; i < n; i++) {
       const E = EMITTERS[i];
-      E.cur = E.a + E.amp * Math.sin(S.t * E.sp + i * 1.3);
+      E.cur = E.a + E.amp * Math.sin(F.lt * E.sp + i * 1.3);
       castBeam(E.x, E.y, E.cur, F.beams);
     }
   }
