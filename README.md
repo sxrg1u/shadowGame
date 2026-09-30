@@ -117,7 +117,7 @@ Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik.
 | **Innenhof** | Die Sonne wandert im Kreis, eckige Säulen werfen lange Schatten. | Von Anfang an |
 | **Garten** | Runde Bäume werfen weiche Schatten. Es gibt mehr Tau, aber die Käfer sind flinker. | Erreiche Stufe 4 |
 | **Dach** | Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken. | Besiege 5 Bosse |
-| **Keller** | Keine Sonne, nur Fackeln, die quer durch den Raum wandern, auch durch die Mitte. Ihr Licht brennt, und die Säulen werfen Schatten von den Fackeln weg. | Besiege 12 Bosse |
+| **Keller** | Die schwerste Karte. Keine Sonne, nur Fackeln, die quer durch den Raum wandern. Eine davon jagt dich. Ihr Licht brennt stärker, und im Schatten erholst du dich langsamer. | Besiege 12 Bosse |
 
 Die tägliche und die wöchentliche Herausforderung dürfen jede Karte benutzen, auch wenn du sie noch nicht freigeschaltet hast.
 

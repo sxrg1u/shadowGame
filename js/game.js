@@ -911,10 +911,10 @@ function update(dt) {
     const da = Math.abs(((a - S.beam.a) % TAU + TAU + Math.PI) % TAU - Math.PI);
     if (da < 0.13) burn += 55;
   }
-  burn *= S.diff.burn;
+  burn *= S.diff.burn * (S.map.burnF || 1);
   if (S.grace > 0) burn = 0;
   S.burn = burn;
-  S.energy += (burn > 0 ? -burn : 7 * (1 + 0.5 * up('regen'))) * dt;
+  S.energy += (burn > 0 ? -burn : 7 * (S.map.regenF || 1) * (1 + 0.5 * up('regen'))) * dt;
   S.energy = Math.max(0, Math.min(maxEnergy(), S.energy));
   if (burn > 0 && Math.random() < dt * (20 + burn * 0.4))
     S.parts.push({ x: S.p.x + fx(-6, 6), y: S.p.y - 4, vx: fx(-8, 8), vy: fx(-45, -20), life: fx(0.4, 0.8) });

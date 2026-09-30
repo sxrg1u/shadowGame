@@ -14,9 +14,9 @@ const MAPS = [
     pal: { lit: '#EFAA76', tile: '#DC9461', shade: '#4B3B55', shadeTile: '#43344C', top: '#3A2D33', edge: '#5A4440' },
     wind: 44, chimneys: true, pillars: 8, cloudF: 0.45 },
   { id: 'cellar', icon: 'flame', name: ['Keller', 'Cellar'], unlock: { stat: 'bosses', n: 12 },
-    desc: ['Keine Sonne, nur wandernde Fackeln. Ihr Licht brennt, und Säulen werfen Schatten von ihnen weg.', 'No sun, only wandering torches. Their light burns, and pillars cast shadows away from them.'],
+    desc: ['Die schwerste Karte. Fackeln wandern durch den ganzen Raum, eine jagt dich. Ihr Licht brennt stärker, und du erholst dich langsamer.', 'The hardest map. Torches roam the whole room and one hunts you. Their light burns harder and you recover more slowly.'],
     pal: { lit: '#F2B45E', tile: '#DE9E4A', shade: '#1F1C27', shadeTile: '#27232F', top: '#3E3845', edge: '#524A58' },
-    dark: true },
+    dark: true, burnF: 1.3, regenF: 0.7 },
 ];
 const MAP_BY = Object.fromEntries(MAPS.map(m => [m.id, m]));
 const SUN_RULES = ['twosun', 'summer', 'night', 'clouds'];
@@ -90,7 +90,7 @@ function initMap() {
   const m = S.map;
   S.roofA = rand(0, TAU); S.gust = 0;
   S.torches = [];
-  if (m.dark) for (let i = 0; i < 3; i++) S.torches.push(newTorch(i));
+  if (m.dark) for (let i = 0; i < 4; i++) S.torches.push(newTorch(i));
   // Dekor: Blumen im Garten, Risse im Keller (nur optisch)
   S.deco = [];
   const n = m.id === 'garden' ? 26 : m.id === 'cellar' ? 14 : 0;
@@ -98,7 +98,7 @@ function initMap() {
 }
 // Fackeln wandern auf verschlungenen Bahnen quer durch den Keller, auch durch die Mitte. Es gibt keinen Platz, der immer dunkel bleibt.
 function newTorch(i) {
-  const T = { s: 0, dir: i % 2 ? 1 : -1, r: 150, ph: fx(0, 6), x: 0, y: 0,
+  const T = { s: 0, dir: i % 2 ? 1 : -1, r: 125, ph: fx(0, 6), x: 0, y: 0,
               wx: 1 + (i % 3) * 0.35, wy: 1.3 + ((i + 1) % 3) * 0.3, px: i * 2.1, py: i * 1.3 + 0.7 };
   // nicht direkt neben der Figur anfangen
   for (let k = 0; k < 40; k++) { T.s = fx(0, 40); torchPos(T); if (!S.p || Math.hypot(T.x - S.p.x, T.y - S.p.y) > 210) break; }
@@ -112,9 +112,16 @@ function torchPos(T) {
 function updateMap(dt, sunDt, playing) {
   const m = S.map;
   if (m.dark) {
-    const want = 3 + (S.level >= 3 ? 1 : 0) + (S.level >= 6 ? 1 : 0);
+    const want = 4 + (S.level >= 2 ? 1 : 0) + (S.level >= 5 ? 1 : 0);
     while (S.torches.length < want) S.torches.push(newTorch(S.torches.length));
-    for (const T of S.torches) { T.s += T.dir * (0.13 + lv() * 0.018) * sunDt; torchPos(T); }
+    for (const T of S.torches) {
+      if (T === S.torches[0] && playing) {   // die Jagdfackel läuft dir hinterher, Säulen zwischen euch helfen
+        const dx = S.p.x - T.x, dy = S.p.y - T.y, d = Math.hypot(dx, dy) || 1, v = (40 + lv() * 5) * sunDt;
+        if (d > 30) { T.x += dx / d * v; T.y += dy / d * v; }
+        continue;
+      }
+      T.s += T.dir * (0.17 + lv() * 0.024) * sunDt; torchPos(T);
+    }
   }
   if (m.wind) {
     S.roofA += dt * 0.12;
