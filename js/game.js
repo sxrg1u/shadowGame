@@ -56,8 +56,8 @@ const up = k => S.up[k] || 0;
 // Wie stark jede Stufe das Spiel härter macht (1 = die ursprüngliche Steigerung). Gilt für Sonne, Hitze, Gegner, Bosse und
 // das Tempo des Chaos-Rads, nicht für Punkte, Bossreihenfolge, freigeschaltete Ereignisse oder Farbchaos.
 const RAMP = 0.7;
-const CAMPAIGN_RAMP = 0.85;   // die Kampagne zieht etwas schneller an als Endlos
-const ramp = () => S.cfg.mode === 'campaign' ? CAMPAIGN_RAMP : RAMP;
+const CAMPAIGN_RAMP = 0.85;   // Kampagne, tägliche und wöchentliche Herausforderung ziehen etwas schneller an als Endlos
+const ramp = () => ['campaign', 'daily', 'weekly'].includes(S.cfg.mode) ? CAMPAIGN_RAMP : RAMP;
 const dl = () => S.level * ramp();              // Schwierigkeit der aktuellen Stufe
 const lv = () => Math.min(S.level, 14) * ramp();
 const isDuel = () => !!(S && S.cfg.duel);
