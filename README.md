@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/og-image.png" alt="Titelbild von Shady: das kleine Schattenwesen im Schatten einer Säule auf dem sonnigen Innenhof" width="720">
+  <img src="assets/og-image.png" alt="Titelbild von Stay Shady: das kleine Schattenwesen im Schatten einer Säule auf dem sonnigen Innenhof" width="720">
 </p>
 
-# Shady
+# Stay Shady
 
 ### [▶ Jetzt im Browser spielen](https://sxrg1u.github.io/shady/)
 
@@ -33,7 +33,7 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 
 | | |
 | --- | --- |
-| ![Hauptmenü von Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Modusauswahl mit den vier Karten Innenhof, Garten, Dach und Keller sowie Kampagne, Endlos, Täglich und Woche](screenshots/modi.png) |
+| ![Hauptmenü von Stay Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Modusauswahl mit den vier Karten Innenhof, Garten, Dach und Keller sowie Kampagne, Endlos, Täglich und Woche](screenshots/modi.png) |
 | *Das Hauptmenü* | *Modus und Karte wählen* |
 | ![Normales Spiel auf Stufe 3: gelber Innenhof, dunkelblaue Schatten der Säulen, in der Mitte die kleine schwarze Spielfigur](screenshots/spiel-normal.png) | ![Garten: grüne Wiese mit Blumen, runde Bäume und Hecken werfen dunkelgrüne Schatten](screenshots/karte-garten.png) |
 | *Innenhof: die erste Karte* | *Garten: runde Bäume, weiche Schatten* |
@@ -344,7 +344,3 @@ index.html?debug=1&lang=de&map=cellar&level=5&boss=eater&event=colorchaos&frames
 
 - **GitHub Pages:** Jeder Push auf `main` aktualisiert <https://sxrg1u.github.io/shady/> nach ein bis zwei Minuten.
 - **itch.io:** `index.html` zusammen mit den Ordnern `css`, `js` und `assets` als ZIP hochladen und „This file will be played in the browser“ anhaken. Als Titelbild passt `assets/cover.png`.
-
-## Verwandt
-
-[Kippwaage](https://github.com/sxrg1u/kippwaggen) ist ein zweites kleines Spiel aus derselben Reihe.
