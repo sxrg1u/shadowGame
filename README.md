@@ -33,12 +33,20 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 
 | | |
 | --- | --- |
-| ![Hauptmenü von Stay Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Modusauswahl mit den vier Karten Innenhof, Garten, Dach und Keller sowie Kampagne, Endlos, Täglich und Woche](screenshots/modi.png) |
-| *Das Hauptmenü* | *Modus und Karte wählen* |
+| ![Hauptmenü von Stay Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Kartenübersicht mit täglicher und wöchentlicher Herausforderung und allen 12 Karten von Innenhof bis Spiegelsaal](screenshots/modi.png) |
+| *Das Hauptmenü* | *Kartenübersicht: alle 12 Karten von leicht nach schwer* |
 | ![Normales Spiel auf Stufe 3: gelber Innenhof, dunkelblaue Schatten der Säulen, in der Mitte die kleine schwarze Spielfigur](screenshots/spiel-normal.png) | ![Garten: grüne Wiese mit Blumen, runde Bäume und Hecken werfen dunkelgrüne Schatten](screenshots/karte-garten.png) |
 | *Innenhof: die erste Karte* | *Garten: runde Bäume, weiche Schatten* |
 | ![Dach: orange Ziegel, Schornsteine mit Rauch, lange lila Schatten, oben rechts ein Pfeil für die Windrichtung](screenshots/karte-dach.png) | ![Keller: dunkler Raum, wandernde Fackeln werfen orange Lichtkreise, Säulen werfen Schatten von den Fackeln weg](screenshots/karte-keller.png) |
 | *Dach: der Wind schiebt dich über die Ziegel* | *Keller: keine Sonne, nur Fackeln* |
+| ![Jahrmarkt: ein Riesenrad mit bunten Gondeln, zwei gestreifte Karussells und rot-weisse Buden werfen lila Schatten](screenshots/karte-jahrmarkt.png) | ![Schiffsdeck: Holzplanken zwischen Wasser und Reling, drei Masten mit Segeln, das mittlere Segel ist gross und hat ein Topsegel](screenshots/karte-schiff.png) |
+| *Jahrmarkt: Gondeln werfen wandernde Schatten* | *Schiffsdeck: schaukelnde Schatten, Wasser links und rechts* |
+| ![Mond: graue Kraterlandschaft mit runden Felsen und langen dunkelblauen Schatten](screenshots/karte-mond.png) | ![Wüste: Sand mit wandernden Dünen, dünnen Kaktusschatten und Felsen](screenshots/karte-wueste.png) |
+| *Mond: du gleitest, die Erde wirft ein zweites Licht* | *Wüste: kaum Schatten, dafür Sandstürme* |
+| ![Bahnhof: zwei Gleise mit Signalen, ein grüner Zug fährt ein, Bänke und Säulen werfen lange Schatten](screenshots/karte-bahnhof.png) | ![Stadt bei Nacht: dunkle Strasse, Häuser, Laternen und Autoscheinwerfer werfen Lichtkegel](screenshots/karte-stadt.png) |
+| *Bahnhof: Züge halten und fahren wieder ab* | *Stadt bei Nacht: Laternen und Scheinwerfer* |
+| ![Bibliothek: lange Bücherregale, ein schwingender Leuchter erhellt den Saal, hinter den Regalen liegen Schatten](screenshots/karte-bibliothek.png) | ![Spiegelsaal: grelle Lichtstrahlen prallen an schrägen Spiegeln ab und kreuzen den dunklen Saal](screenshots/karte-spiegelsaal.png) |
+| *Bibliothek: ein schwingender Leuchter, fallende Bücher* | *Spiegelsaal: Strahlen prallen an Spiegeln ab* |
 | ![Bosskampf gegen den Schattenfresser: ein lila Wesen mit Zähnen, um ihn herum ein Kreis, in dem kein Schatten mehr liegt](screenshots/boss-schattenfresser.png) | ![Bosskampf gegen den Nachtmahr: der Garten ist fast schwarz, nur um die Spielfigur und um wandernde Lichtflecken ist etwas zu sehen](screenshots/boss-nachtmahr.png) |
 | *Schattenfresser: frisst die Schatten um sich herum* | *Nachtmahr: macht alles dunkel* |
 | ![Endkampf auf Stufe 10 gegen den Sonnenkern, eine wütende Sonne, die vier Laser über den Innenhof schießt](screenshots/boss-sonnenkern.png) | ![Garderobe mit Reitern für Skins, Hüte und Spuren und einer Vorschau der Spielfigur](screenshots/garderobe.png) |
@@ -303,6 +311,8 @@ Screenshots für diese README neu erzeugen:
 ```bash
 npm run screenshots
 ```
+
+Nur einzelne Bilder: `SHADY_ONLY=karte-schiff.png,modi.png npm run screenshots`.
 
 Das Tutorial automatisch mit echten Tastendrücken durchspielen und prüfen:
 
