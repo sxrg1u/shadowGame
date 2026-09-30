@@ -53,7 +53,9 @@ function mapPillarShape() {
 // Spiegelsaal: Spiegel [x, y, Länge, Grundwinkel, Schwenk] und Lichtwerfer an den Wänden
 const MIRRORS = [[360, 112, 74, 0.6, 0.35], [120, 332, 74, -0.7, 0.3], [384, 312, 64, 1.2, 0.4], [104, 150, 64, -1.0, 0.3], [248, 414, 74, 0.1, 0.5]];
 const EMITTERS = [{ x: 0, y: 112, a: 0.12, amp: 0.45, sp: 0.42 }, { x: W, y: 372, a: Math.PI + 0.1, amp: 0.45, sp: 0.37 },
-                  { x: 150, y: 0, a: Math.PI / 2, amp: 0.5, sp: 0.33 }, { x: 340, y: H, a: -Math.PI / 2, amp: 0.5, sp: 0.46 }];
+                  { x: 150, y: 0, a: Math.PI / 2, amp: 0.5, sp: 0.33 }, { x: 340, y: H, a: -Math.PI / 2, amp: 0.5, sp: 0.46 },
+                  { x: 0, y: 330, a: -0.2, amp: 0.5, sp: 0.39 }, { x: W, y: 150, a: Math.PI - 0.15, amp: 0.5, sp: 0.44 },
+                  { x: 330, y: 0, a: Math.PI / 2 + 0.3, amp: 0.45, sp: 0.35 }];
 const CITY_LAMPS = [[60, 184], [180, 296], [300, 184], [420, 296], [120, 70], [360, 60], [110, 420], [370, 424]];
 
 function initMapFx() {
@@ -64,12 +66,11 @@ function initMapFx() {
   if (m.tracks) {
     F.trains = m.tracks.map((y, i) => ({ y, next: rand(2, 4) + i * 4, warn: 0, train: null }));
     // Bahnsteigdächer: Stücke mit Lücken, damit man zwischen ihnen wechseln muss
-    F.roofs = [[46, 212, 92, 56], [194, 212, 92, 56], [342, 212, 92, 56], [60, 46, 96, 40], [318, 52, 100, 40], [110, 392, 100, 40], [300, 398, 96, 40]]
-      .map(([x, y, w, h]) => ({ x, y, w, h, tall: 0.7 }));
+    F.roofs = [[70, 222, 64, 36], [346, 222, 64, 36]].map(([x, y, w, h]) => ({ x, y, w, h, tall: 0.5 }));
   }
   if (m.id === 'ship') {
     F.sway = 0;
-    F.masts = [104, 214, 384].map((y, i) => { addFixed(fixed(W / 2, y, 16, { mast: true })); return { x: W / 2, y, ph: i * 4.6, open: 1 }; });
+    F.masts = [104, 214, 384].map((y, i) => { addFixed(fixed(W / 2, y, 16, { mast: true })); return { x: W / 2, y, ph: i * 4.6, open: 1, big: i === 1 }; });
     S.p.x = W / 2 + 60;
   }
   if (m.id === 'desert') {
@@ -152,7 +153,7 @@ function updateMapFx(dt, sunDt, playing) {
         const rest = (tn.stopX - tn.x) * tn.dir;
         tn.v = Math.max(30, tn.v0 * Math.sqrt(Math.max(0, rest) / tn.d0));
         tn.x += tn.dir * Math.min(tn.v * dt, Math.max(0, rest));
-        if (rest <= 1) { tn.x = tn.stopX; tn.v = 0; tn.st = 'stop'; tn.wait = rand(3.5, 5.5); Sound.sfx('block'); }
+        if (rest <= 1) { tn.x = tn.stopX; tn.v = 0; tn.st = 'stop'; tn.wait = rand(2.2, 3.2); Sound.sfx('block'); }
       } else if (tn.st === 'stop') {
         tn.wait -= dt;
         if (tn.wait < 1.4 && !tn.horn) { tn.horn = true; Sound.sfx('alarm'); }
@@ -199,8 +200,10 @@ function updateMapFx(dt, sunDt, playing) {
       const c = ((S.t + M.ph) % 14) / 14;
       M.open = c < 0.55 ? 1 : c < 0.62 ? 1 - (c - 0.55) / 0.07 : c < 0.93 ? 0 : (c - 0.93) / 0.07;
       // Grosses Segel unten, kleines Topsegel darüber, beide werfen Schatten
-      const w = 26 + 200 * M.open, wt = 20 + 120 * M.open;
-      if (M.open > 0.05) { cast({ x: M.x - w / 2, y: M.y - 10, w, h: 20, tall: 1.8 }); cast({ x: M.x - wt / 2, y: M.y - 40, w: wt, h: 14, tall: 2.2 }); }
+      if (M.open > 0.05) {
+        if (M.big) { const w = 26 + 200 * M.open, wt = 20 + 120 * M.open; cast({ x: M.x - w / 2, y: M.y - 10, w, h: 20, tall: 1.8 }); cast({ x: M.x - wt / 2, y: M.y - 40, w: wt, h: 14, tall: 2.2 }); }
+        else { const w = 22 + 150 * M.open; cast({ x: M.x - w / 2, y: M.y - 8, w, h: 16, tall: 1.5 }); }
+      }
     }
   }
 
@@ -305,7 +308,7 @@ function updateMapFx(dt, sunDt, playing) {
   // Spiegelsaal: Spiegel schwenken, Strahlen prallen an ihnen ab
   if (m.beams) {
     for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(S.t * 0.3 + M.ph);
-    const n = Math.min(EMITTERS.length, 2 + Math.floor(S.level / 3));
+    const n = Math.min(EMITTERS.length, 4 + Math.floor(S.level / 3));
     F.beams = [];
     for (let i = 0; i < n; i++) {
       const E = EMITTERS[i];
@@ -325,7 +328,7 @@ function updateMapFx(dt, sunDt, playing) {
 const tr_ = (de, en) => tr(de, en);
 
 // Ein Strahl läuft bis zur Wand oder Säule und prallt an Spiegeln ab (höchstens 6-mal)
-const BEAM_W = 8;
+const BEAM_W = 13;
 function castBeam(x, y, a, out) {
   let dx = Math.cos(a), dy = Math.sin(a), left = 1500, last = null;
   for (let k = 0; k < 7 && left > 1; k++) {
@@ -544,9 +547,11 @@ function drawMapTop() {
       ctx.beginPath(); ctx.moveTo(M.x - w / 2, y - h / 2); ctx.quadraticCurveTo(M.x, y - h / 2 - 9 * M.open * Math.sin(S.t * 1.3 + M.ph), M.x + w / 2, y - h / 2);
       ctx.lineTo(M.x + w / 2, y + h / 2); ctx.quadraticCurveTo(M.x, y + h / 2 + 7 * M.open, M.x - w / 2, y + h / 2); ctx.closePath(); ctx.fill(); ctx.stroke();
     };
-    sail(M.y, 26 + 200 * M.open, 20, 108);
-    sail(M.y - 33, 20 + 120 * M.open, 14, 66);
-    ctx.strokeStyle = '#4A2E1A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(M.x, M.y - 33); ctx.stroke();
+    if (M.big) {
+      sail(M.y, 26 + 200 * M.open, 20, 108);
+      sail(M.y - 33, 20 + 120 * M.open, 14, 66);
+      ctx.strokeStyle = '#4A2E1A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(M.x, M.y - 33); ctx.stroke();
+    } else sail(M.y, 22 + 150 * M.open, 16, 80);
     ctx.fillStyle = '#4A2E1A'; ctx.beginPath(); ctx.arc(M.x, M.y, 5, 0, TAU); ctx.fill();
   }
   if (m.beams) {
@@ -559,7 +564,7 @@ function drawMapTop() {
       ctx.fillStyle = '#6B5C8E'; ctx.beginPath(); ctx.arc(M.x, M.y, 4, 0, TAU); ctx.fill();
     }
     // Lichtwerfer an den Wänden; noch nicht aktive bleiben grau
-    const n = Math.min(EMITTERS.length, 2 + Math.floor(S.level / 3));
+    const n = Math.min(EMITTERS.length, 4 + Math.floor(S.level / 3));
     EMITTERS.forEach((E, i) => {
       ctx.save(); ctx.translate(Math.max(8, Math.min(W - 8, E.x)), Math.max(8, Math.min(H - 8, E.y))); ctx.rotate(E.cur ?? E.a);
       ctx.fillStyle = '#2B2F3A'; ctx.fillRect(-9, -8, 16, 16);
