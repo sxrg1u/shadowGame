@@ -35,7 +35,7 @@ function reset(mode, cfg) {
         anchor: null, anchorCd: 0, parry: 0, parryCd: 0, parryFx: 0,
         run: { hits: 0, newAch: [], newItems: [], dailyDone: false, jumps: 0, parries: 0 }, closeArmed: false, beatT: 0,
         pickT: 0, winT: 0, duelWinT: 0, incoming: [], countT: 0, countShown: 0, spots: [], torches: [], deco: [], trailFx: 0, tut: null,
-        casters: [], fx: {}, vel: { x: 0, y: 0 } };
+        casters: [], fx: {}, vel: { x: 0, y: 0 }, bolts: [], storm: null, chalkT: 0 };
   S.energy = maxEnergy();
   if (ruleOn('rush')) S.levelIn = 6;
   if (ruleOn('night')) S.lensIn = 3;
@@ -66,7 +66,15 @@ const isDuel = () => !!(S && S.cfg.duel);
 // Extra-Modus der laufenden Runde (siehe js/modes.js), sonst null. xf('noWheel') fragt einen Schalter des Modus ab.
 const XM = () => (S && typeof EXTRA !== 'undefined' && Object.prototype.hasOwnProperty.call(EXTRA, S.cfg.mode) && EXTRA[S.cfg.mode]) || null;
 const xf = k => { const X = XM(); return !!(X && X[k]); };
-const omega = () => { const X = XM(); return X && X.omega ? X.omega() : (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1); };
+const omega = () => {
+  const X = XM();
+  if (X && X.omega) return X.omega() * (on('sunstop') ? 0 : 1);
+  return on('timelapse') ? TAU / 3 : (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1) * lightF();
+};
+// Sonnenbremse hält Sonne und Lichter an
+const lightF = () => on('sunstop') ? 0 : on('timelapse') ? 4 : 1;
+// Fallen sehen aus wie gute Extras
+const TRAP_KINDS = new Set(['shroom', 'acid', 'storm', 'lure', 'leadboots']);
 const shadowLen = () => {
   const X = XM();
   if (X && X.shadowLen) return X.shadowLen();
@@ -76,13 +84,13 @@ const dirOf = az => ({ x: Math.cos(az), y: Math.sin(az) });
 // Zweite Sonne dicht neben der ersten: Die Schatten überlappen, hinter jeder Säule bleibt ein Kernschatten zum Verstecken
 const az2 = () => S.az + 0.75;
 const sun2On = () => on('sun2') || ruleOn('twosun');
-const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : PR;
+const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : on('giant') ? PR * 2 : PR;
 const inverted = () => on('invert') || ruleOn('mirror');
 const maxEnergy = () => ruleOn('glass') ? 60 : 100;
 const maxHearts = () => ruleOn('glass') || xf('noHearts') ? 0 : 2 + up('heart');
 const lingerF = () => 1 + 0.5 * up('linger');
 const comboMax = () => up('combo') ? 8 : 5;
-const mult = () => (on('star') ? 2 : 1) * S.diff.pts * (1 + 0.25 * up('greed')) * (ruleOn('glass') ? 2 : 1) * (1 + 0.1 * Math.floor(S.level / 5));
+const mult = () => (on('star') ? 2 : 1) * (on('night') ? 2 : 1) * S.diff.pts * (1 + 0.25 * up('greed')) * (ruleOn('glass') ? 2 : 1) * (1 + 0.1 * Math.floor(S.level / 5));
 const pts = n => Math.round(n * mult());
 const dashCdMax = () => on('dashy') ? 0.2 : ruleOn('dashfever') ? 0.25 : 1.1 * Math.pow(0.78, up('dashcd'));
 const maxCharges = () => 1 + up('twin');
@@ -97,7 +105,7 @@ function shadowFrom(px, py, az) {
 function lightAt(px, py) {
   const E = eaterAura();
   if (E && Math.hypot(px - E.x, py - E.y) < E.aura) return 1;
-  if (duskDark() || on('eclipse')) return 0;
+  if (duskDark() || on('eclipse') || on('night') || on('rain')) return 0;
   if (S.puddles.some(q => Math.hypot(px - q.x, py - q.y) < q.r)) return 0;
   if (S.map.dark) return darkLight(px, py);
   if (sandstorm()) return 0;
@@ -111,6 +119,19 @@ function lightAt(px, py) {
 }
 const inShadow = (px, py) => lightAt(px, py) === 0;
 
+// Kettenblitz: Vom weggedashten Käfer springt ein Blitz zu bis zu 4 weiteren in der Nähe
+function chainZap(from) {
+  const done = new Set([from]); let cur = from, n = 0;
+  while (n < 4) {
+    let best = null, bd = 160;
+    for (const q of S.bugs) if (!done.has(q) && q.life > 0) { const d = dist(q, cur); if (d < bd) { bd = d; best = q; } }
+    if (!best) break;
+    S.bolts.push({ x1: cur.x, y1: cur.y, x2: best.x, y2: best.y, life: 0.3 });
+    best.life = 0; done.add(best); sparks(best.x, best.y, '#9FE8FF', 8); S.score += pts(20); stat('bugs');
+    cur = best; n++;
+  }
+  if (n) { flash(tr('Kettenblitz ×', 'Chain lightning ×') + n, '#9FE8FF'); Sound.sfx('thunder'); }
+}
 function flash(text, color) { S.msg = { text, color, t: 1.6 }; if (typeof announce === 'function') announce(text); }
 function sparks(x, y, color, n) { for (let i = 0; i < n; i++) S.parts.push({ x, y, vx: fx(-90, 90), vy: fx(-90, 90), life: fx(0.3, 0.6), spark: color }); }
 // Treffer: Dash und kurze Unverwundbarkeit schützen, das Blasenschild fängt ab
@@ -170,6 +191,7 @@ function dash(tx, ty) {
   if (S.cfg.remote) { if (S.mode === 'play') RNet.send({ t: 'act' }); return; }
   const X = XM(); if (X && X.dash && S.mode === 'play') { X.dash(tx, ty); return; }
   if (S.mode !== 'play' || S.dash || S.charges <= 0) return;
+  if (on('lead')) { Sound.sfx('deny'); flash(tr('Bleischuhe: kein Dash!', 'Lead boots: no dash!'), '#98A1B4'); return; }
   let dx = S.face.x, dy = S.face.y;
   if (tx !== undefined) {
     dx = tx - S.p.x; dy = ty - S.p.y;
@@ -452,6 +474,13 @@ function updateBoss(dt, ef) {
 const EVENTS = [
   { name: 'Mittagssonne', min: 1, skip: () => S.map.dark, run() { S.E.noonWarn = 1.5; } },
   { name: 'Zweite Sonne', min: 1, skip: () => ruleOn('twosun') || S.map.dark, run() { S.E.sun2 = 7; } },
+  // Spiegelbild: nur das Bild ist seitenverkehrt, die Tasten bleiben gleich
+  { name: 'Spiegelbild', min: 1, run() { S.E.mirrorview = 6; } },
+  // Regen: kein Licht, aber der Boden ist glatt und die Figur rutscht
+  { name: 'Regen', min: 1, good: true, skip: () => xf('invert'), run() { S.E.rain = 7; } },
+  { name: 'Riesen-Modus', min: 2, skip: () => on('shrink') || ruleOn('tiny'), run() { S.E.giant = 6; resolve(); } },
+  // Zeitraffer: Die Sonne rast in 3 s einmal ganz im Kreis
+  { name: 'Zeitraffer', min: 1, run() { S.E.timelapse = 3; } },
   { name: 'Sturmböe', min: 0, run() { const a = rand(0, TAU); S.wind = { x: Math.cos(a) * 85, y: Math.sin(a) * 85 }; S.E.wind = 4; } },
   { name: 'Käferschwarm', min: 1, run() { const e = edgePoint(); for (let i = 0; i < 5; i++) S.bugs.push({ x: e.x + rand(-30, 30), y: e.y + rand(-30, 30), life: 12, ph: rand(0, 6) }); } },
   { name: 'Sonnenfunken', min: 0, run() {
@@ -526,20 +555,25 @@ function receiveAttack(name) {
 
 // ---------- Hilfsmittel ----------
 const ITEM_WEIGHTS = { umbrella: 8, crystal: 8, hourglass: 5, gold: 4, magnet: 6, boots: 6, bomb: 6, seed: 5, heart: 2,
-                       star: 5, frost: 5, shrink: 5, thunder: 5, portal: 3, bubble: 6, dashy: 4, decoy: 4, spear: 4, spikes: 4, clover: 3, shroom: 9, acid: 9 };
+                       star: 5, frost: 5, shrink: 5, thunder: 5, portal: 3, bubble: 6, dashy: 4, decoy: 4, spear: 4, spikes: 4, clover: 3, shroom: 9, acid: 9,
+                       shades: 5, chalk: 5, whistle: 5, sunstop: 5, moondust: 5, cloak: 5, chain: 5,
+                       storm: 5, lure: 5, leadboots: 5 };
 function rollItem() {
   if (ruleOn('traps')) return rng() < 0.5 ? 'shroom' : 'acid';
   const w = { ...ITEM_WEIGHTS };
   if (S.hearts >= maxHearts()) delete w.heart;
   if (S.portals) delete w.portal;
   if (ruleOn('tiny')) delete w.shrink;
+  if (xf('invert')) delete w.moondust;   // Nacht wäre für ein Lichtwesen kein Extra, sondern eine Falle
+  // Ohne Himmel keine Wolken
+  if (S.map.dark || S.map.noClouds) { delete w.whistle; delete w.storm; }
   let total = 0; for (const k in w) total += w[k];
   let r = rng() * total;
   for (const k in w) { r -= w[k]; if (r <= 0) return k; }
   return 'crystal';
 }
 function collect(it) {
-  const trap = it.kind === 'shroom' || it.kind === 'acid';
+  const trap = TRAP_KINDS.has(it.kind);
   if (trap) { stat('traps'); Sound.sfx('trap'); }
   else { stat('items'); Sound.sfx(it.kind === 'gold' ? 'gold' : 'pickup'); }
   switch (it.kind) {
@@ -576,6 +610,21 @@ function collect(it) {
       stat('bugs', n); Sound.sfx('thunder');
       flash(tr('Donnerschlag! ' + n + ' weg', 'Thunderclap! ' + n + ' gone'), COL.thunder); break;
     }
+    // Neue Extras
+    case 'shades': S.E.shades = 5 * lingerF(); flash(tr('Sonnenbrille! Licht tut halb so weh', 'Sunglasses! Light hurts half as much'), '#3FC7C4'); break;
+    case 'chalk': S.E.chalk = 4 * lingerF(); flash(tr('Schattenkreide! Lauf und mal Schatten', 'Shadow chalk! Run to draw shade'), '#DDE3EC'); break;
+    case 'whistle': S.clouds.push({ x: S.p.x, y: S.p.y, vx: 0, rx: 54, ry: 36, follow: 8 * lingerF() }); flash(tr('Wolkenpfeife! Eine Wolke folgt dir', 'Cloud whistle! A cloud follows you'), '#6FB8F0'); break;
+    case 'sunstop': S.E.sunstop = 6 * lingerF(); flash(S.map.dark ? tr('Sonnenbremse! Alle Lichter stehen still', 'Sun brake! All lights stand still') : tr('Sonnenbremse! Die Sonne steht still', 'Sun brake! The sun stands still'), '#F08A24'); break;
+    case 'moondust': S.E.night = 5 * lingerF(); flash(tr('Mondstaub! Nacht und doppelte Punkte', 'Moon dust! Night and double points'), '#C9B8FF'); break;
+    case 'cloak': S.E.cloak = 6 * lingerF(); flash(tr('Tarnkappe! Käfer und Raketen sehen dich nicht', 'Cloak! Bugs and missiles cannot see you'), '#9B7CF0'); break;
+    case 'chain': S.E.chain = 8 * lingerF(); flash(tr('Kettenblitz! Dash durch einen Käfer', 'Chain lightning! Dash through a bug'), '#9FE8FF'); break;
+    // Neue Fallen
+    case 'storm': S.storm = { x: S.p.x - 40, y: S.p.y - 40, life: 7, next: 1.2 }; flash(tr('Gewitterwolke! Sie blitzt dich an', 'Storm cloud! It strikes at you'), COL.warn); break;
+    case 'lure':
+      S.E.lure = 6;
+      for (let i = 0; i < 3; i++) { const e = edgePoint(); S.bugs.push({ x: e.x, y: e.y, life: 10, ph: rand(0, 6) }); }
+      flash(tr('Lockstoff! Die Käfer rasen auf dich zu', 'Lure! Bugs rush at you'), COL.warn); break;
+    case 'leadboots': S.E.lead = 5; S.E.boots = 0; flash(tr('Bleischuhe! Langsam und kein Dash', 'Lead boots! Slow and no dash'), COL.warn); break;
     case 'shroom': S.E.invert = 5; S.hurt = 0.3; flash(tr('Umkehrpilz! Alles verdreht', 'Reversal mushroom! Everything is inverted'), COL.shroom); break;
     case 'bubble': S.bubble = 3; flash(tr('Blasenschild ×3', 'Bubble shield ×3'), '#6FC3FF'); break;
     case 'dashy': S.E.dashy = 6; S.charges = maxCharges(); S.dashCd = 0; flash(tr('Dauerdash!', 'Dash frenzy!'), '#3FC7C4'); break;
@@ -659,8 +708,19 @@ function update(dt) {
   if (S.msg) { S.msg.t -= dt; if (S.msg.t <= 0) S.msg = null; }
   if (S.banner) { S.banner.t -= dt; if (S.banner.t <= 0) S.banner = null; }
   if (S.shake > 0) S.shake -= dt;
-  for (const c of S.clouds) c.x += c.vx * sunDt;
-  S.clouds = S.clouds.filter(c => c.x > -120 && c.x < W + 120);
+  for (const c of S.clouds) {
+    if (c.follow > 0) {   // Wolkenpfeife: folgt der Figur, danach zieht sie weiter
+      c.follow -= dt;
+      const dx = S.p.x - c.x, dy = S.p.y - c.y, d = Math.hypot(dx, dy);
+      if (d > 4) { const v = Math.min(d, 130 * dt); c.x += dx / d * v; c.y += dy / d * v; }
+      if (c.follow <= 0) c.vx = (c.x < W / 2 ? -1 : 1) * 40;
+    } else c.x += c.vx * sunDt;
+  }
+  S.clouds = S.clouds.filter(c => c.follow > 0 || (c.x > -120 && c.x < W + 120));
+  if (on('rain')) for (let i = 0; i < 6; i++) if (Math.random() < dt * 30) S.parts.push({ x: fx(-20, W), y: fx(-20, H), vx: 60, vy: 420, life: 0.14, streak: true, rain: true });
+  if (!on('rain') && !S.map.lowG && S.vel && (S.vel.x || S.vel.y)) { S.vel.x = 0; S.vel.y = 0; }
+  for (const b of S.bolts) b.life -= dt;
+  S.bolts = S.bolts.filter(b => b.life > 0);
   for (const r of S.pillars) { if (r.grow > 0) r.grow -= dt; if (r.glass > 0) r.glass -= dt; }
   updateMap(dt, sunDt, S.mode === 'play');
   if (S.mode === 'count') {
@@ -688,7 +748,7 @@ function update(dt) {
   const ml = Math.hypot(mx, my);
   if (ml) S.face = { x: mx / ml, y: my / ml };
   const sticky = S.honey.some(h => Math.hypot(S.p.x - h.x, S.p.y - h.y) < h.r);
-  const spd = 155 * (1 + 0.12 * up('feet')) * (on('boots') ? 1.7 : 1) * (S.hurt > 0 ? 0.6 : 1) * (sticky ? 0.45 : 1);
+  const spd = 155 * (1 + 0.12 * up('feet')) * (on('boots') ? 1.7 : 1) * (on('lead') ? 0.65 : 1) * (S.hurt > 0 ? 0.6 : 1) * (sticky ? 0.45 : 1);
   if (S.dash) {
     S.p.x += S.dash.vx * dt; S.p.y += S.dash.vy * dt; S.dash.t -= dt;
     S.parts.push({ x: S.p.x, y: S.p.y, vx: 0, vy: 0, life: 0.22, ghost: true });
@@ -697,9 +757,9 @@ function update(dt) {
       if (S.trailT <= 0) { S.trailT = 0.035; const life = 3 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 17, life, max: life }); }
     }
     if (S.dash.t <= 0) { if (S.map.lowG) { S.vel.x = S.dash.vx * 0.35; S.vel.y = S.dash.vy * 0.35; } S.dash = null; }
-  } else if (S.map.lowG) {
-    // Geringe Schwerkraft: Die Figur gleitet und bremst nur langsam ab
-    const tx = ml ? mx / ml * spd * 1.1 : 0, ty = ml ? my / ml * spd * 1.1 : 0, k = Math.min(1, dt * (ml ? 3.2 : 1.6));
+  } else if (S.map.lowG || on('rain')) {
+    // Geringe Schwerkraft oder nasser Boden: Die Figur gleitet und bremst nur langsam ab
+    const wet = on('rain'), tx = ml ? mx / ml * spd * 1.1 : 0, ty = ml ? my / ml * spd * 1.1 : 0, k = Math.min(1, dt * (wet ? (ml ? 1.5 : 0.6) : (ml ? 3.2 : 1.6)));
     S.vel.x += (tx - S.vel.x) * k; S.vel.y += (ty - S.vel.y) * k;
     S.p.x += S.vel.x * dt; S.p.y += S.vel.y * dt;
   } else if (ml) { S.p.x += mx / ml * spd * dt; S.p.y += my / ml * spd * dt; }
@@ -707,6 +767,11 @@ function update(dt) {
   if (trail && trail !== 'none' && (ml || S.dash)) {
     S.trailFx -= dt;
     if (S.trailFx <= 0) { S.trailFx = S.dash ? 0.018 : 0.06; emitTrail(S.parts, trail, S.p.x, S.p.y + pr() * 0.6); }
+  }
+  // Schattenkreide: hinter der Figur bleibt eine Schattenlinie
+  if (on('chalk') && (ml || S.dash)) {
+    S.chalkT -= dt;
+    if (S.chalkT <= 0) { S.chalkT = 0.035; S.puddles.push({ x: S.p.x, y: S.p.y, r: 14, life: 3, max: 3 }); }
   }
   if (S.charges < maxCharges()) {
     S.dashCd -= dt;
@@ -799,7 +864,7 @@ function update(dt) {
         L.life -= dt;
         const T = S.decoy || S.p;
         const dx = T.x - L.x, dy = T.y - L.y, d = Math.hypot(dx, dy) || 1;
-        const v = (40 + lv() * 5) * ef * (ruleOn('night') ? 2 : 1);
+        const v = (40 + lv() * 5) * ef * (ruleOn('night') ? 2 : 1) * (on('cloak') ? 0 : 1);
         L.x += dx / d * v * dt; L.y += dy / d * v * dt;
       }
       if (L.life <= 0) { S.lens = null; S.lensIn = rand(7, 12) * (ruleOn('night') ? 0.5 : 1); }
@@ -813,12 +878,25 @@ function update(dt) {
     if (B.life <= 0) S.beam = null;
   }
 
+  // Gewitterwolke (Falle): folgt dir und lässt alle 1,6 s einen Blitz einschlagen
+  if (S.storm) {
+    const G = S.storm; G.life -= dt; G.next -= dt;
+    const dx = S.p.x - G.x, dy = S.p.y - G.y, d = Math.hypot(dx, dy);
+    if (d > 4) { const v = Math.min(d, 75 * ef * dt); G.x += dx / d * v; G.y += dy / d * v; }
+    if (G.next <= 0 && G.life > 0.5) { G.next = 1.6; S.meteors.push({ x: S.p.x, y: S.p.y, r: 24, warn: 1.0, bolt: true }); Sound.sfx('thunder'); }
+    if (G.life <= 0) S.storm = null;
+  }
+
   // Sonnenfunken
   for (const m of S.meteors) {
     m.warn -= dt * (ef > 0 ? 1 : 0);
     if (m.warn <= 0) {
       m.done = true; S.shake = Math.max(S.shake, 0.3); sparks(m.x, m.y, COL.hot, 14); Sound.sfx('boom');
-      if (dist(m, S.p) < m.r + pr() && !on('shield')) { if (S.parry > 0) parried(S.p.x, S.p.y, tr('Funken abgewehrt!', 'Spark blocked!')); else hit(22, tr('Funkentreffer!', 'Spark hit!')); }
+      if (dist(m, S.p) < m.r + pr() && !on('shield')) {
+        if (S.parry > 0) parried(S.p.x, S.p.y, m.bolt ? tr('Blitz abgewehrt!', 'Lightning blocked!') : tr('Funken abgewehrt!', 'Spark blocked!'));
+        else hit(m.bolt ? 16 : 22, m.bolt ? tr('Blitzschlag!', 'Lightning strike!') : tr('Funkentreffer!', 'Spark hit!'));
+      }
+      if (m.bolt) { S.bolts.push({ x1: m.x + fx(-20, 20), y1: m.y - 90, x2: m.x, y2: m.y, life: 0.25 }); continue; }   // Blitz: kein glühender Boden
       const gx = Math.floor(m.x / CELL), gy = Math.floor(m.y / CELL);
       if (!S.hot.some(h => h.gx === gx && h.gy === gy)) S.hot.push({ gx, gy, warn: 0, life: 4 });
     }
@@ -905,7 +983,7 @@ function update(dt) {
     const T = S.decoy || S.p;
     const want = Math.atan2(T.y - m.y, T.x - m.x);
     const diff = ((want - m.a) % TAU + TAU + Math.PI) % TAU - Math.PI;
-    m.a += Math.max(-2.3 * dt, Math.min(2.3 * dt, diff)) * ef;
+    if (!on('cloak')) m.a += Math.max(-2.3 * dt, Math.min(2.3 * dt, diff)) * ef;
     const v = (160 + lv() * 6) * ef;
     m.x += Math.cos(m.a) * v * dt; m.y += Math.sin(m.a) * v * dt;
     if (Math.random() < dt * 30) S.parts.push({ x: m.x - Math.cos(m.a) * 10, y: m.y - Math.sin(m.a) * 10, vx: fx(-15, 15), vy: fx(-15, 15), life: 0.35 });
@@ -936,13 +1014,15 @@ function update(dt) {
     S.bugIn = Math.max(2.2, 5.5 - dl() * 0.5) / (ruleOn('bugs') ? 3 : 1);
   }
   for (const b of S.bugs) {
+    if (b.life <= 0) continue;
     b.life -= dt;
-    const T = S.decoy || S.p;
+    // Getarnt: Die Käfer irren herum, statt dich zu jagen
+    const T = on('cloak') ? { x: b.x + Math.cos(b.ph + S.t * 0.7) * 80, y: b.y + Math.sin(b.ph * 1.3 + S.t * 0.6) * 80 } : S.decoy || S.p;
     const tx = T.x - b.x, ty = T.y - b.y, td = Math.hypot(tx, ty) || 1;
-    const v = (b.tame ? 34 : (52 + lv() * 6) * (S.map.bugF || 1)) * ef, wob = Math.sin(S.t * 5 + b.ph) * 40 * ef;
+    const v = (b.tame ? 34 : (52 + lv() * 6) * (S.map.bugF || 1) * (on('lure') ? 2 : 1)) * ef, wob = Math.sin(S.t * 5 + b.ph) * 40 * ef;
     b.x += (tx / td * v - ty / td * wob) * dt;
     b.y += (ty / td * v + tx / td * wob) * dt;
-    if (S.decoy && td < 12) { b.life = 0; sparks(b.x, b.y, COL.bug, 8); continue; }
+    if (S.decoy && !on('cloak') && td < 12) { b.life = 0; sparks(b.x, b.y, COL.bug, 8); continue; }
     const dx = S.p.x - b.x, dy = S.p.y - b.y, d = Math.hypot(dx, dy) || 1;
     if (d < pr() + 6) {
       b.life = 0;
@@ -952,6 +1032,7 @@ function update(dt) {
         flash((S.dash ? tr('Weggedasht +', 'Dashed away +') : tr('Abgewehrt +', 'Fended off +')) + p, S.dash ? '#5FBE90' : COL.umbrella);
         stat('bugs'); if (S.dash) stat('bugsDashed');
         Sound.sfx('pop');
+        if (S.dash && on('chain')) chainZap(b);
       } else { if (hit(18, tr('Autsch!', 'Ouch!'))) { S.p.x += dx / d * 26; S.p.y += dy / d * 26; resolve(); } sparks(b.x, b.y, COL.bug, 10); }
     }
   }
@@ -1013,7 +1094,7 @@ function update(dt) {
   for (const g of S.magpies) {
     g.life -= dt;
     if (!g.target || g.target.life <= 0) {
-      const loot = S.dews.concat(S.items.filter(i => i.kind !== 'acid' && i.kind !== 'shroom'));
+      const loot = S.dews.concat(S.items.filter(i => !TRAP_KINDS.has(i.kind)));
       g.target = loot.length ? loot.reduce((a, b) => dist(a, g) < dist(b, g) ? a : b) : null;
     }
     const goal = g.life < 2 || !g.target ? { x: g.x < W / 2 ? -40 : W + 40, y: g.y - 60 } : g.target;
@@ -1032,7 +1113,7 @@ function update(dt) {
   const light = shielded ? 0 : inv ? 1 - lightAt(S.p.x, S.p.y) : lightAt(S.p.x, S.p.y);
   S.lit = light > 0;
   let burn = 0;
-  if (S.lit) burn += (32 + lv() * 4) * light * Math.pow(0.85, up('cream')) * (ruleOn('dashfever') ? 1.3 : 1);
+  if (S.lit) burn += (32 + lv() * 4) * light * Math.pow(0.85, up('cream')) * (ruleOn('dashfever') ? 1.3 : 1) * (on('shades') ? 0.5 : 1);
   const gx = Math.floor(S.p.x / CELL), gy = Math.floor(S.p.y / CELL);
   if (S.hot.some(h => h.warn <= 0 && h.gx === gx && h.gy === gy)) burn += 30;
   if (!shielded && !inv && S.lens && S.lens.warn <= 0 && dist(S.lens, S.p) < S.lens.r) burn += 60;

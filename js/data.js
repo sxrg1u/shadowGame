@@ -211,6 +211,7 @@ const ACH = [
   { id: 'xonelife', name: 'Ohne Netz', icon: 'heart', desc: 'Erreiche Stufe 8 im Modus „Ein Leben“.', goal: 8, val: s => s.onelifeLevel || 0 },
   { id: 'xroyale', name: 'Letzter Schatten', icon: 'decoy', desc: 'Gewinne ein Battle Royale.', goal: 1, val: s => s.royaleWins || 0 },
   { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
+  { id: 'trails15', name: 'Spurenkönig', icon: 'sparkle', desc: 'Besitze 15 Spuren.', goal: 15, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));
 

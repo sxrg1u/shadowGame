@@ -33,6 +33,14 @@ const SHOTS = [
   { file: 'karte-garten.png', query: 'map=garden&level=4&seed=21&frames=300' },
   { file: 'karte-dach.png', query: 'map=roof&level=5&seed=22&frames=300' },
   { file: 'karte-keller.png', query: 'map=cellar&level=5&seed=27&frames=340' },
+  { file: 'karte-jahrmarkt.png', query: 'map=fair&level=3&seed=51&frames=300' },
+  { file: 'karte-schiff.png', query: 'map=ship&level=3&seed=52&frames=600' },
+  { file: 'karte-mond.png', query: 'map=moon&level=3&seed=53&frames=300' },
+  { file: 'karte-wueste.png', query: 'map=desert&level=3&seed=54&frames=300' },
+  { file: 'karte-bahnhof.png', query: 'map=station&level=3&seed=55&frames=330' },
+  { file: 'karte-stadt.png', query: 'map=city&level=3&seed=56&frames=300' },
+  { file: 'karte-bibliothek.png', query: 'map=library&level=3&seed=57&frames=300' },
+  { file: 'karte-spiegelsaal.png', query: 'map=mirror&level=3&seed=58&frames=300' },
   { file: 'boss-schattenfresser.png', query: 'level=6&seed=31&boss=eater&frames=360' },
   { file: 'boss-nachtmahr.png', query: 'map=garden&level=6&seed=32&boss=dusk&frames=250' },
   { file: 'boss-sonnenkern.png', query: 'level=10&seed=33&mode=campaign&boss=core&frames=300' },
@@ -94,7 +102,10 @@ async function main() {
   page.on('pageerror', e => console.error('Fehler im Spiel:', e.message));
   const url = q => `http://127.0.0.1:${port}/index.html?${q}`;
 
+  // SHADY_ONLY=karte-schiff.png,modi.png erzeugt nur diese Bilder
+  const only = process.env.SHADY_ONLY ? process.env.SHADY_ONLY.split(',') : null;
   for (const s of SHOTS) {
+    if (only && !only.includes(s.file)) continue;
     await page.goto(url(BASE + '&' + s.query));
     await settle(page);
     const file = path.join(OUT, s.file);
@@ -102,6 +113,7 @@ async function main() {
     console.log('✓', path.relative(ROOT, file));
   }
 
+  if (only && !only.includes(GIF.file)) { await browser.close(); server.close(); return; }
   // GIF aus mehreren Bildern des Spielfelds
   await page.goto(url(GIF.query));
   await settle(page);

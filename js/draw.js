@@ -259,6 +259,7 @@ function draw() {
   const flashes = P.settings.flashes;
   ctx.save();
   if (S.shake > 0 && P.settings.shake) ctx.translate(fx(-1, 1) * S.shake * 9, fx(-1, 1) * S.shake * 9);
+  if (on('mirrorview')) { ctx.translate(W, 0); ctx.scale(-1, 1); }   // Spiegelbild: nur das Bild, die Anzeigen bleiben lesbar
   if (S.map.dark) {
     CC.el('yard'); ctx.fillStyle = COL.shade; ctx.fillRect(-10, -10, W + 20, H + 20);
     CC.el('tile'); tiles(COL.shadeTile);
@@ -467,7 +468,8 @@ function draw() {
       ctx.globalAlpha = Math.min(0.4, q.life * 0.35); ctx.fillStyle = '#6B6470';
       ctx.beginPath(); ctx.arc(q.x, q.y, 3 + (1.4 - q.life) * 6, 0, TAU); ctx.fill();
     } else if (q.streak) {
-      ctx.strokeStyle = COL.white; ctx.lineWidth = 1.5;
+      if (q.rain) ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = q.rain ? '#CFE6FF' : COL.white; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * 0.06, q.y - q.vy * 0.06); ctx.stroke();
     } else {
       ctx.fillStyle = q.spark || COL.white;
@@ -548,10 +550,38 @@ function draw() {
     }
     if (on('boots')) { ctx.fillStyle = 'rgba(43,143,214,.35)'; ctx.beginPath(); ctx.arc(p.x, p.y + R, R * 1.2, 0, TAU); ctx.fill(); }
     if (on('magnet')) { ctx.strokeStyle = 'rgba(217,70,59,.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]); ctx.lineDashOffset = S.t * 40; ctx.beginPath(); ctx.arc(p.x, p.y, 40 + (S.t * 40 % 30), 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
-    const alpha = (0.35 + 0.65 * S.energy / 100) * (S.hurt > 0 && Math.floor(S.hurt * 20) % 2 ? 0.3 : 1);
+    if (on('lead')) { ctx.fillStyle = 'rgba(58,63,74,.55)'; ctx.beginPath(); ctx.ellipse(p.x, p.y + R + 1, R * 1.1, 3.5, 0, 0, TAU); ctx.fill(); }
+    if (on('shades')) {
+      ctx.fillStyle = 'rgba(63,199,196,.25)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, R + 7, 0, TAU); ctx.fill();
+    }
+    if (on('chain')) { ctx.strokeStyle = 'rgba(159,232,255,' + (0.5 + 0.4 * Math.sin(S.t * 20)) + ')'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]); ctx.lineDashOffset = -S.t * 50; ctx.beginPath(); ctx.arc(p.x, p.y, R + 11, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
+    const alpha = (0.35 + 0.65 * S.energy / 100) * (S.hurt > 0 && Math.floor(S.hurt * 20) % 2 ? 0.3 : 1) * (on('cloak') ? 0.4 : 1);
     CC.el('player');
     drawCreature(ctx, p.x, p.y, R, { skin: P.equip.skin, hat: P.equip.hat, t: S.t, alpha, eyeAlpha: 1, ccHat: 'hat',
       tint: on('invert') ? COL.shroom : (XX && ((S.xr && S.xr.tint) || XX.tint)) || null, eyes: S.burn > 0 ? 'burn' : on('invert') ? 'dizzy' : S.mode === 'over' && S.won ? 'happy' : 'open' });
+  }
+
+  // Kettenblitz und Blitzschläge
+  if (S.bolts.length) {
+    CC.el('bolt'); ctx.lineCap = 'round';
+    for (const b of S.bolts) {
+      ctx.globalAlpha = Math.min(1, b.life / 0.2);
+      for (const [w, col] of [[6, 'rgba(159,232,255,.45)'], [2, '#FFFFFF']]) {
+        ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(b.x1, b.y1);
+        for (let i = 1; i < 5; i++) { const f = i / 5; ctx.lineTo(b.x1 + (b.x2 - b.x1) * f + Math.sin(i * 7.3 + b.x1) * 7, b.y1 + (b.y2 - b.y1) * f + Math.cos(i * 5.1 + b.y1) * 7); }
+        ctx.lineTo(b.x2, b.y2); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  if (S.storm) {
+    const G = S.storm, fl = G.next < 0.25 && Math.floor(S.t * 20) % 2 === 0;
+    CC.el('stormCloud'); ctx.globalAlpha = Math.min(1, G.life) * 0.9;
+    ctx.fillStyle = fl ? '#8A93A6' : '#3A3F4A';
+    ctx.beginPath(); ctx.ellipse(G.x, G.y, 30, 18, 0, 0, TAU); ctx.ellipse(G.x - 16, G.y + 4, 18, 12, 0, 0, TAU); ctx.ellipse(G.x + 17, G.y + 3, 17, 12, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#FFE36B'; ctx.beginPath(); ctx.moveTo(G.x + 2, G.y + 8); ctx.lineTo(G.x - 4, G.y + 18); ctx.lineTo(G.x, G.y + 18); ctx.lineTo(G.x - 3, G.y + 27); ctx.lineTo(G.x + 5, G.y + 15); ctx.lineTo(G.x + 1, G.y + 15); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha = 1;
   }
 
   // Käfer
@@ -671,6 +701,8 @@ function draw() {
   if (!on('eclipse') && !S.map.dark && !duskDark()) { CC.el('sun', 0); drawSun(S.az, on('noon') ? 1.6 : 1); CC.el('sun', 1); if (sun2On()) drawSun(az2(), 1); CC.el('sky'); drawMapSky(); }
   if (duskDark()) drawDarkness();
   drawMapOverlay();
+  if (on('rain')) { CC.el('rain'); ctx.fillStyle = 'rgba(40,60,90,' + (0.3 * Math.min(1, S.E.rain)) + ')'; ctx.fillRect(-10, -10, W + 20, H + 20); }
+  if (on('night')) { CC.el('night'); ctx.fillStyle = 'rgba(16,20,56,' + (0.42 * Math.min(1, S.E.night)) + ')'; ctx.fillRect(-10, -10, W + 20, H + 20); }
 
   // Überblendungen
   CC.el('overlay');
@@ -721,9 +753,16 @@ function draw() {
     const lab = { shield: [tr('Schirm', 'Umbrella'), COL.umbrella], slow: [tr('Sanduhr', 'Hourglass'), '#5FBE90'], magnet: ['Magnet', COL.magnet], boots: ['Turbo', '#6FB8F0'],
                   star: [tr('Punkte ×2', 'Points ×2'), COL.gold], frost: ['Frost', COL.frost], shrink: [tr('Winzig', 'Tiny'), COL.shrink], invert: [tr('Verdreht', 'Inverted'), '#C98AE6'],
                   eclipse: [tr('Finsternis', 'Eclipse'), '#8E9CC2'], sun2: [tr('Zwei Sonnen', 'Two suns'), COL.sun], wind: [tr('Sturm', 'Gale'), COL.white], noon: [tr('Mittag', 'Noon'), COL.sun],
-                  dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'], colorchaos: [tr('Farbchaos', 'Color chaos'), '#E0457B'] };
+                  dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'], colorchaos: [tr('Farbchaos', 'Color chaos'), '#E0457B'],
+                  shades: [tr('Sonnenbrille', 'Sunglasses'), '#3FC7C4'], chalk: [tr('Kreide', 'Chalk'), '#DDE3EC'], sunstop: [tr('Sonne steht', 'Sun stopped'), '#F08A24'],
+                  night: [tr('Mondnacht', 'Moon night'), '#C9B8FF'], cloak: [tr('Getarnt', 'Cloaked'), '#9B7CF0'], chain: [tr('Kettenblitz', 'Chain lightning'), '#9FE8FF'],
+                  mirrorview: [tr('Spiegelbild', 'Mirror image'), '#C9B8FF'], rain: [tr('Regen', 'Rain'), '#6FB8F0'], giant: [tr('Riese', 'Giant'), COL.warn], timelapse: [tr('Zeitraffer', 'Time-lapse'), COL.sun],
+                  lure: [tr('Lockstoff', 'Lure'), COL.warn], lead: [tr('Bleischuhe', 'Lead boots'), '#98A1B4'] };
     for (const k in lab) if (on(k)) list.push([lab[k][0] + ' ' + S.E[k].toFixed(1) + ' s', lab[k][1]]);
     if (S.bubble > 0) list.push([tr('Schild ×', 'Shield ×') + S.bubble, '#6FC3FF']);
+    const fc = S.clouds.find(c => c.follow > 0);
+    if (fc) list.push([tr('Wolke ', 'Cloud ') + fc.follow.toFixed(1) + ' s', '#6FB8F0']);
+    if (S.storm) list.push([tr('Gewitter ', 'Storm ') + S.storm.life.toFixed(1) + ' s', COL.warn]);
     if (S.decoy) list.push([tr('Klon ', 'Clone ') + S.decoy.life.toFixed(1) + ' s', '#C9B8FF']);
     if (S.lucky > 0) list.push([tr('Glück ×', 'Luck ×') + S.lucky, '#5FBE90']);
     if (S.combo > 1) list.push([tr('Kombo ×', 'Combo ×') + S.combo, COL.dew]);

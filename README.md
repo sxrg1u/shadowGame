@@ -34,12 +34,20 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 
 | | |
 | --- | --- |
-| ![Hauptmenü von Stay Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Modusauswahl mit den vier Karten Innenhof, Garten, Dach und Keller sowie Kampagne, Endlos, Täglich und Woche](screenshots/modi.png) |
-| *Das Hauptmenü* | *Modus und Karte wählen* |
+| ![Hauptmenü von Stay Shady mit Logo, Menüknöpfen, täglicher Herausforderung und Wochenherausforderung](screenshots/hauptmenue.png) | ![Kartenübersicht mit täglicher und wöchentlicher Herausforderung und allen 12 Karten von Innenhof bis Spiegelsaal](screenshots/modi.png) |
+| *Das Hauptmenü* | *Kartenübersicht: alle 12 Karten von leicht nach schwer* |
 | ![Normales Spiel auf Stufe 3: gelber Innenhof, dunkelblaue Schatten der Säulen, in der Mitte die kleine schwarze Spielfigur](screenshots/spiel-normal.png) | ![Garten: grüne Wiese mit Blumen, runde Bäume und Hecken werfen dunkelgrüne Schatten](screenshots/karte-garten.png) |
 | *Innenhof: die erste Karte* | *Garten: runde Bäume, weiche Schatten* |
 | ![Dach: orange Ziegel, Schornsteine mit Rauch, lange lila Schatten, oben rechts ein Pfeil für die Windrichtung](screenshots/karte-dach.png) | ![Keller: dunkler Raum, wandernde Fackeln werfen orange Lichtkreise, Säulen werfen Schatten von den Fackeln weg](screenshots/karte-keller.png) |
 | *Dach: der Wind schiebt dich über die Ziegel* | *Keller: keine Sonne, nur Fackeln* |
+| ![Jahrmarkt: ein Riesenrad mit bunten Gondeln, zwei gestreifte Karussells und rot-weisse Buden werfen lila Schatten](screenshots/karte-jahrmarkt.png) | ![Schiffsdeck: Holzplanken zwischen Wasser und Reling, drei Masten mit Segeln, das mittlere Segel ist gross und hat ein Topsegel](screenshots/karte-schiff.png) |
+| *Jahrmarkt: Gondeln werfen wandernde Schatten* | *Schiffsdeck: schaukelnde Schatten, Wasser links und rechts* |
+| ![Mond: graue Kraterlandschaft mit runden Felsen und langen dunkelblauen Schatten](screenshots/karte-mond.png) | ![Wüste: Sand mit wandernden Dünen, dünnen Kaktusschatten und Felsen](screenshots/karte-wueste.png) |
+| *Mond: du gleitest, die Erde wirft ein zweites Licht* | *Wüste: kaum Schatten, dafür Sandstürme* |
+| ![Bahnhof: zwei Gleise mit Signalen, ein grüner Zug fährt ein, Bänke und Säulen werfen lange Schatten](screenshots/karte-bahnhof.png) | ![Stadt bei Nacht: dunkle Strasse, Häuser, Laternen und Autoscheinwerfer werfen Lichtkegel](screenshots/karte-stadt.png) |
+| *Bahnhof: Züge halten und fahren wieder ab* | *Stadt bei Nacht: Laternen und Scheinwerfer* |
+| ![Bibliothek: lange Bücherregale, ein schwingender Leuchter erhellt den Saal, hinter den Regalen liegen Schatten](screenshots/karte-bibliothek.png) | ![Spiegelsaal: grelle Lichtstrahlen prallen an schrägen Spiegeln ab und kreuzen den dunklen Saal](screenshots/karte-spiegelsaal.png) |
+| *Bibliothek: ein schwingender Leuchter, fallende Bücher* | *Spiegelsaal: Strahlen prallen an Spiegeln ab* |
 | ![Bosskampf gegen den Schattenfresser: ein lila Wesen mit Zähnen, um ihn herum ein Kreis, in dem kein Schatten mehr liegt](screenshots/boss-schattenfresser.png) | ![Bosskampf gegen den Nachtmahr: der Garten ist fast schwarz, nur um die Spielfigur und um wandernde Lichtflecken ist etwas zu sehen](screenshots/boss-nachtmahr.png) |
 | *Schattenfresser: frisst die Schatten um sich herum* | *Nachtmahr: macht alles dunkel* |
 | ![Endkampf auf Stufe 10 gegen den Sonnenkern, eine wütende Sonne, die vier Laser über den Innenhof schießt](screenshots/boss-sonnenkern.png) | ![Garderobe mit Reitern für Skins, Hüte und Spuren und einer Vorschau der Spielfigur](screenshots/garderobe.png) |
@@ -178,13 +186,38 @@ Nach jeder Stufe kommt ein Boss. Ihn verletzen ein Dash oder eine Lichtkugel, di
 
 ## Chaos-Rad
 
-Alle paar Sekunden löst das Chaos-Rad eines von 20 Ereignissen aus. Meistens ist es gemein, manchmal gut:
+Alle paar Sekunden löst das Chaos-Rad eines von 24 Ereignissen aus. Meistens ist es gemein, manchmal gut:
 
-Mittagssonne, Zweite Sonne, Sturmböe, Käferschwarm, Sonnenfunken, Erdbeben, Blitzlicht, Leuchtturm, Elstern, Honigregen, Lasergitter, Laserturm, Sägeblätter, Suchraketen, Lichtwirbel, Glassäulen, Farbchaos, Beuteregen, Mondfinsternis, Tauregen.
+Mittagssonne, Zweite Sonne, Sturmböe, Käferschwarm, Sonnenfunken, Erdbeben, Blitzlicht, Leuchtturm, Elstern, Honigregen, Lasergitter, Laserturm, Sägeblätter, Suchraketen, Lichtwirbel, Glassäulen, Farbchaos, Beuteregen, Mondfinsternis, Tauregen, Spiegelbild, Regen, Riesen-Modus, Zeitraffer.
+
+- **Spiegelbild:** 6 s lang ist das Bild seitenverkehrt. Die Tasten bleiben gleich, Maus und Finger zeigen dorthin, wo du hinsiehst.
+- **Regen:** 7 s lang gibt es kein Licht, aber der Boden ist nass und du rutschst.
+- **Riesen-Modus:** 6 s lang bist du doppelt so gross und passt schlechter in Schatten.
+- **Zeitraffer:** Die Sonne rast in 3 s einmal im Kreis, alle Schatten wirbeln herum.
 
 **Farbchaos** bringt alle Farben durcheinander: Boden, Schatten, Säulen, Spielfigur, Gegner, Bosse, Anzeige und Karten bekommen jeweils einen eigenen, wild wechselnden Farbton. Mit jeder Stufe wird es schlimmer. Auf Stufe 1 und 2 wechseln etwa dreimal pro Sekunde nur manche Farben, ab Stufe 8 wechselt alles bis zu zwölfmal pro Sekunde, dazu kommen invertierte Farben und vertauschte Farbkanäle. Das Ereignis ist rein optisch, Hitboxen und Regeln bleiben gleich. Wer unter Einstellungen **Grelle Blitze** ausschaltet, bekommt eine sanfte Version mit weichen Übergängen und ohne Invertierung.
 
-Dazu kommen über 40 gute und schlechte Sachen, die auf dem Feld auftauchen: Schirm, Blasenschild, Schattenklon, Magnet, Portale, Frostkristall, Fallen wie Umkehrpilz und Säuretropfen und mehr. Die komplette Liste steht im Spiel unter **Anleitung → Lexikon**.
+Dazu kommen über 50 gute und schlechte Sachen, die auf dem Feld auftauchen: Schirm, Blasenschild, Schattenklon, Magnet, Portale, Frostkristall, Fallen wie Umkehrpilz und Säuretropfen und mehr. Die komplette Liste steht im Spiel unter **Anleitung → Lexikon**.
+
+Neu sind sieben Extras und drei getarnte Fallen. Die Fallen sehen fast aus wie ein gutes Extra, nur ein kleines Detail verrät sie.
+
+| Extra | Wirkung |
+| --- | --- |
+| **Sonnenbrille** | 5 s lang tut Licht halb so weh |
+| **Schattenkreide** | 4 s lang malst du beim Laufen eine Schattenlinie |
+| **Wolkenpfeife** | eine Wolke folgt dir 8 s lang |
+| **Sonnenbremse** | die Sonne (auf dunklen Karten alle Lichter) steht 6 s still |
+| **Mondstaub** | 5 s Nacht: überall Schatten, doppelte Punkte |
+| **Tarnkappe** | 6 s lang sehen dich Käfer, Raketen und Brennglas nicht |
+| **Kettenblitz** | 8 s lang springt ein Blitz vom weggedashten Käfer zu bis zu 4 weiteren |
+
+| Falle | Sieht aus wie | Woran du sie erkennst | Wirkung |
+| --- | --- | --- | --- |
+| **Gewitterwolke** | Wolkenpfeife | graue Wolke mit Blitz | folgt dir 7 s und lässt Blitze einschlagen |
+| **Lockstoff** | Tarnkappe | gelbe Spitze | drei Käfer kommen, alle jagen dich doppelt so schnell |
+| **Bleischuhe** | Turboschuhe | graue Pfeile | 5 s langsam und kein Dash |
+
+Wolkenpfeife und Gewitterwolke gibt es nur auf Karten mit Himmel.
 
 ## Upgrades nach jedem Boss
 
@@ -196,7 +229,8 @@ Die 20 Karten: Schnelldash, Schattenspur, Zäher Schatten, Lange Schatten, Extra
 
 - **18 Skins**, von Mitternacht und Moos bis Regenbogen, Eis und Lava.
 - **20 Hüte**, zum Beispiel Zylinder, Piratenhut, Wikingerhelm und Kochmütze.
-- **10 Spuren**, die hinter deiner Figur herziehen: Funken, Blasen, Herzen, Noten, Sternschnuppe, Regenbogen, Schattenecho, Blätter, Feuer, Mondstaub.
+- **24 Spuren**, die hinter deiner Figur herziehen: Funken, Blasen, Herzen, Noten, Sternschnuppe, Regenbogen, Rauch, Schneeflocken, Tautropfen, Pixel, Blitze, Konfetti, Glitzer, Schattenecho, Blätter, Feuer, Mondstaub, Wellen, Sandkörner, Dampf, Neon, Buchseiten, Lichtstrahlen, Erdlicht.
+- In der Garderobe bleibt die Figur beim Scrollen stehen, nur die Liste bewegt sich. Auf allen Bildschirmen bleiben der Kopf mit dem Zurück-Knopf und die Reiter oben.
 
 Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen:
 
@@ -213,6 +247,13 @@ Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen
 | Spur Blätter | Stufe 6 im Garten erreichen |
 | Spur Feuer | 10 Bosse besiegen |
 | Spur Mondstaub | Den Nachtmahr zweimal besiegen |
+| Spur Wellen | Stufe 6 auf dem Schiffsdeck |
+| Spur Sandkörner | Stufe 6 in der Wüste |
+| Spur Dampf | Stufe 6 im Bahnhof |
+| Spur Neon | Stufe 6 in der Stadt bei Nacht |
+| Spur Buchseiten | Stufe 6 in der Bibliothek |
+| Spur Lichtstrahlen | Stufe 6 im Spiegelsaal |
+| Spur Erdlicht | Stufe 6 auf dem Mond |
 | Skin Wochenheld, Hut Lorbeerkranz | Eine Wochenherausforderung schaffen |
 
 ## Erfolge und Statistik
@@ -330,6 +371,8 @@ Screenshots für diese README neu erzeugen:
 ```bash
 npm run screenshots
 ```
+
+Nur einzelne Bilder: `SHADY_ONLY=karte-schiff.png,modi.png npm run screenshots`.
 
 Das Tutorial automatisch mit echten Tastendrücken durchspielen und prüfen:
 

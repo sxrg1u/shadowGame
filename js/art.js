@@ -60,6 +60,14 @@ const GOOD = [
   ['spikes','Stachelpanzer','6 s lang zerstört jede Berührung Käfer und Raketen und verletzt Bosse, auch ohne Dash.'],
   ['clover','Glücksklee','Die nächsten 3 Drehungen des Chaos-Rads sind gut.'],
   ['lootrain','Beuteregen','Chaos-Rad: 3 zufällige Extras fallen vom Himmel.'],
+  ['downpour','Regen','Chaos-Rad: 7 s lang kein Licht, aber der Boden ist glatt und du rutschst.'],
+  ['shades','Sonnenbrille','5 s lang tut Licht nur halb so weh.'],
+  ['chalk','Schattenkreide','4 s lang malst du beim Laufen eine Schattenlinie hinter dir.'],
+  ['whistle','Wolkenpfeife','Ruft eine Wolke, die dir 8 s lang folgt. Nicht auf Karten ohne Himmel.'],
+  ['sunstop','Sonnenbremse','Die Sonne bleibt 6 s lang stehen. Auf dunklen Karten stehen alle Lichter still.'],
+  ['moondust','Mondstaub','5 s lang ist Nacht: überall Schatten und doppelte Punkte.'],
+  ['cloak','Tarnkappe','6 s lang sehen dich Käfer, Raketen und das Brennglas nicht.'],
+  ['chain','Kettenblitz','8 s lang springt ein Blitz vom weggedashten Käfer zu bis zu 4 weiteren.'],
 ];
 const BAD = [
   ['bug','Lichtkäfer','Jagt dich. Kostet 18 Kraft und stößt dich weg.'],
@@ -69,6 +77,12 @@ const BAD = [
   ['crumble','Einsturz','Bei jedem Stufenwechsel verschwindet eine Säule.'],
   ['shroom','Umkehrpilz','Falle. 5 s lang ist deine Steuerung verdreht, auch der Dash.'],
   ['acid','Säuretropfen','Falle, sieht aus wie Tau. −25 Kraft und −100 Punkte.'],
+  ['mirrorview','Spiegelbild','Chaos-Rad: 6 s lang ist das Bild seitenverkehrt. Die Tasten bleiben gleich.'],
+  ['giant','Riesen-Modus','Chaos-Rad: 6 s lang bist du doppelt so gross und passt schlechter in Schatten.'],
+  ['timelapse','Zeitraffer','Chaos-Rad: Die Sonne rast in 3 s einmal im Kreis, alle Schatten wirbeln herum.'],
+  ['storm','Gewitterwolke','Falle, sieht aus wie die Wolkenpfeife (graue Wolke). Folgt dir 7 s und lässt Blitze einschlagen.'],
+  ['lure','Lockstoff','Falle, sieht aus wie die Tarnkappe (gelbe Spitze). Drei Käfer kommen, alle jagen dich doppelt so schnell.'],
+  ['leadboots','Bleischuhe','Falle, sieht aus wie Turboschuhe (graue Pfeile). 5 s lang langsam und kein Dash.'],
   ['honey','Honigpfütze','Chaos-Rad: Klebrig, du wirst halb so schnell.'],
   ['meteor','Sonnenfunken','Chaos-Rad: Rote Kreise warnen vor dem Einschlag, danach brennt der Boden.'],
   ['beam','Leuchtturm','Chaos-Rad: Ein Lichtstrahl dreht sich übers Feld und brennt sogar im Schatten.'],
@@ -147,6 +161,82 @@ function icon(c, k) {
     case 'portal': c.fillStyle = 'rgba(155,124,240,.35)'; c.beginPath(); c.arc(0, 0, 10, 0, TAU); c.fill(); c.strokeStyle = COL.portal; c.lineWidth = 3; c.stroke(); c.lineWidth = 1.5; c.beginPath(); c.arc(0, 0, 5, 0, Math.PI * 1.4); c.stroke(); break;
     case 'eclipse': c.fillStyle = COL.gold; c.beginPath(); c.arc(0, 0, 11, 0, TAU); c.fill(); c.fillStyle = COL.body; c.beginPath(); c.arc(1.5, -1, 9.5, 0, TAU); c.fill(); break;
     case 'rain': dropShape(c, -6, -3, 0.6, COL.dew); dropShape(c, 5, -5, 0.6, COL.dew); dropShape(c, 0, 6, 0.6, COL.dew); break;
+    // Neue Extras und ihre getarnten Fallen: Jede Falle sieht fast aus wie ihr gutes Gegenstück
+    case 'shades': {
+      disc(c, '#3FC7C4');
+      c.fillStyle = '#141821';
+      c.beginPath(); c.ellipse(-4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.ellipse(4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#141821'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-1, -0.5); c.quadraticCurveTo(0, -1.8, 1, -0.5); c.moveTo(-8, -0.5); c.lineTo(-10, -2.5); c.moveTo(8, -0.5); c.lineTo(10, -2.5); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(-5.5, -0.8, 1, 0, TAU); c.arc(3.1, -0.8, 1, 0, TAU); c.fill();
+      break;
+    }
+    case 'chalk': {
+      disc(c, '#8E9CC2'); c.save(); c.rotate(-0.7);
+      c.fillStyle = '#F7F8FB'; c.fillRect(-7, -2.6, 14, 5.2);
+      c.fillStyle = '#C9CFDB'; c.fillRect(4, -2.6, 3, 5.2);
+      c.restore();
+      c.strokeStyle = '#141821'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-7, 8); c.quadraticCurveTo(-2, 5, 2, 8); c.stroke();
+      break;
+    }
+    case 'whistle': case 'storm': {
+      disc(c, '#6FB8F0');
+      c.fillStyle = k === 'storm' ? '#5B6376' : '#F7F8FB'; c.beginPath(); c.ellipse(-1, -3, 6.5, 3.8, 0, 0, TAU); c.ellipse(3.5, -4.5, 4, 3, 0, 0, TAU); c.fill();
+      if (k === 'storm') { c.fillStyle = '#FFE36B'; c.beginPath(); c.moveTo(1, -1); c.lineTo(-1.5, 2); c.lineTo(0.5, 2); c.lineTo(-0.5, 4); c.lineTo(2.5, 1); c.lineTo(0.5, 1); c.closePath(); c.fill(); }
+      c.fillStyle = '#D2D7E1'; c.strokeStyle = '#5B6376'; c.lineWidth = 1; c.beginPath(); c.ellipse(-2, 5.5, 5, 2.4, 0, 0, TAU); c.fill(); c.stroke();
+      c.fillRect(2.5, 4.2, 5, 2.6); c.strokeRect(2.5, 4.2, 5, 2.6);
+      break;
+    }
+    case 'sunstop': {
+      disc(c, '#F08A24'); c.fillStyle = '#FFE36B'; c.strokeStyle = '#FFE36B'; c.lineWidth = 1.5;
+      c.beginPath(); c.arc(0, 0, 4.2, 0, TAU); c.fill();
+      for (let i = 0; i < 8; i++) { const a = i * TAU / 8; c.beginPath(); c.moveTo(Math.cos(a) * 6, Math.sin(a) * 6); c.lineTo(Math.cos(a) * 8.5, Math.sin(a) * 8.5); c.stroke(); }
+      c.fillStyle = '#7A3A0A';
+      c.fillRect(-2.2, -2.4, 1.6, 4.8); c.fillRect(0.6, -2.4, 1.6, 4.8);
+      break;
+    }
+    case 'moondust': {
+      disc(c, '#1A1440'); c.fillStyle = '#F4F1E0';
+      c.beginPath(); c.arc(-1, 0, 6, Math.PI * 0.5, Math.PI * 1.5); c.quadraticCurveTo(-4, 0, -1, 6); c.fill();
+      c.fillStyle = '#FFFFFF';
+      for (const [x, y, r] of [[4, -4, 1.4], [6, 1.5, 1], [2.5, 5, 1.2]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+      break;
+    }
+    case 'cloak': case 'lure': {
+      disc(c, '#6D5BD0'); c.fillStyle = '#2B2F3A';
+      c.beginPath(); c.moveTo(-8, 4); c.quadraticCurveTo(-4, -2, 0, -8); c.quadraticCurveTo(4, -2, 8, 4); c.closePath(); c.fill();
+      c.fillStyle = k === 'lure' ? '#FFE36B' : '#C9B8FF'; c.beginPath(); c.arc(0, -8, 1.8, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(-3, 1, 0.9, 0, TAU); c.arc(3.5, -1.5, 0.9, 0, TAU); c.fill();
+      break;
+    }
+    case 'chain': {
+      disc(c, '#2472B3'); c.strokeStyle = '#9FE8FF'; c.lineWidth = 1.8;
+      c.beginPath(); c.moveTo(-7, -5); c.lineTo(-2, -1); c.lineTo(-4, 2); c.lineTo(2, 5); c.lineTo(0, 1); c.lineTo(7, -3); c.stroke();
+      c.fillStyle = '#FFE36B'; for (const [x, y] of [[-7, -5], [2, 5], [7, -3]]) { c.beginPath(); c.arc(x, y, 1.8, 0, TAU); c.fill(); }
+      break;
+    }
+    case 'leadboots':   // sieht aus wie die Turboschuhe, nur die Pfeile sind bleigrau
+      disc(c, COL.boots); c.strokeStyle = '#3A3F4A'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(-6, -5); c.lineTo(-1, 0); c.lineTo(-6, 5); c.moveTo(0, -5); c.lineTo(5, 0); c.lineTo(0, 5); c.stroke(); break;
+    case 'mirrorview':
+      disc(c, '#6D5BD0'); c.lineWidth = 1.6;
+      c.beginPath(); c.moveTo(0, -8); c.lineTo(0, 8); c.stroke();
+      c.beginPath(); c.moveTo(-2.5, -4); c.lineTo(-7, 0); c.lineTo(-2.5, 4); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.moveTo(2.5, -4); c.lineTo(7, 0); c.lineTo(2.5, 4); c.closePath(); c.fill();
+      break;
+    case 'downpour':
+      c.fillStyle = '#5B6376'; c.beginPath(); c.ellipse(0, -4, 10, 5.5, 0, 0, TAU); c.ellipse(-5, -2, 5, 4, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#6FB8F0'; c.lineWidth = 1.8; c.lineCap = 'round';
+      c.beginPath(); for (const x of [-6, -1, 4]) { c.moveTo(x, 3); c.lineTo(x - 2, 9); } c.stroke();
+      break;
+    case 'giant':
+      disc(c, COL.warn); c.lineWidth = 1.8;
+      c.beginPath(); c.moveTo(-3, 3); c.lineTo(-7, 7); c.moveTo(3, -3); c.lineTo(7, -7); c.moveTo(-7, 3); c.lineTo(-7, 7); c.lineTo(-3, 7); c.moveTo(3, -7); c.lineTo(7, -7); c.lineTo(7, -3); c.stroke();
+      break;
+    case 'timelapse':
+      disc(c, '#F08A24'); c.lineWidth = 1.8;
+      c.beginPath(); c.arc(0, 0, 6.5, -Math.PI / 2, Math.PI * 1.2); c.stroke();
+      c.beginPath(); c.moveTo(-5.5, 5); c.lineTo(-7.5, 1); c.lineTo(-3, 2); c.closePath(); c.fill();
+      c.fillStyle = '#FFE36B'; c.beginPath(); c.arc(0, 0, 2.6, 0, TAU); c.fill();
+      break;
     case 'cloud': c.fillStyle = COL.shade; c.beginPath(); c.ellipse(0, 2, 12, 7, 0, 0, TAU); c.fill(); c.fillStyle = 'rgba(255,255,255,.85)'; c.beginPath(); c.ellipse(-2, -3, 8, 5, 0, 0, TAU); c.ellipse(4, -2, 6, 4, 0, 0, TAU); c.fill(); break;
     case 'bug': bugShape(c, 0, 0); break;
     case 'swarm': bugShape(c, -6, -4); bugShape(c, 6, -2); bugShape(c, 0, 6); break;
@@ -711,6 +801,21 @@ const TRAILS = [
   { id: 'blaetter', name: 'Blätter', req: { stat: 'lvl_garden', n: 6, text: 'Erreiche Stufe 6 im Garten' } },
   { id: 'feuer', name: 'Feuer', req: { stat: 'bosses', n: 10, text: 'Besiege 10 Bosse' } },
   { id: 'mond', name: 'Mondstaub', req: { stat: 'dusk', n: 2, text: 'Besiege den Nachtmahr 2×' } },
+  { id: 'rauch', name: 'Rauch', cost: 3500 },
+  { id: 'schnee', name: 'Schneeflocken', cost: 4000 },
+  { id: 'tropfen', name: 'Tautropfen', cost: 4500 },
+  { id: 'pixel', name: 'Pixel', cost: 5500 },
+  { id: 'blitze', name: 'Blitze', cost: 7000 },
+  { id: 'konfetti', name: 'Konfetti', cost: 8000 },
+  { id: 'glitzer', name: 'Glitzer', cost: 12000 },
+  // Spuren der neuen Karten: Stufe 6 auf der Karte
+  { id: 'wellen', name: 'Wellen', req: { stat: 'lvl_ship', n: 6, text: 'Erreiche Stufe 6 auf dem Schiffsdeck' } },
+  { id: 'sand', name: 'Sandkörner', req: { stat: 'lvl_desert', n: 6, text: 'Erreiche Stufe 6 in der Wüste' } },
+  { id: 'dampf', name: 'Dampf', req: { stat: 'lvl_station', n: 6, text: 'Erreiche Stufe 6 im Bahnhof' } },
+  { id: 'neonspur', name: 'Neon', req: { stat: 'lvl_city', n: 6, text: 'Erreiche Stufe 6 in der Stadt' } },
+  { id: 'seiten', name: 'Buchseiten', req: { stat: 'lvl_library', n: 6, text: 'Erreiche Stufe 6 in der Bibliothek' } },
+  { id: 'strahlen', name: 'Lichtstrahlen', req: { stat: 'lvl_mirror', n: 6, text: 'Erreiche Stufe 6 im Spiegelsaal' } },
+  { id: 'erdlicht', name: 'Erdlicht', req: { stat: 'lvl_moon', n: 6, text: 'Erreiche Stufe 6 auf dem Mond' } },
 ];
 const TRAIL_BY = Object.fromEntries(TRAILS.map(t => [t.id, t]));
 function emitTrail(arr, kind, x, y) {
@@ -720,6 +825,10 @@ function emitTrail(arr, kind, x, y) {
   else if (kind === 'blaetter') { q.vy = fx(10, 25); q.life = q.max = 1; }
   else if (kind === 'noten' || kind === 'herzen') { q.vy = fx(-28, -12); q.life = q.max = 0.9; }
   else if (kind === 'echo') { q.vx = q.vy = 0; q.life = q.max = 0.45; }
+  else if (kind === 'schnee' || kind === 'tropfen' || kind === 'konfetti' || kind === 'sand' || kind === 'seiten') { q.vy = fx(18, 38); q.life = q.max = 1.1; }
+  else if (kind === 'rauch' || kind === 'dampf') { q.vy = fx(-26, -12); q.life = q.max = 1.2; }
+  else if (kind === 'wellen' || kind === 'pixel' || kind === 'neonspur' || kind === 'strahlen') { q.vx = fx(-4, 4); q.vy = fx(-4, 4); q.life = q.max = 0.8; }
+  else if (kind === 'glitzer' || kind === 'erdlicht') { q.life = q.max = 0.9; }
   arr.push(q);
 }
 function drawTrailPart(c, q, t) {
@@ -738,6 +847,32 @@ function drawTrailPart(c, q, t) {
     case 'echo': c.fillStyle = 'rgba(20,24,33,.5)'; c.beginPath(); c.arc(0, -2, 6 * k + 2, 0, TAU); c.fill(); break;
     case 'blaetter': c.rotate(q.rot + t * 2); c.fillStyle = k > 0.5 ? '#77A84A' : '#C98A1B'; c.beginPath(); c.ellipse(0, 0, 3.2, 1.5, 0, 0, TAU); c.fill(); break;
     case 'feuer': c.fillStyle = k > 0.6 ? '#FFD37A' : k > 0.3 ? '#F08A24' : '#C3402C'; c.beginPath(); c.arc(0, 0, 1.5 + k * 3, 0, TAU); c.fill(); break;
+    case 'rauch': c.fillStyle = 'rgba(160,166,180,.55)'; c.beginPath(); c.arc(0, 0, 2 + (1 - k) * 5, 0, TAU); c.fill(); break;
+    case 'dampf': c.fillStyle = 'rgba(245,247,252,.75)'; c.beginPath(); c.arc(0, 0, 1.5 + (1 - k) * 5, 0, TAU); c.arc(2.5, -1.5, 1 + (1 - k) * 3, 0, TAU); c.fill(); break;
+    case 'schnee':
+      c.rotate(q.rot + t); c.strokeStyle = '#F4F8FF'; c.lineWidth = 1;
+      c.beginPath(); for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; c.moveTo(Math.cos(a) * 3, Math.sin(a) * 3); c.lineTo(-Math.cos(a) * 3, -Math.sin(a) * 3); } c.stroke(); break;
+    case 'tropfen': dropShape(c, 0, 0, 0.35 + k * 0.15, COL.dew); break;
+    case 'pixel': c.fillStyle = `hsl(${(q.hue + q.rot * 40) % 360} 80% 60%)`; c.fillRect(-2, -2, 4, 4); break;
+    case 'blitze':
+      c.rotate(q.rot); c.strokeStyle = '#9FE8FF'; c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(-3, -3); c.lineTo(0, -0.5); c.lineTo(-1, 0.5); c.lineTo(3, 3); c.stroke(); break;
+    case 'konfetti': c.rotate(q.rot + t * 5); c.fillStyle = ['#E0457B', '#F4CF63', '#5FBE90', '#6FB8F0', '#C9B8FF'][Math.floor(q.rot * 3) % 5]; c.fillRect(-2.2, -1, 4.4, 2); break;
+    case 'glitzer': {
+      const s = (0.6 + 0.4 * Math.sin(t * 14 + q.rot * 5)) * (1 + k * 2);
+      c.fillStyle = '#FFFBEA'; c.beginPath(); c.moveTo(0, -s * 1.8); c.lineTo(s * 0.4, 0); c.lineTo(0, s * 1.8); c.lineTo(-s * 0.4, 0); c.closePath();
+      c.moveTo(-s * 1.8, 0); c.lineTo(0, s * 0.4); c.lineTo(s * 1.8, 0); c.lineTo(0, -s * 0.4); c.closePath(); c.fill(); break;
+    }
+    case 'wellen': c.strokeStyle = 'rgba(111,184,240,.9)'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, 0, 1.5 + (1 - k) * 6, 0.8 + (1 - k) * 3, 0, 0, TAU); c.stroke(); break;
+    case 'sand': c.fillStyle = k > 0.5 ? '#F2D08A' : '#C9A060'; c.beginPath(); c.arc(0, 0, 1 + k, 0, TAU); c.fill(); break;
+    case 'neonspur': c.rotate(q.rot); c.fillStyle = Math.floor(q.rot * 4) % 2 ? '#FF3FA4' : '#39F0FF'; c.shadowColor = c.fillStyle; c.shadowBlur = 4; c.fillRect(-3, -0.8, 6, 1.6); break;
+    case 'seiten':
+      c.rotate(q.rot + Math.sin(t * 4 + q.rot) * 0.6); c.fillStyle = '#F7F1E0'; c.fillRect(-2.5, -3, 5, 6);
+      c.strokeStyle = 'rgba(58,42,26,.5)'; c.lineWidth = 0.5; c.beginPath(); c.moveTo(-1.5, -1.5); c.lineTo(1.5, -1.5); c.moveTo(-1.5, 0); c.lineTo(1.5, 0); c.moveTo(-1.5, 1.5); c.lineTo(1, 1.5); c.stroke(); break;
+    case 'strahlen': c.rotate(q.rot); c.fillStyle = 'rgba(255,246,208,.9)'; c.fillRect(-4, -0.7, 8, 1.4); c.fillStyle = 'rgba(255,236,160,.35)'; c.fillRect(-5, -2, 10, 4); break;
+    case 'erdlicht':
+      c.fillStyle = 'rgba(143,199,255,.35)'; c.beginPath(); c.arc(0, 0, 2 + k * 3.5, 0, TAU); c.fill();
+      c.fillStyle = k > 0.5 ? '#5FBE90' : '#2B6FD6'; c.beginPath(); c.arc(0, 0, 0.8 + k * 1.2, 0, TAU); c.fill(); break;
     case 'mond':
       c.fillStyle = '#DDE6FF'; c.beginPath(); c.arc(0, 0, 0.8 + k * 1.6, 0, TAU); c.fill();
       c.globalAlpha *= 0.4; c.beginPath(); c.arc(0, 0, 3 + k * 3, 0, TAU); c.fill(); break;

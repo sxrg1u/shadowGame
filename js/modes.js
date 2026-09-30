@@ -172,7 +172,7 @@ const RNet = {
   },
   // fallback: Gibt es keinen solchen Raum, ist der Code vielleicht ein Duell-Raum (Net, eigenes Präfix)
   async join(code, fallback) {
-    this.teardown(); this.role = 'guest'; this.code = code;
+    this.teardown(); this.role = 'guest'; this.code = code; this.game = '';   // welches Spiel es ist, sagt erst der Gastgeber
     this.setStatus(tr('Verbinde mit Raum ' + code + ' …', 'Connecting to room ' + code + ' …'), false, true);
     try { await Net.lib(); } catch (e) { return this.fail(tr('Die Mehrspieler-Bibliothek ließ sich nicht laden. Bist du online?', 'The multiplayer library could not be loaded. Are you online?')); }
     const peer = new window.Peer({ debug: 0 });
