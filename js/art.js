@@ -76,11 +76,7 @@ const BAD = [
   ['crumble','Einsturz','Bei jedem Stufenwechsel verschwindet eine Säule.'],
   ['shroom','Umkehrpilz','Falle. 5 s lang ist deine Steuerung verdreht, auch der Dash.'],
   ['acid','Säuretropfen','Falle, sieht aus wie Tau. −25 Kraft und −100 Punkte.'],
-  ['glare','Blendspiegel','Falle, sieht aus wie die Sonnenbrille (rote Gläser). 5 s lang brennt Licht doppelt.'],
-  ['splash','Kreidekleckse','Falle, sieht aus wie Schattenkreide (gelbe Kreide). Um dich glüht der Boden.'],
   ['storm','Gewitterwolke','Falle, sieht aus wie die Wolkenpfeife (graue Wolke). Folgt dir 7 s und lässt Blitze einschlagen.'],
-  ['turbosun','Turbosonne','Falle, sieht aus wie die Sonnenbremse (Pfeile statt Pause). 6 s lang rast die Sonne.'],
-  ['noonbell','Mittagsglocke','Falle, sieht aus wie Mondstaub (orange Funken). 5 s kurze Schatten und halbe Punkte.'],
   ['lure','Lockstoff','Falle, sieht aus wie die Tarnkappe (gelbe Spitze). Drei Käfer kommen, alle jagen dich doppelt so schnell.'],
   ['leadboots','Bleischuhe','Falle, sieht aus wie Turboschuhe (graue Pfeile). 5 s lang langsam und kein Dash.'],
   ['honey','Honigpfütze','Chaos-Rad: Klebrig, du wirst halb so schnell.'],
@@ -162,18 +158,18 @@ function icon(c, k) {
     case 'eclipse': c.fillStyle = COL.gold; c.beginPath(); c.arc(0, 0, 11, 0, TAU); c.fill(); c.fillStyle = COL.body; c.beginPath(); c.arc(1.5, -1, 9.5, 0, TAU); c.fill(); break;
     case 'rain': dropShape(c, -6, -3, 0.6, COL.dew); dropShape(c, 5, -5, 0.6, COL.dew); dropShape(c, 0, 6, 0.6, COL.dew); break;
     // Neue Extras und ihre getarnten Fallen: Jede Falle sieht fast aus wie ihr gutes Gegenstück
-    case 'shades': case 'glare': {
-      disc(c, '#3FC7C4'); const bad = k === 'glare';
-      c.fillStyle = bad ? '#7A1F1F' : '#141821';
+    case 'shades': {
+      disc(c, '#3FC7C4');
+      c.fillStyle = '#141821';
       c.beginPath(); c.ellipse(-4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.ellipse(4.3, 0.5, 3.8, 3.1, 0, 0, TAU); c.fill();
       c.strokeStyle = '#141821'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-1, -0.5); c.quadraticCurveTo(0, -1.8, 1, -0.5); c.moveTo(-8, -0.5); c.lineTo(-10, -2.5); c.moveTo(8, -0.5); c.lineTo(10, -2.5); c.stroke();
       c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(-5.5, -0.8, 1, 0, TAU); c.arc(3.1, -0.8, 1, 0, TAU); c.fill();
       break;
     }
-    case 'chalk': case 'splash': {
+    case 'chalk': {
       disc(c, '#8E9CC2'); c.save(); c.rotate(-0.7);
-      c.fillStyle = k === 'splash' ? '#FFE9A8' : '#F7F8FB'; c.fillRect(-7, -2.6, 14, 5.2);
-      c.fillStyle = k === 'splash' ? '#F0C24A' : '#C9CFDB'; c.fillRect(4, -2.6, 3, 5.2);
+      c.fillStyle = '#F7F8FB'; c.fillRect(-7, -2.6, 14, 5.2);
+      c.fillStyle = '#C9CFDB'; c.fillRect(4, -2.6, 3, 5.2);
       c.restore();
       c.strokeStyle = '#141821'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-7, 8); c.quadraticCurveTo(-2, 5, 2, 8); c.stroke();
       break;
@@ -186,19 +182,18 @@ function icon(c, k) {
       c.fillRect(2.5, 4.2, 5, 2.6); c.strokeRect(2.5, 4.2, 5, 2.6);
       break;
     }
-    case 'sunstop': case 'turbosun': {
+    case 'sunstop': {
       disc(c, '#F08A24'); c.fillStyle = '#FFE36B'; c.strokeStyle = '#FFE36B'; c.lineWidth = 1.5;
       c.beginPath(); c.arc(0, 0, 4.2, 0, TAU); c.fill();
       for (let i = 0; i < 8; i++) { const a = i * TAU / 8; c.beginPath(); c.moveTo(Math.cos(a) * 6, Math.sin(a) * 6); c.lineTo(Math.cos(a) * 8.5, Math.sin(a) * 8.5); c.stroke(); }
       c.fillStyle = '#7A3A0A';
-      if (k === 'sunstop') { c.fillRect(-2.2, -2.4, 1.6, 4.8); c.fillRect(0.6, -2.4, 1.6, 4.8); }
-      else { c.beginPath(); c.moveTo(-2.6, -2.4); c.lineTo(0, 0); c.lineTo(-2.6, 2.4); c.moveTo(0, -2.4); c.lineTo(2.6, 0); c.lineTo(0, 2.4); c.strokeStyle = '#7A3A0A'; c.lineWidth = 1.2; c.stroke(); }
+      c.fillRect(-2.2, -2.4, 1.6, 4.8); c.fillRect(0.6, -2.4, 1.6, 4.8);
       break;
     }
-    case 'moondust': case 'noonbell': {
+    case 'moondust': {
       disc(c, '#1A1440'); c.fillStyle = '#F4F1E0';
       c.beginPath(); c.arc(-1, 0, 6, Math.PI * 0.5, Math.PI * 1.5); c.quadraticCurveTo(-4, 0, -1, 6); c.fill();
-      c.fillStyle = k === 'noonbell' ? '#FF8A3A' : '#FFFFFF';
+      c.fillStyle = '#FFFFFF';
       for (const [x, y, r] of [[4, -4, 1.4], [6, 1.5, 1], [2.5, 5, 1.2]]) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
       break;
     }

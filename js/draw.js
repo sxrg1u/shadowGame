@@ -545,8 +545,8 @@ function draw() {
     if (on('boots')) { ctx.fillStyle = 'rgba(43,143,214,.35)'; ctx.beginPath(); ctx.arc(p.x, p.y + R, R * 1.2, 0, TAU); ctx.fill(); }
     if (on('magnet')) { ctx.strokeStyle = 'rgba(217,70,59,.5)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]); ctx.lineDashOffset = S.t * 40; ctx.beginPath(); ctx.arc(p.x, p.y, 40 + (S.t * 40 % 30), 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
     if (on('lead')) { ctx.fillStyle = 'rgba(58,63,74,.55)'; ctx.beginPath(); ctx.ellipse(p.x, p.y + R + 1, R * 1.1, 3.5, 0, 0, TAU); ctx.fill(); }
-    if (on('shades') || on('glare')) {
-      ctx.fillStyle = on('glare') ? 'rgba(232,64,60,.3)' : 'rgba(63,199,196,.25)';
+    if (on('shades')) {
+      ctx.fillStyle = 'rgba(63,199,196,.25)';
       ctx.beginPath(); ctx.arc(p.x, p.y, R + 7, 0, TAU); ctx.fill();
     }
     if (on('chain')) { ctx.strokeStyle = 'rgba(159,232,255,' + (0.5 + 0.4 * Math.sin(S.t * 20)) + ')'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]); ctx.lineDashOffset = -S.t * 50; ctx.beginPath(); ctx.arc(p.x, p.y, R + 11, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
@@ -747,7 +747,6 @@ function draw() {
                   dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'], colorchaos: [tr('Farbchaos', 'Color chaos'), '#E0457B'],
                   shades: [tr('Sonnenbrille', 'Sunglasses'), '#3FC7C4'], chalk: [tr('Kreide', 'Chalk'), '#DDE3EC'], sunstop: [tr('Sonne steht', 'Sun stopped'), '#F08A24'],
                   night: [tr('Mondnacht', 'Moon night'), '#C9B8FF'], cloak: [tr('Getarnt', 'Cloaked'), '#9B7CF0'], chain: [tr('Kettenblitz', 'Chain lightning'), '#9FE8FF'],
-                  glare: [tr('Geblendet', 'Glared'), COL.warn], turbosun: [tr('Turbosonne', 'Turbo sun'), COL.warn], halfpts: [tr('Punkte ½', 'Points ½'), COL.warn],
                   lure: [tr('Lockstoff', 'Lure'), COL.warn], lead: [tr('Bleischuhe', 'Lead boots'), '#98A1B4'] };
     for (const k in lab) if (on(k)) list.push([lab[k][0] + ' ' + S.E[k].toFixed(1) + ' s', lab[k][1]]);
     if (S.bubble > 0) list.push([tr('Schild ×', 'Shield ×') + S.bubble, '#6FC3FF']);

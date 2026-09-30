@@ -177,19 +177,25 @@ Mittagssonne, Zweite Sonne, Sturmböe, Käferschwarm, Sonnenfunken, Erdbeben, Bl
 
 Dazu kommen über 50 gute und schlechte Sachen, die auf dem Feld auftauchen: Schirm, Blasenschild, Schattenklon, Magnet, Portale, Frostkristall, Fallen wie Umkehrpilz und Säuretropfen und mehr. Die komplette Liste steht im Spiel unter **Anleitung → Lexikon**.
 
-Neu sind sieben Extras, und zu jedem gibt es eine getarnte Falle, die fast genauso aussieht. Nur ein kleines Detail verrät sie:
+Neu sind sieben Extras und drei getarnte Fallen. Die Fallen sehen fast aus wie ein gutes Extra, nur ein kleines Detail verrät sie.
 
-| Extra | Wirkung | Falle | Wirkung der Falle | Woran du sie erkennst |
-| --- | --- | --- | --- | --- |
-| **Sonnenbrille** | 5 s lang tut Licht halb so weh | **Blendspiegel** | 5 s lang brennt Licht doppelt | rote Gläser |
-| **Schattenkreide** | 4 s lang malst du beim Laufen eine Schattenlinie | **Kreidekleckse** | der Boden um dich glüht | gelbe Kreide |
-| **Wolkenpfeife** | eine Wolke folgt dir 8 s lang | **Gewitterwolke** | folgt dir 7 s und lässt Blitze einschlagen | graue Wolke mit Blitz |
-| **Sonnenbremse** | die Sonne (auf dunklen Karten alle Lichter) steht 6 s still | **Turbosonne** | die Sonne und alle Lichter rasen 6 s | Pfeile statt Pause |
-| **Mondstaub** | 5 s Nacht: überall Schatten, doppelte Punkte | **Mittagsglocke** | 5 s kurze Schatten, halbe Punkte | orange Funken |
-| **Tarnkappe** | 6 s lang sehen dich Käfer, Raketen und Brennglas nicht | **Lockstoff** | drei Käfer kommen, alle jagen dich doppelt so schnell | gelbe Spitze |
-| **Kettenblitz** | 8 s lang springt ein Blitz vom weggedashten Käfer zu bis zu 4 weiteren | **Bleischuhe** | 5 s langsam und kein Dash (sehen aus wie Turboschuhe) | graue Pfeile |
+| Extra | Wirkung |
+| --- | --- |
+| **Sonnenbrille** | 5 s lang tut Licht halb so weh |
+| **Schattenkreide** | 4 s lang malst du beim Laufen eine Schattenlinie |
+| **Wolkenpfeife** | eine Wolke folgt dir 8 s lang |
+| **Sonnenbremse** | die Sonne (auf dunklen Karten alle Lichter) steht 6 s still |
+| **Mondstaub** | 5 s Nacht: überall Schatten, doppelte Punkte |
+| **Tarnkappe** | 6 s lang sehen dich Käfer, Raketen und Brennglas nicht |
+| **Kettenblitz** | 8 s lang springt ein Blitz vom weggedashten Käfer zu bis zu 4 weiteren |
 
-Wolkenpfeife und Gewitterwolke gibt es nur auf Karten mit Himmel, die Mittagsglocke nur auf Karten mit Sonne.
+| Falle | Sieht aus wie | Woran du sie erkennst | Wirkung |
+| --- | --- | --- | --- |
+| **Gewitterwolke** | Wolkenpfeife | graue Wolke mit Blitz | folgt dir 7 s und lässt Blitze einschlagen |
+| **Lockstoff** | Tarnkappe | gelbe Spitze | drei Käfer kommen, alle jagen dich doppelt so schnell |
+| **Bleischuhe** | Turboschuhe | graue Pfeile | 5 s langsam und kein Dash |
+
+Wolkenpfeife und Gewitterwolke gibt es nur auf Karten mit Himmel.
 
 ## Upgrades nach jedem Boss
 

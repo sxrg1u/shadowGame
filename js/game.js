@@ -64,10 +64,10 @@ const dl = () => S.level * ramp();              // Schwierigkeit der aktuellen S
 const lv = () => Math.min(S.level, 14) * ramp();
 const isDuel = () => !!(S && S.cfg.duel);
 const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1) * lightF();
-// Sonnenbremse hält Sonne und Lichter an, die Turbosonne beschleunigt sie
-const lightF = () => on('sunstop') ? 0 : on('turbosun') ? 3 : 1;
+// Sonnenbremse hält Sonne und Lichter an
+const lightF = () => on('sunstop') ? 0 : 1;
 // Fallen sehen aus wie gute Extras
-const TRAP_KINDS = new Set(['shroom', 'acid', 'glare', 'splash', 'storm', 'turbosun', 'noonbell', 'lure', 'leadboots']);
+const TRAP_KINDS = new Set(['shroom', 'acid', 'storm', 'lure', 'leadboots']);
 const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);
 const dirOf = az => ({ x: Math.cos(az), y: Math.sin(az) });
 // Zweite Sonne dicht neben der ersten: Die Schatten überlappen, hinter jeder Säule bleibt ein Kernschatten zum Verstecken
@@ -79,7 +79,7 @@ const maxEnergy = () => ruleOn('glass') ? 60 : 100;
 const maxHearts = () => ruleOn('glass') ? 0 : 2 + up('heart');
 const lingerF = () => 1 + 0.5 * up('linger');
 const comboMax = () => up('combo') ? 8 : 5;
-const mult = () => (on('star') ? 2 : 1) * (on('night') ? 2 : 1) * (on('halfpts') ? 0.5 : 1) * S.diff.pts * (1 + 0.25 * up('greed')) * (ruleOn('glass') ? 2 : 1) * (1 + 0.1 * Math.floor(S.level / 5));
+const mult = () => (on('star') ? 2 : 1) * (on('night') ? 2 : 1) * S.diff.pts * (1 + 0.25 * up('greed')) * (ruleOn('glass') ? 2 : 1) * (1 + 0.1 * Math.floor(S.level / 5));
 const pts = n => Math.round(n * mult());
 const dashCdMax = () => on('dashy') ? 0.2 : ruleOn('dashfever') ? 0.25 : 1.1 * Math.pow(0.78, up('dashcd'));
 const maxCharges = () => 1 + up('twin');
@@ -534,16 +534,15 @@ function receiveAttack(name) {
 const ITEM_WEIGHTS = { umbrella: 8, crystal: 8, hourglass: 5, gold: 4, magnet: 6, boots: 6, bomb: 6, seed: 5, heart: 2,
                        star: 5, frost: 5, shrink: 5, thunder: 5, portal: 3, bubble: 6, dashy: 4, decoy: 4, spear: 4, spikes: 4, clover: 3, shroom: 9, acid: 9,
                        shades: 5, chalk: 5, whistle: 5, sunstop: 5, moondust: 5, cloak: 5, chain: 5,
-                       glare: 5, splash: 5, storm: 5, turbosun: 5, noonbell: 5, lure: 5, leadboots: 5 };
+                       storm: 5, lure: 5, leadboots: 5 };
 function rollItem() {
   if (ruleOn('traps')) return rng() < 0.5 ? 'shroom' : 'acid';
   const w = { ...ITEM_WEIGHTS };
   if (S.hearts >= maxHearts()) delete w.heart;
   if (S.portals) delete w.portal;
   if (ruleOn('tiny')) delete w.shrink;
-  // Ohne Himmel keine Wolken und keine Mittagssonne
+  // Ohne Himmel keine Wolken
   if (S.map.dark || S.map.noClouds) { delete w.whistle; delete w.storm; }
-  if (S.map.dark) delete w.noonbell;
   let total = 0; for (const k in w) total += w[k];
   let r = rng() * total;
   for (const k in w) { r -= w[k]; if (r <= 0) return k; }
@@ -591,24 +590,12 @@ function collect(it) {
     case 'shades': S.E.shades = 5 * lingerF(); flash(tr('Sonnenbrille! Licht tut halb so weh', 'Sunglasses! Light hurts half as much'), '#3FC7C4'); break;
     case 'chalk': S.E.chalk = 4 * lingerF(); flash(tr('Schattenkreide! Lauf und mal Schatten', 'Shadow chalk! Run to draw shade'), '#DDE3EC'); break;
     case 'whistle': S.clouds.push({ x: S.p.x, y: S.p.y, vx: 0, rx: 54, ry: 36, follow: 8 * lingerF() }); flash(tr('Wolkenpfeife! Eine Wolke folgt dir', 'Cloud whistle! A cloud follows you'), '#6FB8F0'); break;
-    case 'sunstop': S.E.sunstop = 6 * lingerF(); S.E.turbosun = 0; flash(S.map.dark ? tr('Sonnenbremse! Alle Lichter stehen still', 'Sun brake! All lights stand still') : tr('Sonnenbremse! Die Sonne steht still', 'Sun brake! The sun stands still'), '#F08A24'); break;
+    case 'sunstop': S.E.sunstop = 6 * lingerF(); flash(S.map.dark ? tr('Sonnenbremse! Alle Lichter stehen still', 'Sun brake! All lights stand still') : tr('Sonnenbremse! Die Sonne steht still', 'Sun brake! The sun stands still'), '#F08A24'); break;
     case 'moondust': S.E.night = 5 * lingerF(); flash(tr('Mondstaub! Nacht und doppelte Punkte', 'Moon dust! Night and double points'), '#C9B8FF'); break;
     case 'cloak': S.E.cloak = 6 * lingerF(); flash(tr('Tarnkappe! Käfer und Raketen sehen dich nicht', 'Cloak! Bugs and missiles cannot see you'), '#9B7CF0'); break;
     case 'chain': S.E.chain = 8 * lingerF(); flash(tr('Kettenblitz! Dash durch einen Käfer', 'Chain lightning! Dash through a bug'), '#9FE8FF'); break;
     // Neue Fallen
-    case 'glare': S.E.glare = 5; S.E.shades = 0; flash(tr('Blendspiegel! Licht brennt doppelt', 'Glare mirror! Light burns twice as hard'), COL.warn); break;
-    case 'splash': {
-      const gx = Math.floor(S.p.x / CELL), gy = Math.floor(S.p.y / CELL);
-      for (let k = 0, n = 0; k < 20 && n < 4; k++) {
-        const x = gx + Math.floor(rand(-1, 2)), y = gy + Math.floor(rand(-1, 2));
-        if (x < 0 || y < 0 || x >= W / CELL || y >= H / CELL || S.hot.some(h => h.gx === x && h.gy === y)) continue;
-        S.hot.push({ gx: x, gy: y, warn: 0.8, life: 5 }); n++;
-      }
-      flash(tr('Kreidekleckse! Der Boden glüht', 'Chalk splash! The floor glows'), COL.warn); break;
-    }
     case 'storm': S.storm = { x: S.p.x - 40, y: S.p.y - 40, life: 7, next: 1.2 }; flash(tr('Gewitterwolke! Sie blitzt dich an', 'Storm cloud! It strikes at you'), COL.warn); break;
-    case 'turbosun': S.E.turbosun = 6; S.E.sunstop = 0; flash(S.map.dark ? tr('Turbosonne! Alle Lichter rasen', 'Turbo sun! All lights race') : tr('Turbosonne! Die Sonne rast', 'Turbo sun! The sun races'), COL.warn); break;
-    case 'noonbell': S.E.noon = 5; S.E.halfpts = 5; flash(tr('Mittagsglocke! Kurze Schatten, halbe Punkte', 'Noon bell! Short shadows, half points'), COL.warn); break;
     case 'lure':
       S.E.lure = 6;
       for (let i = 0; i < 3; i++) { const e = edgePoint(); S.bugs.push({ x: e.x, y: e.y, life: 10, ph: rand(0, 6) }); }
@@ -1095,7 +1082,7 @@ function update(dt) {
   const light = shielded ? 0 : lightAt(S.p.x, S.p.y);
   S.lit = light > 0;
   let burn = 0;
-  if (S.lit) burn += (32 + lv() * 4) * light * Math.pow(0.85, up('cream')) * (ruleOn('dashfever') ? 1.3 : 1) * (on('shades') ? 0.5 : 1) * (on('glare') ? 2 : 1);
+  if (S.lit) burn += (32 + lv() * 4) * light * Math.pow(0.85, up('cream')) * (ruleOn('dashfever') ? 1.3 : 1) * (on('shades') ? 0.5 : 1);
   const gx = Math.floor(S.p.x / CELL), gy = Math.floor(S.p.y / CELL);
   if (S.hot.some(h => h.warn <= 0 && h.gx === gx && h.gy === gy)) burn += 30;
   if (!shielded && S.lens && S.lens.warn <= 0 && dist(S.lens, S.p) < S.lens.r) burn += 60;
