@@ -314,7 +314,7 @@ function updateMapFx(dt, sunDt, playing) {
     F.beams = [];
     for (let i = 0; i < n; i++) {
       const E = EMITTERS[i];
-      E.cur = E.a + E.amp * Math.sin(S.t * E.sp * 1.6 + i * 1.3);
+      E.cur = E.a + E.amp * Math.sin(S.t * E.sp + i * 1.3);
       castBeam(E.x, E.y, E.cur, F.beams);
     }
   }
