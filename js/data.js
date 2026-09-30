@@ -3,7 +3,7 @@
 
 // ---------- Debug-Start (nur für automatische Screenshots) ----------
 // ?debug=1 startet direkt eine Runde mit festem Zufall und fester Bildrate, z. B.
-// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120&map=cellar (screen=menu zeigt das Hauptmenü).
+// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120&map=cellar (screen=menu zeigt das Hauptmenü, screen=wardrobe|modes|ach|help|settings den jeweiligen Bildschirm).
 // Nach „frames“ Bildern bleibt das Bild stehen. Ohne ?debug=1 ändert sich nichts. Im Debug-Modus wird nie gespeichert.
 const DEBUG = (() => {
   const q = new URLSearchParams(location.search);

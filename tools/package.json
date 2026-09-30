@@ -4,7 +4,8 @@
   "description": "Hilfsskripte für Shady. Das Spiel selbst braucht nichts davon.",
   "type": "module",
   "scripts": {
-    "screenshots": "node screenshots.mjs"
+    "screenshots": "node screenshots.mjs",
+    "tutorial-test": "node tutorial-test.mjs"
   },
   "devDependencies": {
     "gifenc": "^1.0.3",

@@ -910,7 +910,9 @@ function setLang(l) {
 // Debug-Start (siehe DEBUG oben): Runde mit fester Stufe, optional Boss und Ereignis. Die Figur ist unverwundbar,
 // damit sie beim Stillstehen nicht verdampft. Die Zeit läuft erst los, wenn die Schriften geladen sind.
 function debugStart() {
-  if (DEBUG.screen !== 'menu') {
+  const scr = 'scr' + DEBUG.screen[0].toUpperCase() + DEBUG.screen.slice(1);   // screen=wardrobe, modes, ach, help, settings
+  if ($(scr)) open(scr);
+  else if (DEBUG.screen !== 'menu') {
     startRun({ mode: DEBUG.mode, diff: P.settings.diff, seed: DEBUG.seed, map: MAP_BY[DEBUG.map] ? DEBUG.map : 'yard' });
     S.level = DEBUG.level - 1; S.grace = 1e9; Sound.setLevel(S.level);
     const b = DEBUG.boss && (DEBUG.boss === 'core' ? CORE : BOSSES.find(x => x.type === DEBUG.boss));
