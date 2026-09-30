@@ -63,9 +63,9 @@ const ramp = () => ['campaign', 'daily', 'weekly'].includes(S.cfg.mode) ? CAMPAI
 const dl = () => S.level * ramp();              // Schwierigkeit der aktuellen Stufe
 const lv = () => Math.min(S.level, 14) * ramp();
 const isDuel = () => !!(S && S.cfg.duel);
-const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1) * lightF();
+const omega = () => on('timelapse') ? TAU / 3 : (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1) * lightF();
 // Sonnenbremse hält Sonne und Lichter an
-const lightF = () => on('sunstop') ? 0 : 1;
+const lightF = () => on('sunstop') ? 0 : on('timelapse') ? 4 : 1;
 // Fallen sehen aus wie gute Extras
 const TRAP_KINDS = new Set(['shroom', 'acid', 'storm', 'lure', 'leadboots']);
 const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);
@@ -73,7 +73,7 @@ const dirOf = az => ({ x: Math.cos(az), y: Math.sin(az) });
 // Zweite Sonne dicht neben der ersten: Die Schatten überlappen, hinter jeder Säule bleibt ein Kernschatten zum Verstecken
 const az2 = () => S.az + 0.75;
 const sun2On = () => on('sun2') || ruleOn('twosun');
-const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : PR;
+const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : on('giant') ? PR * 2 : PR;
 const inverted = () => on('invert') || ruleOn('mirror');
 const maxEnergy = () => ruleOn('glass') ? 60 : 100;
 const maxHearts = () => ruleOn('glass') ? 0 : 2 + up('heart');
@@ -94,7 +94,7 @@ function shadowFrom(px, py, az) {
 function lightAt(px, py) {
   const E = eaterAura();
   if (E && Math.hypot(px - E.x, py - E.y) < E.aura) return 1;
-  if (duskDark() || on('eclipse') || on('night')) return 0;
+  if (duskDark() || on('eclipse') || on('night') || on('rain')) return 0;
   if (S.puddles.some(q => Math.hypot(px - q.x, py - q.y) < q.r)) return 0;
   if (S.map.dark) return darkLight(px, py);
   if (sandstorm()) return 0;
@@ -458,6 +458,13 @@ function updateBoss(dt, ef) {
 const EVENTS = [
   { name: 'Mittagssonne', min: 1, skip: () => S.map.dark, run() { S.E.noonWarn = 1.5; } },
   { name: 'Zweite Sonne', min: 1, skip: () => ruleOn('twosun') || S.map.dark, run() { S.E.sun2 = 7; } },
+  // Spiegelbild: nur das Bild ist seitenverkehrt, die Tasten bleiben gleich
+  { name: 'Spiegelbild', min: 1, run() { S.E.mirrorview = 6; } },
+  // Regen: kein Licht, aber der Boden ist glatt und die Figur rutscht
+  { name: 'Regen', min: 1, good: true, run() { S.E.rain = 7; } },
+  { name: 'Riesen-Modus', min: 2, skip: () => on('shrink') || ruleOn('tiny'), run() { S.E.giant = 6; resolve(); } },
+  // Zeitraffer: Die Sonne rast in 3 s einmal ganz im Kreis
+  { name: 'Zeitraffer', min: 1, run() { S.E.timelapse = 3; } },
   { name: 'Sturmböe', min: 0, run() { const a = rand(0, TAU); S.wind = { x: Math.cos(a) * 85, y: Math.sin(a) * 85 }; S.E.wind = 4; } },
   { name: 'Käferschwarm', min: 1, run() { const e = edgePoint(); for (let i = 0; i < 5; i++) S.bugs.push({ x: e.x + rand(-30, 30), y: e.y + rand(-30, 30), life: 12, ph: rand(0, 6) }); } },
   { name: 'Sonnenfunken', min: 0, run() {
@@ -693,6 +700,8 @@ function update(dt) {
     } else c.x += c.vx * sunDt;
   }
   S.clouds = S.clouds.filter(c => c.follow > 0 || (c.x > -120 && c.x < W + 120));
+  if (on('rain')) for (let i = 0; i < 6; i++) if (Math.random() < dt * 30) S.parts.push({ x: fx(-20, W), y: fx(-20, H), vx: 60, vy: 420, life: 0.14, streak: true, rain: true });
+  if (!on('rain') && !S.map.lowG && S.vel && (S.vel.x || S.vel.y)) { S.vel.x = 0; S.vel.y = 0; }
   for (const b of S.bolts) b.life -= dt;
   S.bolts = S.bolts.filter(b => b.life > 0);
   for (const r of S.pillars) { if (r.grow > 0) r.grow -= dt; if (r.glass > 0) r.glass -= dt; }
@@ -728,9 +737,9 @@ function update(dt) {
       if (S.trailT <= 0) { S.trailT = 0.035; const life = 3 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 17, life, max: life }); }
     }
     if (S.dash.t <= 0) { if (S.map.lowG) { S.vel.x = S.dash.vx * 0.35; S.vel.y = S.dash.vy * 0.35; } S.dash = null; }
-  } else if (S.map.lowG) {
-    // Geringe Schwerkraft: Die Figur gleitet und bremst nur langsam ab
-    const tx = ml ? mx / ml * spd * 1.1 : 0, ty = ml ? my / ml * spd * 1.1 : 0, k = Math.min(1, dt * (ml ? 3.2 : 1.6));
+  } else if (S.map.lowG || on('rain')) {
+    // Geringe Schwerkraft oder nasser Boden: Die Figur gleitet und bremst nur langsam ab
+    const wet = on('rain'), tx = ml ? mx / ml * spd * 1.1 : 0, ty = ml ? my / ml * spd * 1.1 : 0, k = Math.min(1, dt * (wet ? (ml ? 1.5 : 0.6) : (ml ? 3.2 : 1.6)));
     S.vel.x += (tx - S.vel.x) * k; S.vel.y += (ty - S.vel.y) * k;
     S.p.x += S.vel.x * dt; S.p.y += S.vel.y * dt;
   } else if (ml) { S.p.x += mx / ml * spd * dt; S.p.y += my / ml * spd * dt; }

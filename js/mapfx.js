@@ -108,7 +108,7 @@ function lightHits(L, px, py) {
   return rayLen(L.x, L.y, a, d) >= d - 1;
 }
 function darkLight(px, py) {
-  if (on('eclipse') || on('night')) return 0;
+  if (on('eclipse') || on('night') || on('rain')) return 0;
   if (S.map.beams) return S.fx.beams.some(b => segDist(px, py, b.x1, b.y1, b.x2, b.y2) < BEAM_W) ? 1 : 0;
   for (const L of darkLights()) if (lightHits(L, px, py)) return 1;
   return 0;

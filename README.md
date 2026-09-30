@@ -169,9 +169,14 @@ Nach jeder Stufe kommt ein Boss. Ihn verletzen ein Dash oder eine Lichtkugel, di
 
 ## Chaos-Rad
 
-Alle paar Sekunden löst das Chaos-Rad eines von 20 Ereignissen aus. Meistens ist es gemein, manchmal gut:
+Alle paar Sekunden löst das Chaos-Rad eines von 24 Ereignissen aus. Meistens ist es gemein, manchmal gut:
 
-Mittagssonne, Zweite Sonne, Sturmböe, Käferschwarm, Sonnenfunken, Erdbeben, Blitzlicht, Leuchtturm, Elstern, Honigregen, Lasergitter, Laserturm, Sägeblätter, Suchraketen, Lichtwirbel, Glassäulen, Farbchaos, Beuteregen, Mondfinsternis, Tauregen.
+Mittagssonne, Zweite Sonne, Sturmböe, Käferschwarm, Sonnenfunken, Erdbeben, Blitzlicht, Leuchtturm, Elstern, Honigregen, Lasergitter, Laserturm, Sägeblätter, Suchraketen, Lichtwirbel, Glassäulen, Farbchaos, Beuteregen, Mondfinsternis, Tauregen, Spiegelbild, Regen, Riesen-Modus, Zeitraffer.
+
+- **Spiegelbild:** 6 s lang ist das Bild seitenverkehrt. Die Tasten bleiben gleich, Maus und Finger zeigen dorthin, wo du hinsiehst.
+- **Regen:** 7 s lang gibt es kein Licht, aber der Boden ist nass und du rutschst.
+- **Riesen-Modus:** 6 s lang bist du doppelt so gross und passt schlechter in Schatten.
+- **Zeitraffer:** Die Sonne rast in 3 s einmal im Kreis, alle Schatten wirbeln herum.
 
 **Farbchaos** bringt alle Farben durcheinander: Boden, Schatten, Säulen, Spielfigur, Gegner, Bosse, Anzeige und Karten bekommen jeweils einen eigenen, wild wechselnden Farbton. Mit jeder Stufe wird es schlimmer. Auf Stufe 1 und 2 wechseln etwa dreimal pro Sekunde nur manche Farben, ab Stufe 8 wechselt alles bis zu zwölfmal pro Sekunde, dazu kommen invertierte Farben und vertauschte Farbkanäle. Das Ereignis ist rein optisch, Hitboxen und Regeln bleiben gleich. Wer unter Einstellungen **Grelle Blitze** ausschaltet, bekommt eine sanfte Version mit weichen Übergängen und ohne Invertierung.
 

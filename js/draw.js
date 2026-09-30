@@ -259,6 +259,7 @@ function draw() {
   const flashes = P.settings.flashes;
   ctx.save();
   if (S.shake > 0 && P.settings.shake) ctx.translate(fx(-1, 1) * S.shake * 9, fx(-1, 1) * S.shake * 9);
+  if (on('mirrorview')) { ctx.translate(W, 0); ctx.scale(-1, 1); }   // Spiegelbild: nur das Bild, die Anzeigen bleiben lesbar
   if (S.map.dark) {
     CC.el('yard'); ctx.fillStyle = COL.shade; ctx.fillRect(-10, -10, W + 20, H + 20);
     CC.el('tile'); tiles(COL.shadeTile);
@@ -467,7 +468,8 @@ function draw() {
       ctx.globalAlpha = Math.min(0.4, q.life * 0.35); ctx.fillStyle = '#6B6470';
       ctx.beginPath(); ctx.arc(q.x, q.y, 3 + (1.4 - q.life) * 6, 0, TAU); ctx.fill();
     } else if (q.streak) {
-      ctx.strokeStyle = COL.white; ctx.lineWidth = 1.5;
+      if (q.rain) ctx.globalAlpha = 0.6;
+      ctx.strokeStyle = q.rain ? '#CFE6FF' : COL.white; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * 0.06, q.y - q.vy * 0.06); ctx.stroke();
     } else {
       ctx.fillStyle = q.spark || COL.white;
@@ -695,6 +697,7 @@ function draw() {
   if (!on('eclipse') && !S.map.dark && !duskDark()) { CC.el('sun', 0); drawSun(S.az, on('noon') ? 1.6 : 1); CC.el('sun', 1); if (sun2On()) drawSun(az2(), 1); CC.el('sky'); drawMapSky(); }
   if (duskDark()) drawDarkness();
   drawMapOverlay();
+  if (on('rain')) { CC.el('rain'); ctx.fillStyle = 'rgba(40,60,90,' + (0.3 * Math.min(1, S.E.rain)) + ')'; ctx.fillRect(-10, -10, W + 20, H + 20); }
   if (on('night')) { CC.el('night'); ctx.fillStyle = 'rgba(16,20,56,' + (0.42 * Math.min(1, S.E.night)) + ')'; ctx.fillRect(-10, -10, W + 20, H + 20); }
 
   // Überblendungen
@@ -747,6 +750,7 @@ function draw() {
                   dashy: [tr('Dauerdash', 'Dash frenzy'), '#3FC7C4'], spikes: [tr('Stacheln', 'Spikes'), '#B8C0CF'], colorchaos: [tr('Farbchaos', 'Color chaos'), '#E0457B'],
                   shades: [tr('Sonnenbrille', 'Sunglasses'), '#3FC7C4'], chalk: [tr('Kreide', 'Chalk'), '#DDE3EC'], sunstop: [tr('Sonne steht', 'Sun stopped'), '#F08A24'],
                   night: [tr('Mondnacht', 'Moon night'), '#C9B8FF'], cloak: [tr('Getarnt', 'Cloaked'), '#9B7CF0'], chain: [tr('Kettenblitz', 'Chain lightning'), '#9FE8FF'],
+                  mirrorview: [tr('Spiegelbild', 'Mirror image'), '#C9B8FF'], rain: [tr('Regen', 'Rain'), '#6FB8F0'], giant: [tr('Riese', 'Giant'), COL.warn], timelapse: [tr('Zeitraffer', 'Time-lapse'), COL.sun],
                   lure: [tr('Lockstoff', 'Lure'), COL.warn], lead: [tr('Bleischuhe', 'Lead boots'), '#98A1B4'] };
     for (const k in lab) if (on(k)) list.push([lab[k][0] + ' ' + S.E[k].toFixed(1) + ' s', lab[k][1]]);
     if (S.bubble > 0) list.push([tr('Schild ×', 'Shield ×') + S.bubble, '#6FC3FF']);

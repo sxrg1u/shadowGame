@@ -924,7 +924,8 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 // Anker und Spiegel reagieren schon beim Antippen, beim Spiegel zählt jede Millisekunde
 $('anchorBtn').addEventListener('pointerdown', e => { e.preventDefault(); anchor(); });
 $('parryBtn').addEventListener('pointerdown', e => { e.preventDefault(); parry(); });
-function toGame(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; }
+// Beim Spiegelbild ist das Bild seitenverkehrt: Maus und Finger zeigen trotzdem dorthin, wo man hinsieht
+function toGame(e) { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W; return { x: S && on('mirrorview') ? W - x : x, y: (e.clientY - r.top) / r.height * H }; }
 // Rechtsklick-Dash über mousedown: Der Browser meldet einen Rechtsklick,
 // während die linke Taste gehalten wird, nicht als eigenes pointerdown.
 cv.addEventListener('mousedown', e => {
