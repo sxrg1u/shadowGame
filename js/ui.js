@@ -859,6 +859,7 @@ function loop(now) {
   if (DEBUG) {   // feste Bildrate, nach „frames“ Bildern bleibt alles stehen
     if (DEBUG.left <= 0) { DEBUG.done = DEBUG.frame > 0; requestAnimationFrame(loop); return; }
     DEBUG.left--; DEBUG.frame++; DEBUG.done = false; dt = 1 / 60; now = DEBUG.frame * 1000 / 60;
+    if (DEBUG.parry && S.mode === 'play' && S.shots.some(q => !q.ref && !q.hard && Math.hypot(q.x - S.p.x, q.y - S.p.y) < 28)) parry();
   }
   if (S.mode === 'pick') {
     if (pickTimer > 0) {
@@ -921,7 +922,8 @@ function debugStart() {
     startRun({ mode: DEBUG.mode, diff: P.settings.diff, seed: DEBUG.seed, map: MAP_BY[DEBUG.map] ? DEBUG.map : 'yard' });
     S.level = DEBUG.level - 1; S.grace = 1e9; Sound.setLevel(S.level);
     const b = DEBUG.boss && (DEBUG.boss === 'core' ? CORE : BOSSES.find(x => x.type === DEBUG.boss));
-    if (b) spawnBoss(b);
+    if (b) { spawnBoss(b); if (DEBUG.rage) S.boss.hp = Math.floor(S.boss.maxHp / 2); }
+    if (DEBUG.anchor) { S.anchor = { x: S.p.x - 70, y: S.p.y + 40, life: ANCHOR_LIFE }; resolve(); }
     const ev = DEBUG.event && EVENTS.find(e => e.id === DEBUG.event || e.name === DEBUG.event);
     if (ev) startEvent(ev);
     hud();
