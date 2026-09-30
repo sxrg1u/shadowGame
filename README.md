@@ -331,7 +331,3 @@ index.html?debug=1&lang=de&map=cellar&level=5&boss=eater&event=colorchaos&frames
 
 - **GitHub Pages:** Jeder Push auf `main` aktualisiert <https://sxrg1u.github.io/shady/> nach ein bis zwei Minuten.
 - **itch.io:** `index.html` zusammen mit den Ordnern `css`, `js` und `assets` als ZIP hochladen und „This file will be played in the browser“ anhaken. Als Titelbild passt `assets/cover.png`.
-
-## Verwandt
-
-[Kippwaage](https://github.com/sxrg1u/kippwaggen) ist ein zweites kleines Spiel aus derselben Reihe.
