@@ -191,44 +191,90 @@ function drawMapPreview(el, m, t) {
   c.fillStyle = p.top; poly(outline); c.fill();
   if (m.chimneys) { c.fillStyle = '#15100F'; c.fillRect(px + s * 0.25, py + s * 0.25, s * 0.5, s * 0.5); }
   if (m.wind) { c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5; c.beginPath(); for (let i = 0; i < 3; i++) { const y = h * (0.2 + i * 0.28); c.moveTo(w * 0.6, y); c.lineTo(w * 0.9, y); } c.stroke(); }
+  mapPreviewExtra(c, m, w, h);
   drawCreature(c, w * 0.66, h * 0.66, h * 0.13, { skin: P.equip.skin, hat: P.equip.hat, t: t || 1, wob: 0 });
 }
-const selMap = () => { const m = MAP_BY[P.settings.map]; return m && mapUnlocked(m) ? m.id : 'yard'; };
+const selMap = () => { const m = MAP_BY[topScr() === 'scrMap' ? mapSel : P.settings.map]; return m && mapUnlocked(m) ? m.id : 'yard'; };
 
+// Kartenübersicht: Herausforderungen oben, darunter alle Karten
 RENDER.scrModes = () => {
-  for (const b of $('diffSeg').children) b.setAttribute('aria-pressed', String(b.dataset.diff === P.settings.diff));
-  $('diffNote').textContent = DIFF[P.settings.diff].note;
-  $('metaCampaign').textContent = P.best.campaign ? tr('Rekord ', 'Best ') + fmt(P.best.campaign) + (P.stats.wins ? tr(' · ' + P.stats.wins + '× gewonnen', ' · won ' + P.stats.wins + '×') : '') : tr('Noch nicht gespielt', 'Not played yet');
-  $('metaEndless').textContent = P.best.endless ? tr('Rekord ', 'Best ') + fmt(P.best.endless) + (P.stats.endlessLevel ? tr(' · bis Stufe ', ' · up to level ') + P.stats.endlessLevel : '') : tr('Noch nicht gespielt', 'Not played yet');
+  $('walletModes').textContent = fmt(P.wallet);
   const di = dailyInfo(), dd = P.daily[di.key] || {};
   $('dailyName2').textContent = tr('Täglich: ', 'Daily: ') + di.rule.name;
+  $('dailyDesc2').textContent = di.rule.desc + tr(' Karte: ' + mapName(di.map) + '. Erreiche Stufe ' + DAILY_GOAL + '.', ' Map: ' + mapName(di.map) + '. Reach level ' + DAILY_GOAL + '.');
+  $('metaDaily').textContent = dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : dd.best ? tr('Heute bisher ', 'Today so far ') + fmt(dd.best) : tr('Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Reward ' + fmt(DAILY_REWARD) + ' points');
+  iconCanvas(di.rule.icon, 36, $('dailyIcon2'));
   const wi = weeklyInfo(), wd = P.weekly[wi.key] || {};
   $('weeklyName2').textContent = tr('Woche: ', 'Week: ') + rulesLabel(wi.rules);
   $('weeklyDesc2').textContent = tr('Zwei Regeln gleichzeitig auf ', 'Two rules at once on ') + mapName(wi.map) + '. ' + wi.rules.map(r => r.desc).join(' ');
   $('metaWeekly').textContent = weeklyMeta(wi, wd);
   iconCanvas('trophy', 36, $('weeklyIcon2'));
+  const nOpen = MAPS.filter(mapUnlocked).length;
+  $('mapCount').textContent = tr(nOpen + ' von ' + MAPS.length + ' frei', nOpen + ' of ' + MAPS.length + ' unlocked');
   const grid = $('mapGrid'); grid.innerHTML = '';
   for (const m of MAPS) {
     const ok = mapUnlocked(m), b = document.createElement('button');
     b.className = 'map-card' + (ok ? '' : ' locked'); b.dataset.map = m.id;
-    b.setAttribute('aria-pressed', String(selMap() === m.id));
     const cvs = document.createElement('canvas'); cvs.setAttribute('aria-hidden', 'true');
     const nm = document.createElement('b'); nm.textContent = mapName(m);
-    const st = document.createElement('span'); st.textContent = ok ? mapDesc(m) : mapLockText(m);
-    b.append(cvs, nm, st); b.title = mapDesc(m);
+    const st = document.createElement('span');
+    const best = P.stats['lvl_' + m.id] || 0, won = (P.stats['win_' + m.id] || 0) > 0;
+    st.textContent = ok ? (best ? tr('Bis Stufe ', 'Up to level ') + best : tr('Noch nicht gespielt', 'Not played yet')) : mapLockText(m);
+    b.append(cvs, nm, st);
+    if (!ok && m.cost) { const pr = document.createElement('span'); pr.className = 'price'; pr.textContent = tr('oder ', 'or ') + fmt(m.cost) + tr(' Punkte', ' points'); b.appendChild(pr); }
+    if (!ok && m.unlock) { const bar = document.createElement('div'); bar.className = 'bar'; const i = document.createElement('i'); i.style.width = Math.round(mapProgress(m) * 100) + '%'; bar.appendChild(i); b.appendChild(bar); }
+    const tag = document.createElement('span');
+    if (!ok) { tag.className = 'tag'; tag.textContent = tr('Gesperrt', 'Locked'); }
+    else if (won) { tag.className = 'tag won'; tag.textContent = tr('Gewonnen', 'Won'); }
+    else if (!P.stats['play_' + m.id]) { tag.className = 'tag new'; tag.textContent = tr('Neu', 'New'); }
+    if (tag.className) b.appendChild(tag);
+    b.setAttribute('aria-label', mapName(m) + ', ' + (tag.textContent ? tag.textContent + ', ' : '') + st.textContent);
     grid.appendChild(b);
     drawMapPreview(cvs, m);
   }
-  $('dailyDesc2').textContent = di.rule.desc + tr(' Karte: ' + mapName(di.map) + '. Erreiche Stufe ' + DAILY_GOAL + '.', ' Map: ' + mapName(di.map) + '. Reach level ' + DAILY_GOAL + '.');
-  $('metaDaily').textContent = dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : dd.best ? tr('Heute bisher ', 'Today so far ') + fmt(dd.best) : tr('Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Reward ' + fmt(DAILY_REWARD) + ' points');
-  iconCanvas(di.rule.icon, 36, $('dailyIcon2'));
-  for (const c of document.querySelectorAll('.mode-card canvas[data-icon]')) iconCanvas(c.dataset.icon, 36, c);
-  const coreOk = P.stats.core > 0 || P.stats.maxLevel >= 10;
-  $('coreBtn').disabled = !coreOk;
-  $('coreBtn').title = coreOk ? '' : tr('Erreich zuerst Stufe 10', 'Reach level 10 first');
-  $('coreBtn').textContent = coreOk ? bossLabel('core') : bossLabel('core') + tr(' (ab Stufe 10)', ' (from level 10)');
-  for (const b of document.querySelectorAll('#practice [data-boss]')) if (b.dataset.boss !== 'core') b.textContent = bossLabel(b.dataset.boss);
 };
+
+// Eine Karte: Modus und Schwierigkeit wählen oder freischalten
+let mapSel = 'yard', buyConfirm = false;
+RENDER.scrMap = () => {
+  const m = MAP_BY[mapSel] || MAPS[0], ok = mapUnlocked(m);
+  // Hinter dem Fenster läuft die Karte live
+  if (S && S.mode === 'ready' && S.map.id !== m.id) reset('ready', { map: m.id });
+  $('mapTitle').textContent = mapName(m);
+  $('mapDescLong').textContent = mapDesc(m);
+  const fl = $('mapFeats'); fl.innerHTML = '';
+  for (const f of m.feat || []) { const li = document.createElement('li'); li.textContent = tr(f[0], f[1]); fl.appendChild(li); }
+  drawMapPreview($('mapHero'), m);
+  $('mapLocked').hidden = ok; $('mapOpen').hidden = !ok;
+  if (!ok) {
+    $('mapReq').textContent = mapLockText(m);
+    $('mapReqBar').style.width = Math.round(mapProgress(m) * 100) + '%';
+    const can = P.wallet >= m.cost;
+    $('mapBuy').disabled = !can;
+    $('mapBuy').textContent = buyConfirm ? tr('Wirklich kaufen? ' + fmt(m.cost) + ' Punkte', 'Really buy? ' + fmt(m.cost) + ' points') : tr('Für ' + fmt(m.cost) + ' Punkte freischalten', 'Unlock for ' + fmt(m.cost) + ' points');
+    $('mapBuyNote').textContent = tr('Dein Konto: ', 'Your balance: ') + fmt(P.wallet) + (can ? '' : tr(' · es fehlen ' + fmt(m.cost - P.wallet), ' · ' + fmt(m.cost - P.wallet) + ' short'));
+  } else {
+    for (const b of $('diffSeg').children) b.setAttribute('aria-pressed', String(b.dataset.diff === P.settings.diff));
+    $('diffNote').textContent = DIFF[P.settings.diff].note;
+    const best = P.stats['lvl_' + m.id] || 0, wins = P.stats['win_' + m.id] || 0;
+    $('metaCampaign').textContent = wins ? tr(wins + '× gewonnen', 'won ' + wins + '×') : tr('10 Stufen, 9 Bosse', '10 levels, 9 bosses');
+    $('metaEndless').textContent = best ? tr('Bis Stufe ', 'Up to level ') + best : tr('Wie weit kommst du?', 'How far can you get?');
+    const coreOk = P.stats.core > 0 || P.stats.maxLevel >= 10;
+    $('coreBtn').disabled = !coreOk;
+    $('coreBtn').title = coreOk ? '' : tr('Erreich zuerst Stufe 10', 'Reach level 10 first');
+    $('coreBtn').textContent = coreOk ? bossLabel('core') : bossLabel('core') + tr(' (ab Stufe 10)', ' (from level 10)');
+    for (const b of document.querySelectorAll('#practice [data-boss]')) if (b.dataset.boss !== 'core') b.textContent = bossLabel(b.dataset.boss);
+  }
+  // Belohnung: eigener Skin und Hut für den Kampagnensieg auf dieser Karte
+  const rw = MAP_REWARD[m.id], got = (P.stats['win_' + m.id] || 0) > 0;
+  $('mapReward').classList.toggle('got', got);
+  $('rewardHead').textContent = got ? tr('Freigeschaltet', 'Unlocked') : tr('Belohnung für den Kampagnensieg', 'Reward for winning the campaign');
+  $('rewardName').textContent = tr('Skin ', 'Skin ') + SKIN_BY[rw.skin].name + tr(' und ', ' and ') + HAT_BY[rw.hat].name;
+  $('rewardNote').textContent = got ? tr('Liegt in deiner Garderobe.', 'Waiting in your wardrobe.') : tr('Gewinne die Kampagne auf dieser Karte, egal auf welcher Schwierigkeit.', 'Win the campaign on this map, on any difficulty.');
+  const rc = $('rewardCv'), c = sizeCanvas(rc, 64, 64);
+  drawCreature(c, 32, 40, 18, { skin: rw.skin, hat: rw.hat, t: performance.now() / 1000, wob: 0, alpha: got ? 1 : 0.9 });
+};
+function openMap(id) { mapSel = id; buyConfirm = false; if (mapUnlocked(MAP_BY[id])) { P.settings.map = id; save(); } open('scrMap'); }
 
 const wardLabel = (skin, hat, trail) => SKIN_BY[skin].name + (hat !== 'none' ? tr(' mit ', ' with ') + HAT_BY[hat].name : '') + (trail && trail !== 'none' ? ' · ' + TRAIL_BY[trail].name : '');
 const eqLabel = () => wardLabel(P.equip.skin, P.equip.hat, P.equip.trail);
@@ -502,7 +548,7 @@ function finish(won) {
   S.mode = 'over'; S.won = won;
   const sc = Math.floor(S.score), m = S.cfg.mode;
   stat('runs'); P.stats.time += S.t; statMax('longest', Math.floor(S.t)); statMax('bestScore', sc); P.stats.points += sc;
-  if (won && m === 'campaign') { stat('wins'); if (S.cfg.diff === 'hard') stat('hardWins'); }
+  if (won && m === 'campaign') { stat('wins'); stat('win_' + S.map.id); if (S.cfg.diff === 'hard') stat('hardWins'); }
   if (m === 'duel') { stat('duels'); if (won) stat('duelWins'); }
   const earned = Math.round(sc * (m === 'practice' ? 0.5 : 1));
   P.wallet += earned;
@@ -770,16 +816,21 @@ document.addEventListener('click', e => {
 });
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
 document.querySelectorAll('[data-boss]').forEach(b => b.addEventListener('click', () => startRun({ mode: 'practice', diff: P.settings.diff, boss: b.dataset.boss, map: selMap() })));
-$('mapGrid').addEventListener('click', e => {
-  const b = e.target.closest('[data-map]'); if (!b) return;
-  const m = MAP_BY[b.dataset.map];
-  if (!mapUnlocked(m)) { Sound.sfx('deny'); toast(tr('Karte gesperrt', 'Map locked'), mapLockText(m), m.icon); return; }
-  P.settings.map = m.id; save(); RENDER.scrModes();
+$('mapGrid').addEventListener('click', e => { const b = e.target.closest('[data-map]'); if (b) openMap(b.dataset.map); });
+$('mapBuy').addEventListener('click', () => {
+  const m = MAP_BY[mapSel];
+  if (!buyConfirm) { buyConfirm = true; RENDER.scrMap(); return; }
+  buyConfirm = false;
+  if (buyMap(m)) {
+    Sound.sfx('buy'); P.settings.map = m.id; save();
+    toast(tr('Karte freigeschaltet', 'Map unlocked'), mapName(m), m.icon);
+    RENDER.scrMap(); $('scrMap').querySelector('[data-mode="campaign"]').focus({ preventScroll: true });
+  } else { Sound.sfx('deny'); RENDER.scrMap(); }
 });
 $('weeklyGo').addEventListener('click', () => startMode('weekly'));
 $('tutBtn').addEventListener('click', () => startTutorial());
 $('tutSkip').addEventListener('click', () => tutFinish(true));
-$('diffSeg').addEventListener('click', e => { const b = e.target.closest('[data-diff]'); if (!b) return; P.settings.diff = b.dataset.diff; save(); RENDER.scrModes(); });
+$('diffSeg').addEventListener('click', e => { const b = e.target.closest('[data-diff]'); if (!b) return; P.settings.diff = b.dataset.diff; save(); RENDER.scrMap(); });
 $('dailyGo').addEventListener('click', () => startMode('daily'));
 $('pauseBtn').addEventListener('click', () => { if (topScr() === 'scrPause') resume(); else pause(); });
 $('muteBtn').addEventListener('click', toggleMute);
@@ -925,7 +976,7 @@ function setLang(l) {
   document.documentElement.lang = LANG;
   document.title = 'Shady';
   const md = document.querySelector('meta[name="description"]');
-  if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. 6 Bosse, 4 Karten, tägliche und wöchentliche Herausforderungen, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. 6 bosses, 4 maps, daily and weekly challenges, upgrades, wardrobe and online duel.');
+  if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. 6 Bosse, 12 Karten, tägliche und wöchentliche Herausforderungen, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. 6 bosses, 12 maps, daily and weekly challenges, upgrades, wardrobe and online duel.');
   applyDataLang(); translateStatic();
   for (const k in hc) delete hc[k];
   legendBuilt = false; for (const id of ['legendGood', 'legendBad', 'legendBoss']) $(id).innerHTML = '';

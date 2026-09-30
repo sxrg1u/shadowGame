@@ -124,7 +124,19 @@ Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik.
 | **Innenhof** | Die Sonne wandert im Kreis, eckige Säulen werfen lange Schatten. | Von Anfang an |
 | **Garten** | Runde Bäume werfen weiche Schatten. Es gibt mehr Tau, aber die Käfer sind flinker. | Erreiche Stufe 4 |
 | **Dach** | Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken. | Besiege 5 Bosse |
-| **Keller** | Die schwerste Karte. Keine Sonne, nur Fackeln, die quer durch den Raum wandern. Eine davon jagt dich. Ihr Licht brennt stärker, und im Schatten erholst du dich langsamer. | Besiege 12 Bosse |
+| **Keller** | Keine Sonne, nur Fackeln, die quer durch den Raum wandern. Eine davon jagt dich. Ihr Licht brennt stärker, und im Schatten erholst du dich langsamer. | Besiege 12 Bosse |
+| **Bahnhof** | Zwei Gleise queren den Bahnsteig. Rote Gleise und ein Signal kündigen einen Zug an. Er wirft kurz einen riesigen Schatten, und wer auf den Gleisen steht, bekommt Schaden (je nach Schwierigkeit) und wird weggeschleudert. | Stufe 6 auf dem Dach |
+| **Schiffsdeck** | Das Schiff schaukelt, alle Schatten schwingen hin und her, und das Deck neigt sich. Die Segel gehen im Takt auf und zu. | Stufe 6 im Bahnhof |
+| **Wüste** | Kaum Schutz: Kakteen werfen dünne Schatten, Dünen wandern langsam. Ein Sandsturm macht alles zu Schatten, aber du siehst kaum etwas, und der Wind schiebt dich. | Stufe 6 auf dem Schiffsdeck |
+| **Jahrmarkt** | Die Gondeln des Riesenrads werfen wandernde Schatten. Karussells drehen dich im Kreis. | Stufe 6 in der Wüste |
+| **Stadt bei Nacht** | Dunkel und sicher, bis eine Laterne flackert und angeht. Autoscheinwerfer fegen über die Strasse, und Autos schubsen dich weg. | Stufe 6 auf dem Jahrmarkt |
+| **Bibliothek** | Lange Regale werfen lange Schatten, der grosse Leuchter schwingt hin und her. Bücher fallen aus den Regalen und versperren Wege. | Stufe 6 in der Stadt |
+| **Spiegelsaal** | Spiegel werfen das Licht aus zwei weiteren Richtungen zurück. Im Halbschatten brennt es halb so stark, ganz dunkel ist nur ein schmaler Streifen hinter jeder Säule. | Stufe 6 in der Bibliothek |
+| **Mond** | Geringe Schwerkraft: Du gleitest, und der Dash trägt fast doppelt so weit. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht, das halb so stark brennt. | Stufe 6 im Spiegelsaal |
+
+Nach **Spielen** siehst du alle Karten auf einen Blick. Tipp eine an, dann wählst du Schwierigkeit und Modus. Jede gesperrte Karte kannst du statt mit der Bedingung auch mit Punkten aus dem Punktekonto freischalten (1.500 bis 15.000 Punkte).
+
+Wer die Kampagne auf einer Karte gewinnt, bekommt dafür einen eigenen Skin und einen eigenen Hut, zum Beispiel Matrose und Kapitänsmütze auf dem Schiffsdeck oder Mondgestein und Raumhelm auf dem Mond.
 
 Die tägliche und die wöchentliche Herausforderung dürfen jede Karte benutzen, auch wenn du sie noch nicht freigeschaltet hast.
 
@@ -264,7 +276,8 @@ js/art.js           Farben, Symbole, Figur, Skins, Hüte, Spuren
 js/data.js          Profil, Schwierigkeit, Regeln, Upgrades, Erfolge, Debug-Start
 js/audio.js         Geräusche und Musik
 js/i18n.js          Englische Texte und Sprachumschaltung
-js/maps.js          Die vier Karten, Schatten und Licht
+js/maps.js          Die 12 Karten, Schatten und Licht
+js/mapfx.js         Sonderregeln der neuen Karten (Züge, Segel, Laternen ...)
 js/game.js          Spielablauf, Bosse, Chaos-Rad, Upgrades
 js/draw.js          Zeichnen des Spielfelds, Farbchaos
 js/tutorial.js      Tutorial

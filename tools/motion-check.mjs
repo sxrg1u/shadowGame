@@ -69,7 +69,8 @@ const SCENARIOS = {
   // Spielmoment: Anker, Dash, Spiegel mit verlangsamtem Spiel
   async game(shot, page) {
     await page.click('[data-go="scrModes"]');
-    await page.click('[data-mode="endless"]');
+    await page.click('[data-map="yard"]');
+    await page.click('#scrMap [data-mode="endless"]');
     await sleep(800);
     await shot('start', 3, 100);
     await page.keyboard.press('e'); await shot('anker-setzen', 4, 100);

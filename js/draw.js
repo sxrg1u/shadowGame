@@ -22,17 +22,19 @@ function shadeRegion(build, alpha, id) {
 }
 function pillarShadows(az) {
   const d = dirOf(az), L = shadowLen(), vx = d.x * L, vy = d.y * L;
+  const one = (r, k) => {
+    const c = pillarOutline(r);
+    const h = hull(c.concat(c.map(q => [q[0] + vx * k, q[1] + vy * k])));
+    ctx.moveTo(h[0][0], h[0][1]);
+    for (let i = 1; i < h.length; i++) ctx.lineTo(h[i][0], h[i][1]);
+    ctx.closePath();
+  };
   return () => {
-    for (const r of S.pillars) {
-      if (r.glass > 0) continue;
-      const c = pillarOutline(r);
-      const h = hull(c.concat(c.map(q => [q[0] + vx, q[1] + vy])));
-      ctx.moveTo(h[0][0], h[0][1]);
-      for (let i = 1; i < h.length; i++) ctx.lineTo(h[i][0], h[i][1]);
-      ctx.closePath();
-    }
+    for (const r of S.pillars) if (!(r.glass > 0)) one(r, 1);
+    for (const r of S.casters) one(r, r.tall || 1);   // Züge, Segel, Gondeln, Dünen
   };
 }
+const shadowPaths = pillarShadows;
 function textOut(txt, x, y, color, font, align) {
   ctx.font = font; ctx.textAlign = align || 'left';
   ctx.lineWidth = 4; ctx.strokeStyle = COL.body; ctx.lineJoin = 'round'; ctx.strokeText(txt, x, y);
@@ -261,10 +263,13 @@ function draw() {
     CC.el('yard'); ctx.fillStyle = COL.shade; ctx.fillRect(-10, -10, W + 20, H + 20);
     CC.el('tile'); tiles(COL.shadeTile);
     drawTorchLight();
+    CC.el('floor'); drawMapFloor();
   } else {
     CC.el('yard'); ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
     CC.el('tile'); tiles(COL.tile);
+    CC.el('floor'); drawMapFloor();
     if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5, 0); shadeRegion(pillarShadows(az2()), 0.5, 1); }
+    else if (extraLights().length) drawMultiShadow();
     else shadeRegion(pillarShadows(S.az), 1, 0);
     if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } }, 1, 2);
   }
@@ -371,6 +376,7 @@ function draw() {
   // Säulen
   S.pillars.forEach((r, n) => { CC.el('pillar', n); drawPillar(r); });
   CC.el('torch'); drawTorches();
+  CC.el('mapTop'); drawMapTop();
 
   // Aura des Schattenfressers und Lichtflecken des Nachtmahrs
   const E = eaterAura();
@@ -653,8 +659,9 @@ function draw() {
   }
 
   // Sonne(n)
-  if (!on('eclipse') && !S.map.dark && !duskDark()) { CC.el('sun', 0); drawSun(S.az, on('noon') ? 1.6 : 1); CC.el('sun', 1); if (sun2On()) drawSun(az2(), 1); }
+  if (!on('eclipse') && !S.map.dark && !duskDark()) { CC.el('sun', 0); drawSun(S.az, on('noon') ? 1.6 : 1); CC.el('sun', 1); if (sun2On()) drawSun(az2(), 1); CC.el('sky'); drawMapSky(); }
   if (duskDark()) drawDarkness();
+  drawMapOverlay();
 
   // Überblendungen
   CC.el('overlay');

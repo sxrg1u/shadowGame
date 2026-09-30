@@ -9,7 +9,7 @@ function makePillar(list, avoid) {
   for (let k = 0; k < 200; k++) {
     const sh = newPillarShape(), w = sh.w, h = sh.h;
     const r = { ...sh, x: rand(28, W - 28 - w), y: rand(28, H - 28 - h), crumble: 0 };
-    if (list.some(o => overlaps(r, o, 44))) continue;
+    if (list.some(o => overlaps(r, o, 44)) || mapBlocks(r)) continue;
     if (avoid && avoid.x > r.x - 36 && avoid.x < r.x + w + 36 && avoid.y > r.y - 36 && avoid.y < r.y + h + 36) continue;
     return r;
   }
@@ -20,7 +20,7 @@ const inPillar = (x, y, pad) => S.pillars.some(r => pillarContains(r, x, y, pad)
 let S;
 function reset(mode, cfg) {
   cfg = cfg || { mode: 'menu' };
-  const map = mode === 'ready' ? MAPS[0] : MAP_BY[cfg.map] || MAPS[0];
+  const map = MAP_BY[cfg.map] || MAPS[0];
   applyPalette(map);
   S = { mode, cfg, map, rules: new Set(cfg.rules || []), diff: DIFF[cfg.diff] || DIFF.normal, up: {}, upList: [],
         t: 0, sunT: 0, az: rand(0, TAU), pillars: [], p: { x: W / 2, y: H / 2 },
@@ -34,7 +34,8 @@ function reset(mode, cfg) {
         saws: [], missiles: [], vortex: null, decoy: null, lucky: 0,
         anchor: null, anchorCd: 0, parry: 0, parryCd: 0, parryFx: 0,
         run: { hits: 0, newAch: [], newItems: [], dailyDone: false, jumps: 0, parries: 0 }, closeArmed: false, beatT: 0,
-        pickT: 0, winT: 0, duelWinT: 0, incoming: [], countT: 0, countShown: 0, spots: [], torches: [], deco: [], trailFx: 0, tut: null };
+        pickT: 0, winT: 0, duelWinT: 0, incoming: [], countT: 0, countShown: 0, spots: [], torches: [], deco: [], trailFx: 0, tut: null,
+        casters: [], fx: {}, vel: { x: 0, y: 0 } };
   S.energy = maxEnergy();
   if (ruleOn('rush')) S.levelIn = 6;
   if (ruleOn('night')) S.lensIn = 3;
@@ -81,6 +82,7 @@ const maxCharges = () => 1 + up('twin');
 function shadowFrom(px, py, az) {
   const d = dirOf(az), ux = -d.x, uy = -d.y, L = shadowLen();
   for (const r of S.pillars) if (!(r.glass > 0) && pillarEnter(r, px, py, ux, uy) <= L) return true;
+  for (const r of S.casters) if (pillarEnter(r, px, py, ux, uy) <= L * (r.tall || 1)) return true;
   return false;
 }
 // 0 = voller Schatten, 1 = volles Licht. Bei der Regel „Doppelte Sonne“ gibt es auch 0,5.
@@ -89,12 +91,15 @@ function lightAt(px, py) {
   if (E && Math.hypot(px - E.x, py - E.y) < E.aura) return 1;
   if (duskDark() || on('eclipse')) return 0;
   if (S.puddles.some(q => Math.hypot(px - q.x, py - q.y) < q.r)) return 0;
-  if (S.map.dark) return torchLight(px, py);
+  if (S.map.dark) return darkLight(px, py);
+  if (sandstorm()) return 0;
   if (S.clouds.some(c => ((px - c.x) / c.rx) ** 2 + ((py - c.y) / c.ry) ** 2 <= 1)) return 0;
   const a = shadowFrom(px, py, S.az) ? 0 : 1;
-  if (!sun2On()) return a;
-  const b = shadowFrom(px, py, az2()) ? 0 : 1;
-  return ruleOn('twosun') ? (a + b) / 2 : Math.max(a, b);
+  let v = a;
+  if (sun2On()) { const b = shadowFrom(px, py, az2()) ? 0 : 1; v = ruleOn('twosun') ? (a + b) / 2 : Math.max(a, b); }
+  // Spiegel und Erdlicht: Halbschatten, wo nur ein Nebenlicht hinkommt
+  if (v < 1) for (const L of extraLights()) if (L.w > v && !shadowFrom(px, py, L.az)) v = L.w;
+  return v;
 }
 const inShadow = (px, py) => lightAt(px, py) === 0;
 
@@ -160,7 +165,7 @@ function dash(tx, ty) {
     if (inverted()) { dx = -dx; dy = -dy; }
   }
   const d = Math.hypot(dx, dy) || 1;
-  S.dash = { t: 0.19 * (1 + 0.3 * up('longdash')), vx: dx / d * 650, vy: dy / d * 650 };
+  S.dash = { t: 0.19 * (1 + 0.3 * up('longdash')) * (S.map.lowG ? 1.7 : 1), vx: dx / d * 650, vy: dy / d * 650 };
   S.charges--; S.trailT = 0;
   if (S.dashCd <= 0) S.dashCd = S.dashMax = dashCdMax();
   stat('dashes'); Sound.sfx('dash');
@@ -291,7 +296,7 @@ function bullAct(B, dt, ef, v) {
     }
   } else if (B.state === 'charge') {
     B.x += B.vx * dt * ef; B.y += B.vy * dt * ef;
-    const i = S.pillars.findIndex(r => B.x > r.x - B.r && B.x < r.x + r.w + B.r && B.y > r.y - B.r && B.y < r.y + r.h + B.r);
+    const i = S.pillars.findIndex(r => !r.fixed && B.x > r.x - B.r && B.x < r.x + r.w + B.r && B.y > r.y - B.r && B.y < r.y + r.h + B.r);
     if (i >= 0) {
       const r = S.pillars[i]; sparks(r.x + r.w / 2, r.y + r.h / 2, COL.top, 18); S.pillars.splice(i, 1); S.shake = 0.5;
       flash(B.type === 'core' ? tr('Der Kern zerlegt eine Säule!', 'The Core smashes a pillar!') : tr('Der Stier zerlegt eine Säule!', 'The Bull smashes a pillar!'), COL.warn); Sound.sfx('boom');
@@ -318,7 +323,7 @@ function eaterAct(B, dt, ef) {
     B.atk -= dt * ef;
     if (B.atk <= 0) {
       let prey = null, bd = 1e9;
-      for (const r of S.pillars) { if (r.glass > 0) continue; const dd = Math.hypot(pcx(r) - S.p.x, pcy(r) - S.p.y); if (dd < bd) { bd = dd; prey = r; } }
+      for (const r of S.pillars) { if (r.glass > 0 || r.fixed) continue; const dd = Math.hypot(pcx(r) - S.p.x, pcy(r) - S.p.y); if (dd < bd) { bd = dd; prey = r; } }
       B.volley = (B.volley || 0) + 1;
       if (B.volley % 2 === 0) {
         const a = Math.atan2(S.p.y - B.y, S.p.x - B.x);
@@ -440,7 +445,7 @@ const EVENTS = [
       for (let i = 0; i < 2 + Math.min(Math.floor(dl()), 8); i++) S.meteors.push({ x: rand(30, W - 30), y: rand(30, H - 30), r: 30, warn: 1.5 + i * 0.35 });
     } },
   { name: 'Erdbeben', min: 2, run() {
-      const n = S.pillars.length; S.pillars = [];
+      const keep = S.pillars.filter(r => r.fixed), n = S.pillars.length - keep.length; S.pillars = keep;
       for (let i = 0; i < n; i++) { const r = makePillar(S.pillars, S.p); if (r) S.pillars.push(r); }
       S.shake = 1.2; resolve(); Sound.sfx('boom', true);
     } },
@@ -533,8 +538,9 @@ function collect(it) {
     case 'bomb': { const life = 8 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 58, life, max: life }); flash(tr('Schattenbombe!', 'Shadow bomb!'), '#8E9CC2'); break; }
     case 'seed': {
       let d = dirOf(S.az);
-      if (S.map.dark && S.torches.length) {
-        const T = S.torches.reduce((a, b) => dist(a, S.p) < dist(b, S.p) ? a : b), dx = S.p.x - T.x, dy = S.p.y - T.y, dd = Math.hypot(dx, dy) || 1;
+      const LL = S.map.dark ? darkLights() : [];
+      if (LL.length) {
+        const T = LL.reduce((a, b) => dist(a, S.p) < dist(b, S.p) ? a : b), dx = S.p.x - T.x, dy = S.p.y - T.y, dd = Math.hypot(dx, dy) || 1;
         d = { x: dx / dd, y: dy / dd };
       }
       const sz = S.map.round ? 34 : 28, cx = S.p.x - d.x * 40, cy = S.p.y - d.y * 40;
@@ -673,7 +679,12 @@ function update(dt) {
       S.trailT -= dt;
       if (S.trailT <= 0) { S.trailT = 0.035; const life = 3 * lingerF(); S.puddles.push({ x: S.p.x, y: S.p.y, r: 17, life, max: life }); }
     }
-    if (S.dash.t <= 0) S.dash = null;
+    if (S.dash.t <= 0) { if (S.map.lowG) { S.vel.x = S.dash.vx * 0.35; S.vel.y = S.dash.vy * 0.35; } S.dash = null; }
+  } else if (S.map.lowG) {
+    // Geringe Schwerkraft: Die Figur gleitet und bremst nur langsam ab
+    const tx = ml ? mx / ml * spd * 1.1 : 0, ty = ml ? my / ml * spd * 1.1 : 0, k = Math.min(1, dt * (ml ? 3.2 : 1.6));
+    S.vel.x += (tx - S.vel.x) * k; S.vel.y += (ty - S.vel.y) * k;
+    S.p.x += S.vel.x * dt; S.p.y += S.vel.y * dt;
   } else if (ml) { S.p.x += mx / ml * spd * dt; S.p.y += my / ml * spd * dt; }
   const trail = P.equip.trail;
   if (trail && trail !== 'none' && (ml || S.dash)) {
@@ -715,7 +726,7 @@ function update(dt) {
   if (S.incoming.length && !S.banner) receiveAttack(S.incoming.shift());
 
   // Wolken
-  if (!calm && !S.map.dark) S.cloudIn -= dt;
+  if (!calm && !S.map.dark && !S.map.noClouds) S.cloudIn -= dt;
   if (S.cloudIn <= 0) {
     const dir = rng() < 0.5 ? 1 : -1, rx = rand(50, 72);
     S.clouds.push({ x: dir > 0 ? -rx - 10 : W + rx + 10, y: rand(60, H - 60), vx: dir * rand(22, 36), rx, ry: rx * 0.65 });
@@ -1029,7 +1040,7 @@ function update(dt) {
   // Stufe und Einsturz
   if (!S.boss && S.pickT <= 0 && S.winT <= 0 && !calm) S.levelIn -= dt;
   if (!calm && S.levelIn <= 2.5 && !up('architect') && !S.pillars.some(r => r.doomed)) {
-    const r = pick(S.pillars);
+    const r = pick(S.pillars.filter(q => !q.fixed && !q.books));
     if (r) { r.doomed = true; r.crumble = 2.5; }
   }
   for (const r of S.pillars) if (r.crumble > 0) r.crumble -= dt;

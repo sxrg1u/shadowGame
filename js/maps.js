@@ -4,35 +4,89 @@
 const MAPS = [
   { id: 'yard', icon: 'noon', name: ['Innenhof', 'Courtyard'],
     desc: ['Der sonnige Innenhof. Die Sonne wandert im Kreis, Säulen werfen lange Schatten.', 'The sunny courtyard. The sun moves in a circle, pillars cast long shadows.'],
+    feat: [['Säulen werfen lange Schatten', 'Pillars cast long shadows'], ['Die Sonne wandert im Kreis', 'The sun moves in a circle']],
     pal: { lit: '#F4CF63', tile: '#EABF4A', shade: '#3F4C6B', shadeTile: '#394562', top: '#1F2535', edge: '#323B55' } },
-  { id: 'garden', icon: 'seed', name: ['Garten', 'Garden'], unlock: { stat: 'maxLevel', n: 4 },
+  { id: 'garden', icon: 'seed', name: ['Garten', 'Garden'], unlock: { stat: 'maxLevel', n: 4 }, cost: 1500,
     desc: ['Runde Bäume werfen weiche Schatten. Mehr Tau, aber die Käfer sind flinker.', 'Round trees cast soft shadows. More dew, but the bugs are quicker.'],
+    feat: [['Runde Bäume', 'Round trees'], ['Mehr Tau, flinkere Käfer', 'More dew, quicker bugs']],
     pal: { lit: '#C9DF74', tile: '#B8D064', shade: '#2E5243', shadeTile: '#284A3C', top: '#2F6B3B', edge: '#245830' },
     round: 0.8, dewCap: 5, dewF: 0.7, bugF: 1.2 },
-  { id: 'roof', icon: 'wind', name: ['Dach', 'Rooftop'], unlock: { stat: 'bosses', n: 5 },
+  { id: 'roof', icon: 'wind', name: ['Dach', 'Rooftop'], unlock: { stat: 'bosses', n: 5 }, cost: 2500,
     desc: ['Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken.', 'The wind keeps pushing you across the tiles. Lots of chimneys and clouds.'],
+    feat: [['Wind schiebt dich', 'Wind pushes you'], ['Viele Wolken', 'Lots of clouds']],
     pal: { lit: '#EFAA76', tile: '#DC9461', shade: '#4B3B55', shadeTile: '#43344C', top: '#3A2D33', edge: '#5A4440' },
     wind: 44, chimneys: true, pillars: 8, cloudF: 0.45 },
-  { id: 'cellar', icon: 'flame', name: ['Keller', 'Cellar'], unlock: { stat: 'bosses', n: 12 },
-    desc: ['Die schwerste Karte. Fackeln wandern durch den ganzen Raum, eine jagt dich. Ihr Licht brennt stärker, und du erholst dich langsamer.', 'The hardest map. Torches roam the whole room and one hunts you. Their light burns harder and you recover more slowly.'],
+  { id: 'cellar', icon: 'flame', name: ['Keller', 'Cellar'], unlock: { stat: 'bosses', n: 12 }, cost: 4000,
+    desc: ['Fackeln wandern durch den ganzen Raum, eine jagt dich. Ihr Licht brennt stärker, und du erholst dich langsamer.', 'Torches roam the whole room and one hunts you. Their light burns harder and you recover more slowly.'],
+    feat: [['Keine Sonne, nur Fackeln', 'No sun, only torches'], ['Eine Fackel jagt dich', 'One torch hunts you']],
     pal: { lit: '#F2B45E', tile: '#DE9E4A', shade: '#1F1C27', shadeTile: '#27232F', top: '#3E3845', edge: '#524A58' },
     dark: true, burnF: 1.3, regenF: 0.7 },
+  { id: 'station', icon: 'missile', name: ['Bahnhof', 'Station'], unlock: { stat: 'lvl_roof', n: 6 }, cost: 5000, track: 'roof',
+    desc: ['Zwei Gleise queren den Bahnsteig. Züge rasen durch und werfen kurz riesige Schatten. Wer auf den Gleisen steht, wird erwischt.', 'Two tracks cross the platform. Trains race through and briefly cast huge shadows. Stand on the tracks and you get hit.'],
+    feat: [['Züge werfen lange Schatten', 'Trains cast long shadows'], ['Rote Gleise: Zug kommt!', 'Red tracks: train incoming!'], ['Treffer: Schaden und Rückstoss', 'Hit: damage and knockback']],
+    pal: { lit: '#E9D8B4', tile: '#DAC7A0', shade: '#3B4658', shadeTile: '#35404F', top: '#474C5A', edge: '#626878' },
+    tracks: [150, 330], trackH: 34, pillars: 5 },
+  { id: 'ship', icon: 'wind', name: ['Schiffsdeck', 'Ship deck'], unlock: { stat: 'lvl_station', n: 6 }, cost: 6000, track: 'garden',
+    desc: ['Das Schiff schaukelt, und alle Schatten schwingen mit. Die Segel gehen im Takt auf und zu und werfen grosse Schatten.', 'The ship rocks and every shadow swings along. The sails open and close in rhythm and cast big shadows.'],
+    feat: [['Schatten schwingen hin und her', 'Shadows swing back and forth'], ['Segel gehen auf und zu', 'Sails open and close'], ['Das Deck neigt sich', 'The deck tilts']],
+    pal: { lit: '#DDAE72', tile: '#C99A5E', shade: '#343B58', shadeTile: '#2F3550', top: '#5B3A22', edge: '#7A5234' },
+    pillars: 4, cloudF: 0.8 },
+  { id: 'desert', icon: 'noon', name: ['Wüste', 'Desert'], unlock: { stat: 'lvl_ship', n: 6 }, cost: 7000, track: 'yard',
+    desc: ['Kaum Schutz: Kakteen werfen dünne Schatten, Dünen wandern langsam über den Sand. Ab und zu verdunkelt ein Sandsturm alles.', 'Barely any cover: cacti cast thin shadows, dunes slowly drift across the sand. Now and then a sandstorm darkens everything.'],
+    feat: [['Dünne Kaktusschatten', 'Thin cactus shadows'], ['Wandernde Dünen', 'Drifting dunes'], ['Sandsturm: Schutz, aber kaum Sicht', 'Sandstorm: cover, but barely any sight']],
+    pal: { lit: '#F2D08A', tile: '#E5BF74', shade: '#6E4B3A', shadeTile: '#654433', top: '#3F6B3A', edge: '#2C5228' },
+    pillars: 5, noClouds: true, burnF: 1.1, dewF: 1.3 },
+  { id: 'fair', icon: 'party', name: ['Jahrmarkt', 'Fairground'], unlock: { stat: 'lvl_desert', n: 6 }, cost: 8000, track: 'garden',
+    desc: ['Das Riesenrad dreht sich, seine Gondeln werfen wandernde Schatten. Wer auf ein Karussell tritt, fährt im Kreis mit.', 'The Ferris wheel turns and its gondolas cast wandering shadows. Step onto a carousel and it spins you around.'],
+    feat: [['Gondeln werfen wandernde Schatten', 'Gondolas cast wandering shadows'], ['Karussells drehen dich im Kreis', 'Carousels spin you around']],
+    pal: { lit: '#F4DCA8', tile: '#E8C98C', shade: '#4B3E6B', shadeTile: '#43375F', top: '#7A2E3A', edge: '#A8404E' },
+    pillars: 4, wheel: { x: 140, y: 150, r: 92 }, carousels: [{ x: 350, y: 340, r: 62 }, { x: 110, y: 390, r: 46 }] },
+  { id: 'city', icon: 'lens', name: ['Stadt bei Nacht', 'City at night'], unlock: { stat: 'lvl_fair', n: 6 }, cost: 9000, track: 'cellar',
+    desc: ['Nachts ist es dunkel und sicher, aber Strassenlaternen gehen an und aus, und Autoscheinwerfer fegen über die Strasse.', 'At night it is dark and safe, but street lamps switch on and off and car headlights sweep across the road.'],
+    feat: [['Laternen flackern, dann gehen sie an', 'Lamps flicker, then switch on'], ['Scheinwerfer fegen über die Strasse', 'Headlights sweep the road'], ['Autos schubsen dich weg', 'Cars shove you away']],
+    pal: { lit: '#F4D88E', tile: '#DFBE6E', shade: '#1B2130', shadeTile: '#222A3B', top: '#2E3548', edge: '#454F68' },
+    dark: true, road: [196, 284], pillars: 6, burnF: 1.15 },
+  { id: 'library', icon: 'hourglass', name: ['Bibliothek', 'Library'], unlock: { stat: 'lvl_city', n: 6 }, cost: 10000, track: 'cellar',
+    desc: ['Lange Regale werfen lange Schatten. Ein grosser Leuchter schwingt durch den Saal, und aus den Regalen fallen Bücher, die Wege versperren.', 'Long shelves cast long shadows. A great chandelier swings through the hall, and books fall from the shelves and block the way.'],
+    feat: [['Der Leuchter schwingt hin und her', 'The chandelier swings back and forth'], ['Fallende Bücher versperren Wege', 'Falling books block the way']],
+    pal: { lit: '#F0C97A', tile: '#DDB062', shade: '#231B1A', shadeTile: '#2C2221', top: '#4A2E1E', edge: '#6B4430' },
+    dark: true, shelves: true, pillars: 7 },
+  { id: 'mirror', icon: 'crystal', name: ['Spiegelsaal', 'Hall of mirrors'], unlock: { stat: 'lvl_library', n: 6 }, cost: 12000, track: 'roof',
+    desc: ['Schräge Spiegel an den Wänden werfen das Sonnenlicht zurück. Das Licht kommt aus drei Richtungen, und nur ein schmaler Streifen hinter jeder Säule bleibt ganz dunkel.', 'Angled mirrors on the walls throw the sunlight back. Light comes from three directions, and only a narrow strip behind each pillar stays fully dark.'],
+    feat: [['Licht aus drei Richtungen', 'Light from three directions'], ['Halbschatten brennt halb so stark', 'Half shade burns half as much'], ['Schmale Kernschatten', 'Narrow full shadows']],
+    pal: { lit: '#F3E6CC', tile: '#E3D2B0', shade: '#4A4468', shadeTile: '#433E5F', top: '#6B5C8E', edge: '#8B7BB0' },
+    pillars: 8, noClouds: true, mirrors: 0.5 },
+  { id: 'moon', icon: 'mond', name: ['Mond', 'Moon'], unlock: { stat: 'lvl_mirror', n: 6 }, cost: 15000, track: 'yard',
+    desc: ['Geringe Schwerkraft: Du gleitest und dein Dash trägt viel weiter. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht.', 'Low gravity: you glide and your dash carries much further. The Earth rises regularly and casts a second, bluish light.'],
+    feat: [['Du gleitest, der Dash trägt weiter', 'You glide, the dash carries further'], ['Erdlicht brennt halb so stark', 'Earthlight burns half as much']],
+    pal: { lit: '#DADDE4', tile: '#CBCFD8', shade: '#2E3550', shadeTile: '#28304A', top: '#5E6475', edge: '#7E8496' },
+    round: 1, pillars: 6, noClouds: true, lowG: true },
 ];
 const MAP_BY = Object.fromEntries(MAPS.map(m => [m.id, m]));
 const SUN_RULES = ['twosun', 'summer', 'night', 'clouds'];
 const mapName = m => tr(m.name[0], m.name[1]);
 const mapDesc = m => tr(m.desc[0], m.desc[1]);
-const mapUnlocked = m => !m.unlock || (P.stats[m.unlock.stat] || 0) >= m.unlock.n;
+// NUR FUER DEN TEST-BRANCH: alle Karten frei. Vor dem Merge nach main auf false setzen.
+const TEST_ALL_MAPS = true;
+const mapUnlocked = m => TEST_ALL_MAPS || !m.unlock || (P.owned.map || []).includes(m.id) || (P.stats[m.unlock.stat] || 0) >= m.unlock.n;
+const mapProgress = m => m.unlock ? Math.min(P.stats[m.unlock.stat] || 0, m.unlock.n) / m.unlock.n : 1;
 function mapLockText(m) {
   const u = m.unlock, v = Math.min(P.stats[u.stat] || 0, u.n);
+  if (u.stat.startsWith('lvl_')) { const pm = MAP_BY[u.stat.slice(4)]; return tr('Erreiche Stufe ' + u.n + ': ' + mapName(pm), 'Reach level ' + u.n + ': ' + mapName(pm)) + ' · ' + v + '/' + u.n; }
   return (u.stat === 'maxLevel' ? tr('Erreiche Stufe ' + u.n, 'Reach level ' + u.n) : tr('Besiege ' + u.n + ' Bosse', 'Defeat ' + u.n + ' bosses')) + ' · ' + v + '/' + u.n;
 }
+function buyMap(m) {
+  if (mapUnlocked(m) || !m.cost || P.wallet < m.cost) return false;
+  P.wallet -= m.cost; (P.owned.map = P.owned.map || []).push(m.id); save();
+  return true;
+}
 function applyPalette(m) { Object.assign(COL, m.pal); }
-const gameTrack = () => (S && S.map ? S.map.id : 'yard');
+const gameTrack = () => (S && S.map ? S.map.track || S.map.id : 'yard');
 
 // ---------- Säulenformen: eckig (Säule, Schornstein) oder rund (Baum) ----------
 function newPillarShape() {
-  const m = S.map;
+  const m = S.map, own = mapPillarShape();
+  if (own) return own;
   if (m.round && rng() < m.round) { const d = rand(36, 60); return { w: d, h: d, round: true }; }
   if (m.chimneys) return { w: rand(22, 40), h: rand(22, 40), chimney: true };
   return { w: rand(28, 64), h: rand(28, 64) };
@@ -93,8 +147,9 @@ function initMap() {
   if (m.dark) for (let i = 0; i < 4; i++) S.torches.push(newTorch(i));
   // Dekor: Blumen im Garten, Risse im Keller (nur optisch)
   S.deco = [];
-  const n = m.id === 'garden' ? 26 : m.id === 'cellar' ? 14 : 0;
+  const n = m.id === 'garden' ? 26 : m.id === 'cellar' ? 14 : m.id === 'moon' ? 10 : 0;
   for (let i = 0; i < n; i++) S.deco.push({ x: fx(8, W - 8), y: fx(8, H - 8), k: Math.floor(fx(0, 3)), s: fx(0.7, 1.2) });
+  initMapFx();
 }
 // Fackeln wandern auf verschlungenen Bahnen quer durch den Keller, auch durch die Mitte. Es gibt keinen Platz, der immer dunkel bleibt.
 const TORCH_GAP = 130;   // so viel Abstand halten Fackeln voneinander
@@ -112,6 +167,7 @@ function torchPos(T) {
 }
 function updateMap(dt, sunDt, playing) {
   const m = S.map;
+  updateMapFx(dt, sunDt, playing);
   if (m.dark) {
     const want = 4 + (S.level >= 2 ? 1 : 0) + (S.level >= 5 ? 1 : 0);
     while (S.torches.length < want) S.torches.push(newTorch(S.torches.length));
@@ -176,13 +232,15 @@ function drawTorchLight() {
   const [A, B] = layers();
   A.globalCompositeOperation = 'source-over';
   A.clearRect(0, 0, W, H);
-  for (const T of S.torches) {
+  for (const T of darkLights()) {
     B.globalCompositeOperation = 'source-over'; B.clearRect(0, 0, W, H);
-    const R = T.r + Math.sin(S.t * 9 + T.ph) * 4 + Math.sin(S.t * 23 + T.ph) * 2;
+    const R = T.cone ? T.r : T.r + Math.sin(S.t * 9 + T.ph) * 4 + Math.sin(S.t * 23 + T.ph) * 2;
     const g = B.createRadialGradient(T.x, T.y, 4, T.x, T.y, R);
-    g.addColorStop(0, 'rgba(255,220,150,1)'); g.addColorStop(0.6, 'rgba(242,180,94,1)');
-    g.addColorStop(0.84, 'rgba(236,166,80,0.75)'); g.addColorStop(1, 'rgba(236,166,80,0)');
-    B.fillStyle = g; B.beginPath(); B.arc(T.x, T.y, R, 0, TAU); B.fill();
+    if (T.cool) { g.addColorStop(0, 'rgba(255,252,230,1)'); g.addColorStop(0.6, 'rgba(246,232,176,1)'); g.addColorStop(0.84, 'rgba(240,220,150,0.75)'); g.addColorStop(1, 'rgba(240,220,150,0)'); }
+    else { g.addColorStop(0, 'rgba(255,220,150,1)'); g.addColorStop(0.6, COL.lit); g.addColorStop(0.84, 'rgba(236,166,80,0.75)'); g.addColorStop(1, 'rgba(236,166,80,0)'); }
+    B.fillStyle = g; B.beginPath();
+    if (T.cone) { B.moveTo(T.x, T.y); B.arc(T.x, T.y, R, T.cone.a - T.cone.h, T.cone.a + T.cone.h); B.closePath(); } else B.arc(T.x, T.y, R, 0, TAU);
+    B.fill();
     B.globalCompositeOperation = 'source-atop'; gridPath(B, 'rgba(150,92,30,.35)');
     B.globalCompositeOperation = 'destination-out'; B.fillStyle = '#000'; B.beginPath();
     for (const r of S.pillars) {
@@ -216,6 +274,7 @@ function drawDeco() {
   }
 }
 function drawPillar(r) {
+  if (drawPillarFx(r)) return;
   const blink = r.doomed && Math.floor(r.crumble * 8) % 2 === 0;
   const g = r.grow > 0 ? 1 - r.grow / 0.4 : 1;
   const cx = pcx(r), cy = pcy(r), w = r.w * g, h = r.h * g;

@@ -323,6 +323,19 @@ const SKINS = [
   { id: 'nimmersatt', name: 'Nimmersatt', body: '#3A1C55', eye: '#FFE36B', rim: '#C9B8FF', req: { stat: 'eater', n: 3, text: 'Besiege den Schattenfresser 3×' } },
   { id: 'nachtschatten', name: 'Nachtschatten', body: '#161233', eye: '#DDE6FF', fx: 'mist', req: { stat: 'dusk', n: 3, text: 'Besiege den Nachtmahr 3×' } },
   { id: 'wochenheld', name: 'Wochenheld', body: '#4B2A7A', eye: '#FFE36B', rim: '#F4CF63', fx: 'shine', req: { stat: 'weeklyDone', n: 1, text: 'Schaffe eine Wochenherausforderung' } },
+  // Kartensieger: Wer die Kampagne auf einer Karte gewinnt, bekommt ihren Skin und Hut
+  { id: 'saeulenschatten', name: 'Säulenschatten', body: '#2E3A5C', eye: '#F4CF63', rim: '#F4CF63', req: { stat: 'win_yard', n: 1, text: 'Gewinne die Kampagne: Innenhof' } },
+  { id: 'efeu', name: 'Efeu', body: '#2F6B3B', eye: '#E9FFD6', rim: '#9BD06A', fx: 'leaves', req: { stat: 'win_garden', n: 1, text: 'Gewinne die Kampagne: Garten' } },
+  { id: 'ziegelrot', name: 'Ziegelrot', body: '#9A4A2E', eye: '#FFE3C9', rim: '#E07A4A', req: { stat: 'win_roof', n: 1, text: 'Gewinne die Kampagne: Dach' } },
+  { id: 'fackelschein', name: 'Fackelschein', body: '#2A1A10', eye: '#FFB020', rim: '#F2B45E', fx: 'cracks', req: { stat: 'win_cellar', n: 1, text: 'Gewinne die Kampagne: Keller' } },
+  { id: 'dampflok', name: 'Dampflok', body: '#3A3F4A', eye: '#FFD37A', rim: '#C3402C', fx: 'mist', req: { stat: 'win_station', n: 1, text: 'Gewinne die Kampagne: Bahnhof' } },
+  { id: 'matrose', name: 'Matrose', body: '#1F3F75', eye: '#FFFFFF', fx: 'stripes', req: { stat: 'win_ship', n: 1, text: 'Gewinne die Kampagne: Schiffsdeck' } },
+  { id: 'kaktus', name: 'Kaktus', body: '#4F7A3A', eye: '#FFE9B0', rim: '#2C5228', fx: 'spines', req: { stat: 'win_desert', n: 1, text: 'Gewinne die Kampagne: Wüste' } },
+  { id: 'zuckerwatte', name: 'Zuckerwatte', body: '#F29BC4', eye: '#5A1E3E', rim: '#FFFFFF', fx: 'shine', req: { stat: 'win_fair', n: 1, text: 'Gewinne die Kampagne: Jahrmarkt' } },
+  { id: 'neon', name: 'Neon', body: '#141024', eye: '#39F0FF', rim: '#FF3FA4', fx: 'neon', req: { stat: 'win_city', n: 1, text: 'Gewinne die Kampagne: Stadt bei Nacht' } },
+  { id: 'pergament', name: 'Pergament', body: '#E8D8B0', eye: '#3A2A1A', rim: '#8A6A40', fx: 'ink', req: { stat: 'win_library', n: 1, text: 'Gewinne die Kampagne: Bibliothek' } },
+  { id: 'spiegelglas', name: 'Spiegelglas', body: '#B8C4D8', eye: '#1A1F2B', rim: '#FFFFFF', fx: 'shine', req: { stat: 'win_mirror', n: 1, text: 'Gewinne die Kampagne: Spiegelsaal' } },
+  { id: 'mondgestein', name: 'Mondgestein', body: '#6E7486', eye: '#DDE6FF', rim: '#AEB6C8', fx: 'stars', req: { stat: 'win_moon', n: 1, text: 'Gewinne die Kampagne: Mond' } },
 ];
 const HATS = [
   { id: 'none', name: 'Ohne Hut' },
@@ -346,7 +359,21 @@ const HATS = [
   { id: 'mondsichel', name: 'Mondsichel', req: { stat: 'eater', n: 1, text: 'Besiege den Schattenfresser' } },
   { id: 'kerze', name: 'Kerzenhut', req: { stat: 'dusk', n: 1, text: 'Besiege den Nachtmahr' } },
   { id: 'lorbeer', name: 'Lorbeerkranz', req: { stat: 'weeklyDone', n: 1, text: 'Schaffe eine Wochenherausforderung' } },
+  { id: 'sonnenhut', name: 'Sonnenhut', req: { stat: 'win_yard', n: 1, text: 'Gewinne die Kampagne: Innenhof' } },
+  { id: 'pilzhut', name: 'Pilzhut', req: { stat: 'win_garden', n: 1, text: 'Gewinne die Kampagne: Garten' } },
+  { id: 'schornsteinhut', name: 'Schornsteinhut', req: { stat: 'win_roof', n: 1, text: 'Gewinne die Kampagne: Dach' } },
+  { id: 'grubenhelm', name: 'Grubenhelm', req: { stat: 'win_cellar', n: 1, text: 'Gewinne die Kampagne: Keller' } },
+  { id: 'schaffnermuetze', name: 'Schaffnermütze', req: { stat: 'win_station', n: 1, text: 'Gewinne die Kampagne: Bahnhof' } },
+  { id: 'kapitaensmuetze', name: 'Kapitänsmütze', req: { stat: 'win_ship', n: 1, text: 'Gewinne die Kampagne: Schiffsdeck' } },
+  { id: 'tropenhelm', name: 'Tropenhelm', req: { stat: 'win_desert', n: 1, text: 'Gewinne die Kampagne: Wüste' } },
+  { id: 'luftballon', name: 'Luftballon', req: { stat: 'win_fair', n: 1, text: 'Gewinne die Kampagne: Jahrmarkt' } },
+  { id: 'kopfhoerer', name: 'Kopfhörer', req: { stat: 'win_city', n: 1, text: 'Gewinne die Kampagne: Stadt bei Nacht' } },
+  { id: 'doktorhut', name: 'Doktorhut', req: { stat: 'win_library', n: 1, text: 'Gewinne die Kampagne: Bibliothek' } },
+  { id: 'discokugel', name: 'Discokugel', req: { stat: 'win_mirror', n: 1, text: 'Gewinne die Kampagne: Spiegelsaal' } },
+  { id: 'raumhelm', name: 'Raumhelm', req: { stat: 'win_moon', n: 1, text: 'Gewinne die Kampagne: Mond' } },
 ];
+const MAP_REWARD = { yard: { skin: 'saeulenschatten', hat: 'sonnenhut' }, garden: { skin: 'efeu', hat: 'pilzhut' }, roof: { skin: 'ziegelrot', hat: 'schornsteinhut' }, cellar: { skin: 'fackelschein', hat: 'grubenhelm' }, station: { skin: 'dampflok', hat: 'schaffnermuetze' }, ship: { skin: 'matrose', hat: 'kapitaensmuetze' }, desert: { skin: 'kaktus', hat: 'tropenhelm' }, fair: { skin: 'zuckerwatte', hat: 'luftballon' }, city: { skin: 'neon', hat: 'kopfhoerer' }, library: { skin: 'pergament', hat: 'doktorhut' }, mirror: { skin: 'spiegelglas', hat: 'discokugel' }, moon: { skin: 'mondgestein', hat: 'raumhelm' } };
+
 const SKIN_BY = Object.fromEntries(SKINS.map(s => [s.id, s]));
 const HAT_BY = Object.fromEntries(HATS.map(h => [h.id, h]));
 
@@ -397,6 +424,30 @@ function drawCreature(c, x, y, R, o) {
     c.moveTo(x + R * 0.1, y + R * 0.7); c.lineTo(x + R * 0.25, y + R * 0.35); c.lineTo(x + R * 0.7, y + R * 0.4);
     c.moveTo(x - R * 0.3, y + R * 0.8); c.lineTo(x - R * 0.45, y + R * 0.45);
     c.stroke(); c.restore();
+  }
+  if (sk.fx === 'stripes' && !o.tint) {
+    c.save(); c.clip(); c.fillStyle = 'rgba(255,255,255,.85)';
+    for (let i = -1; i < 3; i++) c.fillRect(x - R * 2, y - R * 0.1 + i * R * 0.42, R * 4, R * 0.18);
+    c.restore();
+  }
+  if (sk.fx === 'leaves' && !o.tint) {
+    c.save(); c.clip(); c.fillStyle = '#9BD06A';
+    for (const [ox, oy, a] of [[-0.5, 0.2, 0.6], [0.45, 0.35, -0.5], [0, 0.65, 0.2], [0.6, -0.4, 1.2]]) { c.beginPath(); c.ellipse(x + ox * R, y + oy * R, R * 0.2, R * 0.1, a, 0, TAU); c.fill(); }
+    c.restore();
+  }
+  if (sk.fx === 'spines' && !o.tint) {
+    c.save(); c.clip(); c.strokeStyle = 'rgba(255,240,200,.8)'; c.lineWidth = Math.max(0.7, 0.8 * k);
+    for (let i = 0; i < 9; i++) { const px = x + ((i * 37) % 17 - 8) / 8 * R * 0.8, py = y + ((i * 23) % 13 - 4) / 8 * R * 0.7; c.beginPath(); c.moveTo(px - R * 0.08, py - R * 0.08); c.lineTo(px + R * 0.08, py + R * 0.08); c.moveTo(px + R * 0.08, py - R * 0.08); c.lineTo(px - R * 0.08, py + R * 0.08); c.stroke(); }
+    c.restore();
+  }
+  if (sk.fx === 'ink' && !o.tint) {
+    c.save(); c.clip(); c.strokeStyle = 'rgba(58,42,26,.45)'; c.lineWidth = Math.max(0.7, 0.8 * k);
+    for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(x - R * 0.7, y + R * (0.05 + i * 0.2)); c.lineTo(x + R * (0.2 + (i % 2) * 0.4), y + R * (0.05 + i * 0.2)); c.stroke(); }
+    c.restore();
+  }
+  if (sk.fx === 'neon' && !o.tint) {
+    const pulse = 0.55 + 0.45 * Math.sin(t * 4);
+    c.save(); c.strokeStyle = `rgba(255,63,164,${0.35 * pulse})`; c.lineWidth = Math.max(2, 3.5 * k); c.stroke(); c.restore();
   }
   if (sk.fx === 'shine' && !o.tint) {
     c.save(); c.clip();
@@ -562,6 +613,77 @@ function drawHat(c, id, x, y, k, t) {
       c.save(); c.translate(0, -12.5); c.scale(0.26 + Math.sin(t * 13) * 0.02, 0.32 + Math.sin(t * 17) * 0.03); icon(c, 'flame'); c.restore();
       break;
     }
+    case 'sonnenhut':
+      c.fillStyle = '#E8C77A'; c.strokeStyle = '#B08A3A'; c.lineWidth = 0.8;
+      c.beginPath(); c.ellipse(0, 0, 12, 3, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0, -2.5, 6, 4.5, 0, Math.PI, 0); c.fill(); c.stroke();
+      c.fillStyle = '#E0457B'; c.fillRect(-6, -2.2, 12, 1.8);
+      break;
+    case 'pilzhut':
+      c.fillStyle = '#D6304F'; c.beginPath(); c.ellipse(0, -1, 10, 8, 0, Math.PI, 0); c.closePath(); c.fill();
+      c.fillStyle = '#F7F8FB'; for (const [px, py, pr] of [[-5, -3, 1.6], [1, -6.5, 1.9], [5.5, -2.5, 1.4], [-1.5, -2, 1]]) { c.beginPath(); c.arc(px, py, pr, 0, TAU); c.fill(); }
+      break;
+    case 'schornsteinhut':
+      c.fillStyle = '#9A4A2E'; c.fillRect(-4, -11, 8, 11); c.fillStyle = '#5A2A18'; c.fillRect(-5, -12.5, 10, 2.5);
+      c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(-4, -7); c.lineTo(4, -7); c.moveTo(-4, -3.5); c.lineTo(4, -3.5); c.moveTo(0, -11); c.lineTo(0, -7); c.stroke();
+      for (let i = 0; i < 3; i++) { const f = (t * 0.6 + i / 3) % 1; c.fillStyle = `rgba(200,200,210,${0.6 * (1 - f)})`; c.beginPath(); c.arc(Math.sin(t * 2 + i) * 2 + f * 3, -14 - f * 9, 1.8 + f * 2.2, 0, TAU); c.fill(); }
+      break;
+    case 'grubenhelm':
+      c.fillStyle = '#F4CF63'; c.beginPath(); c.ellipse(0, 0, 8.5, 8, 0, Math.PI, 0); c.fill();
+      c.fillStyle = '#C9A227'; c.fillRect(-9.5, -1.5, 19, 2.5);
+      c.fillStyle = 'rgba(255,240,180,.4)'; c.beginPath(); c.arc(0, -5, 5, 0, TAU); c.fill();
+      c.fillStyle = '#FFF6D0'; c.strokeStyle = '#5B6376'; c.lineWidth = 0.8; c.beginPath(); c.arc(0, -5, 2.6, 0, TAU); c.fill(); c.stroke();
+      break;
+    case 'schaffnermuetze':
+      c.fillStyle = '#1F2A4A'; c.beginPath(); c.moveTo(-7.5, 0); c.lineTo(-8.5, -7); c.quadraticCurveTo(0, -10, 8.5, -7); c.lineTo(7.5, 0); c.closePath(); c.fill();
+      c.fillStyle = '#C3402C'; c.fillRect(-7.8, -3, 15.6, 2.2);
+      c.fillStyle = '#12151F'; c.beginPath(); c.ellipse(3, 0.8, 7, 1.8, 0, 0, Math.PI); c.fill();
+      c.fillStyle = '#F4CF63'; c.beginPath(); c.arc(0, -6.2, 1.3, 0, TAU); c.fill();
+      break;
+    case 'kapitaensmuetze':
+      c.fillStyle = '#F7F8FB'; c.strokeStyle = '#C9CFDB'; c.lineWidth = 0.7;
+      c.beginPath(); c.ellipse(0, -6, 10, 3.5, 0, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = '#1E222C'; c.fillRect(-7, -5, 14, 5);
+      c.beginPath(); c.ellipse(2.5, 0.6, 7.5, 1.8, 0, 0, Math.PI); c.fill();
+      c.strokeStyle = '#F4CF63'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(0, -4.5); c.lineTo(0, -1); c.moveTo(-1.8, -3.6); c.lineTo(1.8, -3.6); c.stroke(); c.beginPath(); c.arc(0, -2, 1.8, 0.2, Math.PI - 0.2); c.stroke();
+      break;
+    case 'tropenhelm':
+      c.fillStyle = '#E9D8AE'; c.strokeStyle = '#A88E5A'; c.lineWidth = 0.8;
+      c.beginPath(); c.ellipse(0, 0, 11, 2.6, 0, 0, TAU); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0, -1, 7.5, 7.5, 0, Math.PI, 0); c.fill(); c.stroke();
+      c.fillStyle = '#6B4A2A'; c.fillRect(-7.4, -2.8, 14.8, 1.8);
+      break;
+    case 'luftballon': {
+      const sw = Math.sin(t * 1.6) * 1.5;
+      c.strokeStyle = '#5B6376'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(2 + sw, -8, 3 + sw, -14); c.stroke();
+      c.fillStyle = '#E0457B'; c.beginPath(); c.ellipse(3 + sw, -19, 5, 6, 0.1, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.ellipse(1.5 + sw, -21, 1.3, 2, 0.3, 0, TAU); c.fill();
+      c.fillStyle = '#E0457B'; c.beginPath(); c.moveTo(2 + sw, -13); c.lineTo(4 + sw, -13); c.lineTo(3 + sw, -14.5); c.fill();
+      break;
+    }
+    case 'kopfhoerer':
+      c.strokeStyle = '#2B2F3A'; c.lineWidth = 2.2; c.beginPath(); c.arc(0, 6, 10, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+      for (const sx of [-1, 1]) { c.fillStyle = '#FF3FA4'; c.beginPath(); c.ellipse(sx * 9.5, 4.5, 2.6, 4, 0, 0, TAU); c.fill(); c.fillStyle = '#39F0FF'; c.beginPath(); c.arc(sx * 9.5, 4.5, 1.1, 0, TAU); c.fill(); }
+      break;
+    case 'doktorhut':
+      c.fillStyle = '#1E222C'; c.beginPath(); c.moveTo(-11, -5); c.lineTo(0, -9); c.lineTo(11, -5); c.lineTo(0, -1); c.closePath(); c.fill();
+      c.fillRect(-5.5, -4, 11, 4);
+      c.strokeStyle = '#F4CF63'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -5); c.quadraticCurveTo(7 + Math.sin(t * 2) * 0.8, -4, 8 + Math.sin(t * 2), 1); c.stroke();
+      c.fillStyle = '#F4CF63'; c.beginPath(); c.arc(8 + Math.sin(t * 2), 1.5, 1.2, 0, TAU); c.fill();
+      break;
+    case 'discokugel': {
+      c.strokeStyle = '#8A93A6'; c.lineWidth = 0.7; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -3); c.stroke();
+      c.save(); c.translate(0, -8.5); c.beginPath(); c.arc(0, 0, 5.5, 0, TAU); c.fillStyle = '#AEB6C8'; c.fill(); c.clip();
+      for (let i = -3; i < 3; i++) for (let j = -3; j < 3; j++) { const b = 0.5 + 0.5 * Math.sin(t * 5 + i * 1.7 + j * 2.3); c.fillStyle = `rgba(255,255,255,${0.2 + 0.7 * b})`; c.fillRect(i * 2 + 0.2, j * 2 + 0.2, 1.6, 1.6); }
+      c.restore();
+      break;
+    }
+    case 'raumhelm':
+      c.fillStyle = 'rgba(180,220,255,.22)'; c.strokeStyle = 'rgba(230,240,255,.9)'; c.lineWidth = 1.2;
+      c.beginPath(); c.arc(0, 9.5, 13.5, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(-5.5, 2, 2, 4, 0.5, 0, TAU); c.fill();
+      c.fillStyle = '#D2D7E1'; c.fillRect(-9, 20, 18, 2.5);
+      break;
     case 'lorbeer':
       for (let i = 0; i < 10; i++) {
         if (i === 4 || i === 5) continue;

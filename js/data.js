@@ -34,7 +34,7 @@ function freshProfile() {
              close: 0, spearKill: 0, maxUpgradesRun: 0, eater: 0, dusk: 0, weeklyDone: 0, tutorial: 0,
              anchorJumps: 0, parries: 0, reflectHits: 0,
              lvl_yard: 0, lvl_garden: 0, lvl_roof: 0, lvl_cellar: 0, play_yard: 0, play_garden: 0, play_roof: 0, play_cellar: 0 },
-    ach: {}, owned: { skin: ['schatten'], hat: ['none'], trail: ['none'] }, equip: { skin: 'schatten', hat: 'none', trail: 'none' },
+    ach: {}, owned: { skin: ['schatten'], hat: ['none'], trail: ['none'], map: [] }, equip: { skin: 'schatten', hat: 'none', trail: 'none' },
     seen: {}, daily: {}, weekly: {}, streak: { last: '', n: 0, best: 0 }, tutDone: false,
   };
 }
@@ -111,7 +111,7 @@ const DAILY_REWARD = 1500;
 const WEEKLY_GOAL = 10;
 const WEEKLY_REWARD = 5000;
 // Im Keller gibt es keine Sonne, dort ergeben die Sonnen-Regeln keinen Sinn.
-const rulesFor = map => RULES.filter(r => !(map.dark && SUN_RULES.includes(r.id)));
+const rulesFor = map => RULES.filter(r => !(map.dark && SUN_RULES.includes(r.id)) && !(map.noClouds && r.id === 'clouds'));
 function dailyInfo(key = dayKey()) {
   const map = MAPS[hashStr('karte-' + key) % MAPS.length], pool = rulesFor(map);
   return { key, map, rule: pool[hashStr('regel-' + key) % pool.length], seed: hashStr('schattenfaenger-' + key) };
@@ -184,7 +184,7 @@ const ACH = [
   { id: 'dusk', name: 'Morgengrauen', icon: 'dusk', desc: 'Besiege den Nachtmahr.', goal: 1, val: s => s.dusk },
   { id: 'allbosses', name: 'Bossbezwinger', icon: 'prisma', desc: 'Besiege jeden der sechs Bosse mindestens einmal.', goal: 6, val: s => ['prisma', 'queen', 'bull', 'eater', 'dusk', 'core'].filter(k => s[k] > 0).length },
   { id: 'boss50', name: 'Bossvernichter', icon: 'spear', desc: 'Besiege insgesamt 50 Bosse.', goal: 50, val: s => s.bosses },
-  { id: 'explorer', name: 'Weltenbummler', icon: 'portal', desc: 'Spiel auf allen vier Karten.', goal: 4, val: s => ['yard', 'garden', 'roof', 'cellar'].filter(k => s['play_' + k] > 0).length },
+  { id: 'explorer', name: 'Weltenbummler', icon: 'portal', desc: 'Spiel auf allen 12 Karten.', goal: 12, val: s => Object.keys(s).filter(k => k.startsWith('play_') && s[k] > 0).length },
   { id: 'garden10', name: 'Gärtner', icon: 'seed', desc: 'Erreiche Stufe 10 im Garten.', goal: 10, val: s => s.lvl_garden },
   { id: 'roof10', name: 'Dachdecker', icon: 'wind', desc: 'Erreiche Stufe 10 auf dem Dach.', goal: 10, val: s => s.lvl_roof },
   { id: 'cellar10', name: 'Kellerkind', icon: 'flame', desc: 'Erreiche Stufe 10 im Keller.', goal: 10, val: s => s.lvl_cellar },
@@ -194,6 +194,16 @@ const ACH = [
   { id: 'parry25', name: 'Spiegelmeister', icon: 'crystal', desc: 'Pariere 25 Angriffe mit dem Spiegel.', goal: 25, val: s => s.parries },
   { id: 'reflect', name: 'Retourkutsche', icon: 'prisma', desc: 'Triff 10-mal einen Boss mit seiner eigenen Lichtkugel.', goal: 10, val: s => s.reflectHits },
   { id: 'anchor20', name: 'Zeitreisender', icon: 'portal', desc: 'Spring 20-mal zu deinem Schattenanker zurück.', goal: 20, val: s => s.anchorJumps },
+  { id: 'station10', name: 'Schwarzfahrer', icon: 'missile', desc: 'Erreiche Stufe 10: Bahnhof.', goal: 10, val: s => s.lvl_station || 0 },
+  { id: 'ship10', name: 'Seebär', icon: 'wind', desc: 'Erreiche Stufe 10: Schiffsdeck.', goal: 10, val: s => s.lvl_ship || 0 },
+  { id: 'desert10', name: 'Wüstenfuchs', icon: 'noon', desc: 'Erreiche Stufe 10: Wüste.', goal: 10, val: s => s.lvl_desert || 0 },
+  { id: 'fair10', name: 'Schausteller', icon: 'party', desc: 'Erreiche Stufe 10: Jahrmarkt.', goal: 10, val: s => s.lvl_fair || 0 },
+  { id: 'city10', name: 'Nachtschwärmer', icon: 'lens', desc: 'Erreiche Stufe 10: Stadt bei Nacht.', goal: 10, val: s => s.lvl_city || 0 },
+  { id: 'library10', name: 'Bücherwurm', icon: 'hourglass', desc: 'Erreiche Stufe 10: Bibliothek.', goal: 10, val: s => s.lvl_library || 0 },
+  { id: 'mirror10', name: 'Spiegelbild', icon: 'crystal', desc: 'Erreiche Stufe 10: Spiegelsaal.', goal: 10, val: s => s.lvl_mirror || 0 },
+  { id: 'moon10', name: 'Mondlandung', icon: 'mond', desc: 'Erreiche Stufe 10: Mond.', goal: 10, val: s => s.lvl_moon || 0 },
+  { id: 'mapwin3', name: 'Kartenkenner', icon: 'trophy', desc: 'Gewinne die Kampagne auf 3 verschiedenen Karten.', goal: 3, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
+  { id: 'mapwinall', name: 'Weltmeister', icon: 'sonnenkrone', desc: 'Gewinne die Kampagne auf allen 12 Karten.', goal: 12, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
   { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));

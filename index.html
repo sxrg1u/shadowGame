@@ -12,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Shady">
 <meta property="og:title" content="Shady – stay in the shadows">
-<meta property="og:description" content="A chaotic browser game about light and shadow. 6 bosses, 4 maps, daily and weekly challenges, online duels. Free, right in your browser.">
+<meta property="og:description" content="A chaotic browser game about light and shadow. 6 bosses, 12 maps, daily and weekly challenges, online duels. Free, right in your browser.">
 <meta property="og:url" content="https://sxrg1u.github.io/shady/">
 <meta property="og:image" content="https://sxrg1u.github.io/shady/assets/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -110,34 +110,56 @@
   </div>
 </section>
 
-<!-- Modusauswahl -->
-<section class="screen" id="scrModes" hidden aria-label="Spielmodus wählen">
+<!-- Kartenübersicht -->
+<section class="screen" id="scrModes" hidden aria-label="Karte wählen">
   <div class="panel">
-    <header class="scr-head"><button class="back" data-back aria-label="Zurück"><svg><use href="#i-back"/></svg></button><h2>Spielen</h2></header>
-    <div class="optline">
-      <div class="seg" id="diffSeg" role="group" aria-label="Schwierigkeit">
-        <button data-diff="easy">Leicht</button><button data-diff="normal">Normal</button><button data-diff="hard">Schwer</button>
-      </div>
-      <p class="muted" id="diffNote"></p>
-    </div>
-    <div class="map-pick">
-      <p class="eyebrow">Karte für Kampagne, Endlos und Boss üben</p>
-      <div class="maps" id="mapGrid" role="group" aria-label="Karte"></div>
-    </div>
-    <div class="modes">
-      <button class="mode-card" data-mode="campaign"><canvas data-icon="trophy" aria-hidden="true"></canvas><h3>Kampagne</h3><p>10 Stufen und 9 Bosse. Am Ende wartet der Sonnenkern. Besieg ihn und du gewinnst.</p><span class="meta" id="metaCampaign"></span></button>
-      <button class="mode-card" data-mode="endless"><canvas data-icon="hourglass" aria-hidden="true"></canvas><h3>Endlos</h3><p>Kein Ende. Jede Stufe wird härter, alle 10 Stufen kommt der Sonnenkern. Wie weit schaffst du es?</p><span class="meta" id="metaEndless"></span></button>
+    <header class="scr-head"><button class="back" data-back aria-label="Zurück"><svg><use href="#i-back"/></svg></button><h2>Spielen</h2><div class="chip-wallet"><span>Konto</span><b id="walletModes">0</b></div></header>
+    <div class="challenges">
       <button class="mode-card" data-mode="daily"><canvas id="dailyIcon2" aria-hidden="true"></canvas><h3 id="dailyName2">Täglich</h3><p id="dailyDesc2"></p><span class="meta" id="metaDaily"></span></button>
       <button class="mode-card week" data-mode="weekly"><canvas id="weeklyIcon2" aria-hidden="true"></canvas><h3 id="weeklyName2">Woche</h3><p id="weeklyDesc2"></p><span class="meta" id="metaWeekly"></span></button>
     </div>
-    <div class="practice" id="practice">
-      <span class="eyebrow">Boss üben</span>
-      <button class="btn small" data-boss="prisma">Prisma</button>
-      <button class="btn small" data-boss="queen">Käferkönigin</button>
-      <button class="btn small" data-boss="bull">Sonnenstier</button>
-      <button class="btn small" data-boss="eater">Schattenfresser</button>
-      <button class="btn small" data-boss="dusk">Nachtmahr</button>
-      <button class="btn small" data-boss="core" id="coreBtn">Sonnenkern</button>
+    <div class="map-head"><h3>Karten</h3><p class="muted" id="mapCount"></p></div>
+    <div class="maps" id="mapGrid" aria-label="Karten"></div>
+  </div>
+</section>
+
+<!-- Karte: Modus wählen -->
+<section class="screen" id="scrMap" hidden aria-label="Modus wählen">
+  <div class="panel narrow map-detail">
+    <header class="scr-head"><button class="back" data-back aria-label="Zurück"><svg><use href="#i-back"/></svg></button><h2 id="mapTitle">Karte</h2></header>
+    <canvas class="map-hero" id="mapHero" aria-hidden="true"></canvas>
+    <p class="muted" id="mapDescLong"></p>
+    <ul class="feats" id="mapFeats"></ul>
+    <div id="mapLocked" class="stack" hidden>
+      <div class="lockbox">
+        <p><b>Gesperrt.</b> <span id="mapReq"></span></p>
+        <div class="prog"><i id="mapReqBar"></i></div>
+      </div>
+      <button class="btn primary center" id="mapBuy">Freischalten</button>
+      <p class="muted center-t" id="mapBuyNote"></p>
+    </div>
+    <div id="mapOpen" class="stack">
+      <div class="optline">
+        <div class="seg" id="diffSeg" role="group" aria-label="Schwierigkeit">
+          <button data-diff="easy">Leicht</button><button data-diff="normal">Normal</button><button data-diff="hard">Schwer</button>
+        </div>
+        <p class="muted" id="diffNote"></p>
+      </div>
+      <button class="btn primary big" data-mode="campaign" data-focus><svg><use href="#i-trophy"/></svg>Kampagne<small id="metaCampaign"></small></button>
+      <button class="btn" data-mode="endless"><svg><use href="#i-play"/></svg>Endlos<small id="metaEndless"></small></button>
+      <div class="practice" id="practice">
+        <span class="eyebrow">Boss üben</span>
+        <button class="btn small" data-boss="prisma">Prisma</button>
+        <button class="btn small" data-boss="queen">Käferkönigin</button>
+        <button class="btn small" data-boss="bull">Sonnenstier</button>
+        <button class="btn small" data-boss="eater">Schattenfresser</button>
+        <button class="btn small" data-boss="dusk">Nachtmahr</button>
+        <button class="btn small" data-boss="core" id="coreBtn">Sonnenkern</button>
+      </div>
+    </div>
+    <div class="reward" id="mapReward">
+      <canvas id="rewardCv" aria-hidden="true"></canvas>
+      <div><p class="eyebrow" id="rewardHead">Belohnung</p><b id="rewardName"></b><p class="muted" id="rewardNote"></p></div>
     </div>
   </div>
 </section>
@@ -279,6 +301,7 @@
 <script src="js/audio.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/maps.js"></script>
+<script src="js/mapfx.js"></script>
 <script src="js/game.js"></script>
 <script src="js/draw.js"></script>
 <script src="js/tutorial.js"></script>
