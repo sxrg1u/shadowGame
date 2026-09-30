@@ -309,7 +309,7 @@ const STATIC_EN = {
   'Bosse': 'Bosses', 'nach jeder Stufe': 'after every level', 'Gut': 'Good', 'einsammeln': 'collect', 'Schlecht': 'Bad', 'ausweichen': 'dodge',
   // Pause, Upgrade, Ergebnis
   // Extra-Modi
-  'Extra-Modi': 'Extra modes', '10 Modi': '10 modes', 'Duell · Royale · Koop · Fangen': 'Duel · royale · co-op · tag', 'Mit Code beitreten': 'Join with a code', 'oder Raum erstellen': 'or create a room',
+  'Extra-Modi': 'Extra modes', '7 Modi': '7 modes', '4 Spiele · online': '4 games · online', 'Duell · Royale · Koop · Fangen': 'Duel · royale · co-op · tag', 'Mit Code beitreten': 'Join with a code', 'oder Raum erstellen': 'or create a room',
   'Raum für': 'Room for', 'Starten': 'Start',
   'Rätselstufen': 'Puzzle levels', 'Battle Royale light': 'Battle royale light', 'Runde starten': 'Start round',
   'Weiter': 'Resume', 'Aufgeben': 'Give up', 'Upgrade wählen': 'Choose an upgrade', 'Boss besiegt': 'Boss defeated', 'Wähl ein Upgrade': 'Choose an upgrade',

@@ -51,6 +51,35 @@ const SHOTS = [
   { file: 'farbchaos-stufe-2.png', query: 'level=2&seed=5&event=colorchaos&frames=70' },
   { file: 'farbchaos-stufe-6.png', query: 'level=6&seed=6&event=colorchaos&frames=192' },
   { file: 'farbchaos-stufe-10-boss.png', query: 'level=10&seed=10&mode=campaign&boss=core&event=colorchaos&frames=212' },
+  // Extra-Modi und Mehrspieler: vom Hauptmenü aus starten, dann Schritt für Schritt [Code im Spiel, Bilder danach]
+  { file: 'extra-modi.png', query: 'screen=extra&frames=40', full: true },
+  { file: 'mehrspieler.png', query: 'screen=multi&frames=40', full: true },
+  { file: 'schattenrennen.png', query: 'screen=menu&frames=5', steps: [
+    [`startExtra('race', { map: 'garden', seed: 71 }); S.grace = 1e9;
+      const c = S.xr.cps, p = []; let x = S.p.x, y = S.p.y;
+      c.forEach(q => { for (let k = 1; k <= 24; k++) p.push(Math.round(x + (q.x - x) * k / 24), Math.round(y + (q.y - y) * k / 24)); x = q.x; y = q.y; });
+      S.xr.ghost = { t: 8.4, path: p, splits: c.map((q, i) => 1.2 * (i + 1)) };`, 200],
+    [`S.target = { x: S.xr.cps[0].x, y: S.xr.cps[0].y };`, 70]] },
+  { file: 'raetsel.png', query: 'screen=menu&frames=5', steps: [[`startExtra('puzzle', { level: 8 });`, 20]] },
+  { file: 'koop.png', query: 'screen=menu&frames=5', steps: [
+    [`P.settings.name = 'Anna'; startExtra('coop', { seed: 73, map: 'yard', online: true, names: ['Anna', 'Ben'] }); S.grace = 1e9;
+      const r = S.pillars.filter(q => !q.fixed).sort((a, b) => Math.hypot(pcx(a) - 240, pcy(a) - 240) - Math.hypot(pcx(b) - 240, pcy(b) - 240))[0];
+      S.p2.x = r.x - 8; S.p2.y = pcy(r); EXTRA.coop.lift(); keys2.add('right');`, 40],
+    [`keys2.clear(); const r = S.p2.carry, d = dirOf(S.az); S.p.x = pcx(r) + d.x * (r.w / 2 + 34); S.p.y = pcy(r) + d.y * (r.w / 2 + 34); resolve();`, 10]] },
+  { file: 'fangen.png', query: 'screen=menu&frames=5', steps: [
+    [`startExtra('tag', { seed: 74, online: true, names: ['Anna', 'Ben'] });`, 200],
+    [`S.grace = 1e9; keys2.add('right'); keys.add('up');`, 40],
+    [`keys2.clear(); keys.clear(); S.xr.fcd = 0; EXTRA.tag.flare();`, 35]] },
+  { file: 'battle-royale.png', query: 'screen=menu&frames=5', steps: [
+    [`P.settings.name = 'Anna'; RNet.me = 0;
+      RNet.players = [['Anna', 'schatten', 'none'], ['Ben', 'moos', 'zylinder'], ['Cleo', 'pflaume', 'blume'], ['Dino', 'glut', 'party'], ['Emma', 'geist', 'krone'], ['Finn', 'honig', 'pirat']]
+        .map(([name, skin, hat], id) => ({ id, name, skin: SKIN_BY[skin] ? skin : 'schatten', hat: HAT_BY[hat] ? hat : 'none', alive: true }));
+      startExtra('royale', { seed: 75, map: 'yard', online: true }); S.xr.n = 8; S.grace = 1e9;`, 200],
+    [`S.t = 50; RNet.players.forEach((p, i) => { if (!i) return; const a = i * 1.3; p.x = p.dx = 240 + Math.cos(a) * (70 + i * 18); p.y = p.dy = 240 + Math.sin(a) * (70 + i * 14); });`, 60]] },
+  { file: 'eine-saeule.png', query: 'screen=menu&frames=5', steps: [[`startExtra('pillar', { seed: 72 }); S.grace = 1e9;`, 600],
+    [`const d = dirOf(S.az); S.p.x = 240 + d.x * 70; S.p.y = 240 + d.y * 70;`, 4]] },
+  { file: 'umgekehrt.png', query: 'screen=menu&frames=5', steps: [[`startExtra('invert', { seed: 76, map: 'yard' }); S.grace = 1e9;`, 420],
+    [`S.banner = null; S.eventIn = 99; S.p.x = 300; S.p.y = 150; resolve();`, 20]] },
 ];
 // Das GIF zeigt Farbchaos mit gedämpften Blitzen (weiche Übergänge), damit die README selbst nicht flackert.
 const GIF = { file: 'farbchaos.gif', query: 'debug=1&lang=de&flashes=0&level=8&seed=8&event=colorchaos&frames=40', frames: 36, step: 5, size: 320 };
@@ -108,6 +137,11 @@ async function main() {
     if (only && !only.includes(s.file)) continue;
     await page.goto(url(BASE + '&' + s.query));
     await settle(page);
+    for (const [code, frames] of s.steps || []) {
+      await page.evaluate(`(() => { ${code} })()`);
+      await page.evaluate(n => window.shadyDebug.advance(n), frames);
+      await settle(page);
+    }
     const file = path.join(OUT, s.file);
     await page.screenshot(s.full ? { path: file } : { path: file, clip: await gameClip(page) });
     console.log('✓', path.relative(ROOT, file));

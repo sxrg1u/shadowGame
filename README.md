@@ -48,6 +48,14 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 | *Bahnhof: Züge halten und fahren wieder ab* | *Stadt bei Nacht: Laternen und Scheinwerfer* |
 | ![Bibliothek: lange Bücherregale, ein schwingender Leuchter erhellt den Saal, hinter den Regalen liegen Schatten](screenshots/karte-bibliothek.png) | ![Spiegelsaal: grelle Lichtstrahlen prallen an schrägen Spiegeln ab und kreuzen den dunklen Saal](screenshots/karte-spiegelsaal.png) |
 | *Bibliothek: ein schwingender Leuchter, fallende Bücher* | *Spiegelsaal: Strahlen prallen an Spiegeln ab* |
+| ![Extra-Modi: sieben Karten von Schattenrennen bis Rätselstufen, oben die Auswahl der Karte](screenshots/extra-modi.png) | ![Mehrspieler: oben Name und Code zum Beitreten, darunter vier Spiele zum Erstellen eines Raums](screenshots/mehrspieler.png) |
+| *Extra-Modi: sieben Spiele für allein* | *Mehrspieler: mit Code beitreten oder eines von vier Spielen erstellen* |
+| ![Schattenrennen im Garten: nummerierte Tore, eine Zielflagge, daneben ein durchsichtiger Geist mit der Aufschrift Bestzeit](screenshots/schattenrennen.png) | ![Rätselstufe 9 Sonnenfinale: Fliesenraster, farbige Punkte zeigen, welche Felder nach dem Zug im Schatten liegen, gestrichelt die Schatten des nächsten Zugs](screenshots/raetsel.png) |
+| *Schattenrennen: sieben Tore, der Geist läuft deine Bestzeit* | *Rätselstufen: grün landet im Schatten, rot im Licht* |
+| ![Koop: Ben trägt eine Säule, gestrichelt markiert, Anna steht in ihrem Schatten](screenshots/koop.png) | ![Fangen im Duell: Anna steht im Schatten, um sie herum ein roter Warnkreis, von oben fliegt ein Sonnenfunke heran](screenshots/fangen.png) |
+| *Koop: Ben trägt die Säule, Anna läuft in ihrem Schatten* | *Fangen im Duell: die Sonne wirft einen Funken* |
+| ![Battle Royale: fünf halbdurchsichtige Geister mit Namen und Hüten, oben die Anzeige noch 6 von 8 und Schatten 67 Prozent](screenshots/battle-royale.png) | ![Eine Säule: eine einzige Säule in der Mitte des Innenhofs, die Figur steht in ihrem Schatten](screenshots/eine-saeule.png) |
+| *Battle Royale light: die anderen als Geister, die Schatten schrumpfen* | *Eine Säule: die Sonne wird immer schneller* |
 | ![Bosskampf gegen den Schattenfresser: ein lila Wesen mit Zähnen, um ihn herum ein Kreis, in dem kein Schatten mehr liegt](screenshots/boss-schattenfresser.png) | ![Bosskampf gegen den Nachtmahr: der Garten ist fast schwarz, nur um die Spielfigur und um wandernde Lichtflecken ist etwas zu sehen](screenshots/boss-nachtmahr.png) |
 | *Schattenfresser: frisst die Schatten um sich herum* | *Nachtmahr: macht alles dunkel* |
 | ![Endkampf auf Stufe 10 gegen den Sonnenkern, eine wütende Sonne, die vier Laser über den Innenhof schießt](screenshots/boss-sonnenkern.png) | ![Garderobe mit Reitern für Skins, Hüte und Spuren und einer Vorschau der Spielfigur](screenshots/garderobe.png) |
@@ -65,6 +73,11 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 <p align="center">
   <img src="screenshots/boss-wut-spiegel.png" alt="Die wütende Käferkönigin mit rotem Schein schießt rote Glutkugeln. Die Spielfigur pariert mit dem Spiegel, eine lila Kugel fliegt zum Boss zurück, daneben liegt der Schattenanker." width="420"><br>
   <em>Wütende Käferkönigin: Spiegel pariert die gelben Kugeln, den roten Glutkugeln musst du ausweichen. Daneben der Schattenanker.</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/umgekehrt.png" alt="Modus Umgekehrt: die Figur leuchtet golden und steht mitten im Sonnenlicht, Tautropfen liegen im Schatten" width="420"><br>
+  <em>Umgekehrt: Als Lichtwesen suchst du die Sonne, der Schatten brennt.</em>
 </p>
 
 Alle Bilder erzeugt [`tools/screenshots.mjs`](tools/screenshots.mjs) automatisch, siehe [Für Entwickler](#für-entwickler).
