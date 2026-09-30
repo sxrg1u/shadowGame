@@ -66,6 +66,7 @@ kbd{font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-b
 @media (pointer:coarse){.touchbar{display:flex}}
 .dashbtn{flex:1;max-width:320px;min-height:52px;border:0;border-radius:10px;background:var(--ink);color:var(--panel);font:800 17px var(--display);letter-spacing:.06em;cursor:pointer}
 .dashbtn:active{transform:scale(.97)}
+.dashbtn.alt{flex:.7;background:var(--panel2);color:var(--ink);border:2px solid var(--ink);font-size:14px}
 body.menu .hud,body.menu .opp,body.menu .touchbar{visibility:hidden}
 
 /* ---------- Bildschirme ---------- */

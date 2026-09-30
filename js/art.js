@@ -90,10 +90,12 @@ const BAD = [
 const BOSS_INFO = [
   ['prisma','Prisma','Ab Stufe 2, danach alle 5 Stufen. Schwebt übers Feld und schießt drehende Laser in alle Richtungen.'],
   ['queen','Käferkönigin','Ab Stufe 3, danach alle 5 Stufen. Kreist um die Mitte, schießt Ringe aus Lichtkugeln und ruft Käfer.'],
-  ['bull','Sonnenstier','Ab Stufe 4, danach alle 5 Stufen. Zielt mit einem roten Strich und stürmt los. Er zerlegt Säulen. Nach dem Aufprall an der Wand ist er benommen, dann zählt ein Dash doppelt.'],
-  ['eater','Schattenfresser','Ab Stufe 5. In seiner Aura gibt es keinen Schatten. Er verschlingt die Säule, die dir am nächsten ist, und ist danach satt und träge: Dann zählt ein Dash doppelt.'],
+  ['bull','Sonnenstier','Ab Stufe 4, danach alle 5 Stufen. Zielt mit einem roten Strich und stürmt los. Er zerlegt Säulen. Nach dem Aufprall an der Wand ist er benommen, dann zählt ein Dash doppelt. Wütend schießt er beim Aufprall einen Kugelring.'],
+  ['eater','Schattenfresser','Ab Stufe 5. In seiner Aura gibt es keinen Schatten. Er verschlingt die Säule, die dir am nächsten ist, und ist danach satt und träge: Dann zählt ein Dash doppelt. Deinen Schattenanker jagt er gezielt, frisst er ihn, heilt er sich.'],
   ['dusk','Nachtmahr','Ab Stufe 6. Verdunkelt den ganzen Hof. Die Sonne brennt nicht mehr, aber du siehst kaum etwas, Lichtflecken jagen dich und er springt ständig an neue Orte.'],
   ['core','Sonnenkern','Endboss der Kampagne auf Stufe 10, im Endlosmodus alle 10 Stufen. Kämpft in drei Phasen: erst Laser, dann Kugelringe, zum Schluss stürmt er los.'],
+  ['rage','Wut-Phase','Ab halben Leben wird jeder Boss außer dem Kern wütend: Er ist schneller und feuert Fächer aus Glutkugeln auf dich. Läuft ein Boss über deinen Anker, zertritt er ihn.'],
+  ['ember','Glutkugel','Rot umrandete Kugel mit dunklem Kern. Der Spiegel wirkt nicht gegen sie, du musst ausweichen oder hindurchdashen.'],
 ];
 
 // ---------- Symbole (Spiel, Lexikon, Karten und Abzeichen teilen sie) ----------
@@ -201,6 +203,11 @@ function icon(c, k) {
     case 'calendar': c.fillStyle = '#F2F4F8'; c.strokeStyle = '#5B6376'; c.lineWidth = 1.4; c.fillRect(-9, -8, 18, 17); c.strokeRect(-9, -8, 18, 17); c.fillStyle = COL.warn; c.fillRect(-9, -8, 18, 5);
       c.fillStyle = '#5B6376'; for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) c.fillRect(-6 + i * 5, 0 + j * 4, 2.5, 2.5); break;
     case 'prisma': case 'queen': case 'bull': case 'core': case 'eater': case 'dusk': c.scale(0.34, 0.34); bossBody(c, k, 0.4, null); break;
+    case 'ember': c.fillStyle = 'rgba(214,40,40,.4)'; c.beginPath(); c.arc(0, 0, 11, 0, TAU); c.fill();
+      c.fillStyle = '#3A0A12'; c.strokeStyle = '#FF3B3B'; c.lineWidth = 2.5; c.beginPath(); c.arc(0, 0, 6, 0, TAU); c.fill(); c.stroke(); break;
+    case 'rage': c.fillStyle = 'rgba(232,64,64,.35)'; c.beginPath(); c.arc(0, 0, 12, 0, TAU); c.fill();
+      c.save(); c.scale(0.28, 0.28); bossBody(c, 'prisma', 0.4, null); c.restore();
+      c.strokeStyle = COL.warn; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(5, -11); c.lineTo(9, -7); c.moveTo(9, -11); c.lineTo(5, -7); c.stroke(); break;
     case 'sparkle': c.fillStyle = COL.gold; starPath(c, 0, 0, 11, 3, 4); c.fill(); c.fillStyle = '#FFF6D0'; starPath(c, 7, -7, 4, 1.2, 4); c.fill(); starPath(c, -7, 6, 3, 1, 4); c.fill(); break;
   }
   c.restore();

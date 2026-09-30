@@ -32,7 +32,8 @@ function reset(mode, cfg) {
         bubble: 0, inv: 0, dash: null, dashCd: 0, dashMax: 1.1, charges: 1, face: { x: 1, y: 0 }, trailT: 0, shieldMax: 5, shieldGen: 20,
         boss: null, shots: [], lasers: [], bossKills: 0, bossClean: true,
         saws: [], missiles: [], vortex: null, decoy: null, lucky: 0,
-        run: { hits: 0, newAch: [], newItems: [], dailyDone: false }, closeArmed: false, beatT: 0,
+        anchor: null, anchorCd: 0, parry: 0, parryCd: 0, parryFx: 0,
+        run: { hits: 0, newAch: [], newItems: [], dailyDone: false, jumps: 0, parries: 0 }, closeArmed: false, beatT: 0,
         pickT: 0, winT: 0, duelWinT: 0, incoming: [], countT: 0, countShown: 0, spots: [], torches: [], deco: [], trailFx: 0, tut: null };
   S.energy = maxEnergy();
   if (ruleOn('rush')) S.levelIn = 6;
@@ -165,7 +166,53 @@ function dash(tx, ty) {
   stat('dashes'); Sound.sfx('dash');
 }
 
+// ---------- Schattenanker ----------
+// Einmal drücken setzt einen Anker, nochmal drücken springt zu ihm zurück. Danach muss er sich erst wieder aufladen.
+const ANCHOR_LIFE = 8, ANCHOR_CD = 6, ANCHOR_FADE_CD = 2;
+function anchor() {
+  if (S.mode !== 'play') return;
+  if (S.anchor) {
+    const A = S.anchor;
+    sparks(S.p.x, S.p.y, '#C9B8FF', 12);
+    S.p.x = A.x; S.p.y = A.y; S.dash = null; S.inv = Math.max(S.inv, 0.25);
+    S.anchor = null; S.anchorCd = ANCHOR_CD;
+    resolve(); sparks(S.p.x, S.p.y, '#6D5BD0', 16);
+    S.run.jumps++; stat('anchorJumps'); Sound.sfx('portal');
+  } else if (S.anchorCd <= 0) {
+    S.anchor = { x: S.p.x, y: S.p.y, life: ANCHOR_LIFE };
+    Sound.sfx('anchor');
+  } else Sound.sfx('deny');
+}
+
+// ---------- Spiegel (Parade) ----------
+// Kurzes Zeitfenster: Wer genau im richtigen Moment drückt, schlägt Lichtkugeln zurück, blockt Laser und Funken,
+// wirft Sägen ab und kontert den Ansturm von Stier und Kern. Klappt es, lädt der Spiegel sofort wieder. Daneben gedrückt heißt volle Abklingzeit.
+const PARRY_WIN = 0.2, PARRY_CD = 1.5, PARRY_OK_CD = 0.35;
+function parry() {
+  if (S.mode !== 'play') return;
+  if (S.parry > 0 || S.parryCd > 0) { Sound.sfx('deny'); return; }
+  S.parry = PARRY_WIN; S.parryCd = PARRY_CD;
+  Sound.sfx('parryUp');
+}
+function parried(x, y, text) {
+  S.parryCd = Math.min(S.parryCd, PARRY_OK_CD); S.parryFx = 0.35;
+  S.shake = Math.max(S.shake, 0.2);
+  sparks(x, y, COL.gold, 12); sparks(S.p.x, S.p.y, COL.white, 6);
+  flash(text || tr('Pariert!', 'Parried!'), COL.gold);
+  S.run.parries++; stat('parries'); Sound.sfx('parry');
+}
+// Zurückgeschlagene Lichtkugel trifft den Boss
+function reflectHit(B, s) {
+  s.life = 0;
+  if (B.inv > 0 || B.enter > 0 || B.state === 'fade' || B.state === 'appear') { sparks(s.x, s.y, COL.gold, 6); return; }
+  B.hp -= 1; B.inv = 0.5; B.spearHit = false;
+  sparks(B.x, B.y, COL.gold, 16); S.shake = Math.max(S.shake, 0.35);
+  flash(tr('Zurückgeschlagen!', 'Sent back!'), COL.gold);
+  stat('reflectHits'); Sound.sfx('bossHit');
+}
+
 // ---------- Bosse ----------
+const RAGE_SPEED = 1.35;   // so viel schneller ist ein wütender Boss
 const BOSSES = [{ type: 'prisma', name: 'Prisma' }, { type: 'queen', name: 'Käferkönigin' }, { type: 'bull', name: 'Sonnenstier' },
                 { type: 'eater', name: 'Schattenfresser' }, { type: 'dusk', name: 'Nachtmahr' }];
 const CORE = { type: 'core', name: 'Sonnenkern' };
@@ -229,7 +276,7 @@ function queenAct(B, dt, ef, n, every, speed) {
   B.atk -= dt * ef;
   if (B.atk <= 0) {
     const a0 = rand(0, TAU);
-    for (let i = 0; i < n; i++) { const aa = a0 + i * TAU / n; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * speed, vy: Math.sin(aa) * speed, life: 6 }); }
+    for (let i = 0; i < n; i++) { const aa = a0 + i * TAU / n; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * speed, vy: Math.sin(aa) * speed, life: 6, hard: i % 3 === 0 }); }
     B.ring = (B.ring || 0) + 1;
     if (B.ring % 2 === 0) for (let i = 0; i < 2; i++) S.bugs.push({ x: B.x, y: B.y, life: 10, ph: rand(0, 6) });
     B.atk = every;
@@ -252,9 +299,9 @@ function bullAct(B, dt, ef, v) {
     if (B.x < B.r || B.x > W - B.r || B.y < B.r || B.y > H - B.r) {
       B.x = Math.max(B.r, Math.min(W - B.r, B.x)); B.y = Math.max(B.r, Math.min(H - B.r, B.y));
       B.state = 'stun'; B.stun = 1.5; S.shake = 0.5; sparks(B.x, B.y, COL.white, 14); Sound.sfx('boom');
-      if (B.type === 'core') {
+      if (B.type === 'core' || B.rage) {
         const a0 = rand(0, TAU);
-        for (let k = 0; k < 10; k++) { const aa = a0 + k * TAU / 10; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 120, vy: Math.sin(aa) * 120, life: 5 }); }
+        for (let k = 0; k < 10; k++) { const aa = a0 + k * TAU / 10; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 120, vy: Math.sin(aa) * 120, life: 5, hard: k % 2 === 0 }); }
       }
     }
   } else if (B.state === 'stun') {
@@ -266,7 +313,7 @@ function bullAct(B, dt, ef, v) {
 function eaterAct(B, dt, ef) {
   B.aura = 64 + Math.sin(B.t * 3) * 5 + (B.state === 'gulp' ? 14 : 0) + Math.min(20, lv() * 1.5);
   if (B.state === 'move') {
-    const T = S.decoy || S.p, dx = T.x - B.x, dy = T.y - B.y, d = Math.hypot(dx, dy) || 1, v = (50 + lv() * 3) * ef;
+    const T = S.decoy || S.anchor || S.p, dx = T.x - B.x, dy = T.y - B.y, d = Math.hypot(dx, dy) || 1, v = (50 + lv() * 3) * ef;   // hungrig auf deinen Anker
     if (d > 24) { B.x += dx / d * v * dt; B.y += dy / d * v * dt; }
     B.atk -= dt * ef;
     if (B.atk <= 0) {
@@ -275,7 +322,7 @@ function eaterAct(B, dt, ef) {
       B.volley = (B.volley || 0) + 1;
       if (B.volley % 2 === 0) {
         const a = Math.atan2(S.p.y - B.y, S.p.x - B.x);
-        for (let k = -2; k <= 2; k++) { const aa = a + k * 0.24; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 135, vy: Math.sin(aa) * 135, life: 5 }); }
+        for (let k = -2; k <= 2; k++) { const aa = a + k * 0.24; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 135, vy: Math.sin(aa) * 135, life: 5, hard: k === 0 }); }
       }
       if (prey) { B.state = 'gulp'; B.gulp = 0.9; B.prey = prey; Sound.sfx('gulpWarn'); } else B.atk = 1.2;
     }
@@ -311,7 +358,7 @@ function duskAct(B, dt, ef) {
   B.atk -= dt * ef;
   if (B.atk <= 0 && B.state === 'move') {
     const a0 = rand(0, TAU);
-    for (let k = 0; k < 12; k++) { const aa = a0 + k * TAU / 12; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 105, vy: Math.sin(aa) * 105, life: 6 }); }
+    for (let k = 0; k < 12; k++) { const aa = a0 + k * TAU / 12; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 105, vy: Math.sin(aa) * 105, life: 6, hard: k % 4 === 0 }); }
     B.atk = 3.8; Sound.sfx('whoosh');
   }
 }
@@ -319,8 +366,24 @@ function updateBoss(dt, ef) {
   const B = S.boss;
   B.t += dt;
   if (B.inv > 0) B.inv -= dt;
+  if (B.touchParried > 0) B.touchParried -= dt;
   if (B.enter > 0) { B.enter -= dt; return; }
   B.time -= dt;
+  // Wut-Phase: Ab halben Leben wird jeder Boss (außer dem Kern mit seinen eigenen Phasen) schneller und feuert Glutkugel-Fächer
+  if (!B.rage && !B.tame && B.type !== 'core' && B.hp > 0 && B.hp <= B.maxHp / 2) {
+    B.rage = true; B.rageAtk = 1.5; B.time = Math.max(B.time, 8);
+    S.banner = { text: bossLabel(B.type) + tr(' ist wütend!', ' is enraged!'), good: false, t: 1.8, head: tr('WUT', 'RAGE') };
+    S.shake = 0.7; sparks(B.x, B.y, COL.warn, 24); Sound.sfx('phase');
+  }
+  if (B.rage) {
+    ef *= RAGE_SPEED;
+    B.rageAtk -= dt * ef;
+    if (B.rageAtk <= 0 && !['charge', 'stun', 'gulp', 'fade', 'appear'].includes(B.state)) {
+      const a = Math.atan2(S.p.y - B.y, S.p.x - B.x);
+      for (let k = -1; k <= 1; k++) { const aa = a + k * 0.3; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 150, vy: Math.sin(aa) * 150, life: 5, hard: true }); }
+      B.rageAtk = 3.2; Sound.sfx('whoosh');
+    }
+  }
   if (B.tame) { B.x += Math.cos(B.t * 0.7) * 30 * dt; B.y += Math.sin(B.t * 0.9) * 30 * dt; }
   else if (B.type === 'prisma') prismaAct(B, dt, ef, 3 + Math.min(3, Math.floor(dl() / 3)), 3.4, 0.5 + lv() * 0.03);
   else if (B.type === 'queen') queenAct(B, dt, ef, 10 + Math.min(6, Math.floor(dl())), 2.4, 115);
@@ -348,9 +411,19 @@ function updateBoss(dt, ef) {
       sparks(B.x, B.y, COL.white, 18);
       flash(dmg > 1 ? tr('Volltreffer ×', 'Critical hit ×') + dmg + '!' : tr('Treffer!', 'Hit!'), '#5FBE90');
       Sound.sfx('bossHit');
-    } else if (!on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
+    } else if (S.parry > 0) {
+      if (B.state === 'charge') { B.state = 'stun'; B.stun = 2; parried(B.x, B.y, tr('Ansturm gekontert!', 'Charge countered!')); }
+      else if (!B.touchParried) { B.touchParried = 0.6; parried(B.x, B.y); }
+    } else if (!(B.touchParried > 0) && !on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
     S.p.x = B.x + dx / d * (B.r + pr() + 14); S.p.y = B.y + dy / d * (B.r + pr() + 14);
     resolve();
+  }
+  // Anker-Jäger: Wer über deinen Anker läuft, zertritt ihn. Der Fresser frisst ihn und heilt sich.
+  if (S.anchor && B.state !== 'fade' && B.state !== 'appear' && dist(B, S.anchor) < B.r + 10) {
+    sparks(S.anchor.x, S.anchor.y, '#C9B8FF', 14);
+    if (B.type === 'eater') { B.hp = Math.min(B.maxHp, B.hp + 1); flash(tr('Der Fresser frisst deinen Anker! +1 Leben', 'The Eater devours your anchor! +1 life'), '#C9B8FF'); Sound.sfx('gulp'); }
+    else { flash(tr('Der Boss zertritt deinen Anker!', 'The boss crushes your anchor!'), COL.warn); Sound.sfx('boom'); }
+    S.anchor = null; S.anchorCd = ANCHOR_CD;
   }
   if (B.hp <= 0) defeatBoss(B);
   else if (B.time <= 0) { S.boss = null; flash(tr('Der Boss zieht ab', 'The boss leaves'), '#98A1B4'); Sound.music(gameTrack()); S.spots = []; }
@@ -612,6 +685,14 @@ function update(dt) {
     if (S.dashCd <= 0) { S.charges++; S.dashCd = S.charges < maxCharges() ? (S.dashMax = dashCdMax()) : 0; }
   }
   if (S.inv > 0) S.inv -= dt;
+  if (S.parry > 0) S.parry -= dt;
+  if (S.parryCd > 0) S.parryCd -= dt;
+  if (S.parryFx > 0) S.parryFx -= dt;
+  if (S.anchorCd > 0) S.anchorCd -= dt;
+  if (S.anchor) {
+    S.anchor.life -= dt;
+    if (S.anchor.life <= 0) { S.anchor = null; S.anchorCd = ANCHOR_FADE_CD; flash(tr('Anker verblasst', 'Anchor faded'), '#98A1B4'); }
+  }
   if (on('wind')) {
     S.p.x += S.wind.x * dt; S.p.y += S.wind.y * dt;
     if (Math.random() < dt * 40) S.parts.push({ x: fx(0, W), y: fx(0, H), vx: S.wind.x * 4, vy: S.wind.y * 4, life: 0.35, streak: true });
@@ -708,7 +789,7 @@ function update(dt) {
     m.warn -= dt * (ef > 0 ? 1 : 0);
     if (m.warn <= 0) {
       m.done = true; S.shake = Math.max(S.shake, 0.3); sparks(m.x, m.y, COL.hot, 14); Sound.sfx('boom');
-      if (dist(m, S.p) < m.r + pr() && !on('shield')) hit(22, tr('Funkentreffer!', 'Spark hit!'));
+      if (dist(m, S.p) < m.r + pr() && !on('shield')) { if (S.parry > 0) parried(S.p.x, S.p.y, tr('Funken abgewehrt!', 'Spark blocked!')); else hit(22, tr('Funkentreffer!', 'Spark hit!')); }
       const gx = Math.floor(m.x / CELL), gy = Math.floor(m.y / CELL);
       if (!S.hot.some(h => h.gx === gx && h.gy === gy)) S.hot.push({ gx, gy, warn: 0, life: 4 });
     }
@@ -736,18 +817,31 @@ function update(dt) {
     else {
       L.life -= dt; L.a += L.spin * dt * ef;
       const len = rayLen(L.x, L.y, L.a, L.len);
-      if (segDist(S.p.x, S.p.y, L.x, L.y, L.x + Math.cos(L.a) * len, L.y + Math.sin(L.a) * len) < pr() + 4) hit(15, 'Laser!');
+      if (segDist(S.p.x, S.p.y, L.x, L.y, L.x + Math.cos(L.a) * len, L.y + Math.sin(L.a) * len) < pr() + 4) {
+        if (S.parry > 0 || L.blocked > 0) { if (!(L.blocked > 0)) { L.blocked = 0.5; parried(S.p.x, S.p.y, tr('Laser geblockt!', 'Laser blocked!')); } }
+        else hit(15, 'Laser!');
+      }
+      if (L.blocked > 0) L.blocked -= dt;
     }
   }
   S.lasers = S.lasers.filter(L => L.life > 0);
 
   // Lichtkugeln
   for (const s of S.shots) {
-    s.x += s.vx * dt * ef; s.y += s.vy * dt * ef; s.life -= dt;
+    const sf = s.ref ? 1 : ef;   // zurückgeschlagene Kugeln fliegen auch bei Frost weiter
+    s.x += s.vx * dt * sf; s.y += s.vy * dt * sf; s.life -= dt;
     if (s.x < -20 || s.x > W + 20 || s.y < -20 || s.y > H + 20 || inPillar(s.x, s.y, 0)) s.life = 0;
+    else if (s.ref) { if (S.boss && dist(s, S.boss) < S.boss.r + 5) reflectHit(S.boss, s); }
+    else if (S.parry > 0 && !s.hard && dist(s, S.p) < pr() + 14) {
+      // Zurück zum Boss, sonst einfach umdrehen
+      const T = S.boss && S.boss.enter <= 0 ? S.boss : { x: s.x - s.vx, y: s.y - s.vy };
+      const dx = T.x - s.x, dy = T.y - s.y, d = Math.hypot(dx, dy) || 1, v = Math.max(260, Math.hypot(s.vx, s.vy) * 2);
+      s.vx = dx / d * v; s.vy = dy / d * v; s.ref = true; s.life = 3;
+      parried(s.x, s.y);
+    }
     else if (dist(s, S.p) < pr() + 5) {
       if (S.dash) { if (up('blade')) { s.life = 0; sparks(s.x, s.y, '#C9B8FF', 6); S.score += pts(10); } }
-      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(12, tr('Lichtkugel!', 'Light orb!')); }
+      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(s.hard ? 16 : 12, s.hard ? tr('Glutkugel!', 'Ember orb!') : tr('Lichtkugel!', 'Light orb!')); }
     }
   }
   S.shots = S.shots.filter(s => s.life > 0);
@@ -763,6 +857,12 @@ function update(dt) {
     s.y += s.vy * dt * ef;
     if (s.y < 12 || s.y > H - 12 || inPillar(s.x, s.y, 6)) { s.y -= s.vy * dt * ef; s.vy = -s.vy; }
     if (dist(s, S.p) < pr() + 11) {
+      if (S.parry > 0 && !on('spikes') && !(S.dash && up('blade'))) {
+        const dx = s.x - S.p.x, dy = s.y - S.p.y, d = Math.hypot(dx, dy) || 1, v = Math.hypot(s.vx, s.vy);
+        s.vx = dx / d * v; s.vy = dy / d * v; s.x = S.p.x + dx / d * (pr() + 14); s.y = S.p.y + dy / d * (pr() + 14);
+        parried(s.x, s.y, tr('Säge abgewehrt!', 'Saw deflected!'));
+        continue;
+      }
       if (on('spikes') || (S.dash && up('blade'))) { s.life = 0; sparks(s.x, s.y, '#DDE3EC', 14); const p = pts(30); flash(tr('Säge zerbrochen +', 'Saw destroyed +') + p, '#B8C0CF'); S.score += p; Sound.sfx('bossHit'); }
       else if (Math.random() < dt * 20) sparks(s.x, s.y, COL.sun, 3);
       if (s.life > 0 && !on('shield')) hit(15, tr('Säge!', 'Saw!'));
@@ -784,7 +884,8 @@ function update(dt) {
     if (S.decoy && dist(m, S.decoy) < 12) boom = true;
     if (!boom && dist(m, S.p) < pr() + 8) {
       boom = true;
-      if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash(tr('Rakete zerstört +', 'Missile destroyed +') + p, '#5FBE90'); stat('missiles'); }
+      if (S.parry > 0) { const p = pts(25); S.score += p; parried(m.x, m.y, tr('Rakete gekontert +', 'Missile countered +') + p); stat('missiles'); }
+      else if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash(tr('Rakete zerstört +', 'Missile destroyed +') + p, '#5FBE90'); stat('missiles'); }
       else if (!on('shield')) hit(20, tr('Rakete!', 'Missile!'));
     }
     if (boom) { m.dead = true; sparks(m.x, m.y, COL.hot, 16); S.shake = Math.max(S.shake, 0.25); Sound.sfx('boom'); }

@@ -474,9 +474,31 @@ function draw() {
     ctx.globalAlpha = 1;
   }
 
+  // Schattenanker
+  if (S.anchor && S.mode !== 'ready') {
+    const A = S.anchor, pulse = 0.5 + 0.5 * Math.sin(S.t * 6), blink = A.life < 2 && Math.floor(A.life * 8) % 2;
+    CC.el('anchor');
+    ctx.strokeStyle = 'rgba(109,91,208,.35)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 6]); ctx.lineDashOffset = -S.t * 30;
+    ctx.beginPath(); ctx.moveTo(S.p.x, S.p.y); ctx.lineTo(A.x, A.y); ctx.stroke(); ctx.setLineDash([]);
+    if (!blink) {
+      ctx.fillStyle = 'rgba(20,24,33,.55)'; ctx.beginPath(); ctx.arc(A.x, A.y, 9 + pulse * 2, 0, TAU); ctx.fill();
+      ctx.strokeStyle = '#C9B8FF'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(A.x, A.y, 14, -Math.PI / 2, -Math.PI / 2 + TAU * A.life / ANCHOR_LIFE); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(A.x, A.y - 6); ctx.lineTo(A.x, A.y + 5); ctx.moveTo(A.x - 5, A.y + 1); ctx.quadraticCurveTo(A.x, A.y + 8, A.x + 5, A.y + 1); ctx.moveTo(A.x - 3, A.y - 3); ctx.lineTo(A.x + 3, A.y - 3); ctx.stroke();
+    }
+  }
+
   // Spielfigur
   if (S.mode !== 'ready') {
     const p = S.p, R = pr();
+    if (S.parry > 0 || S.parryFx > 0) {
+      CC.el('parry');
+      const k = S.parryFx > 0 ? 1 - S.parryFx / 0.35 : 0;
+      ctx.strokeStyle = S.parryFx > 0 ? 'rgba(255,194,26,' + (1 - k) + ')' : 'rgba(255,246,208,.95)';
+      ctx.lineWidth = S.parryFx > 0 ? 4 : 3;
+      ctx.beginPath(); ctx.arc(p.x, p.y, R + 9 + k * 22, 0, TAU); ctx.stroke();
+      if (S.parry > 0) { ctx.fillStyle = 'rgba(255,227,107,.22)'; ctx.beginPath(); ctx.arc(p.x, p.y, R + 9, 0, TAU); ctx.fill(); }
+    }
     CC.el('aura');
     if (on('shield')) {
       const blink = S.E.shield < 1.5 && Math.floor(S.E.shield * 8) % 2 === 0;
@@ -567,8 +589,14 @@ function draw() {
   // Lichtkugeln
   for (const [n, s] of S.shots.entries()) {
     CC.el('shot', n);
-    ctx.fillStyle = 'rgba(255,227,107,.45)'; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.fill();
-    ctx.fillStyle = '#FFF6D0'; ctx.strokeStyle = COL.sun; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, TAU); ctx.fill(); ctx.stroke();
+    if (s.hard) {   // Glutkugel: lässt sich nicht parieren
+      const g = 0.5 + 0.5 * Math.sin(S.t * 18 + n);
+      ctx.fillStyle = 'rgba(214,40,40,' + (0.3 + 0.25 * g) + ')'; ctx.beginPath(); ctx.arc(s.x, s.y, 10 + g * 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3A0A12'; ctx.strokeStyle = '#FF3B3B'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5.5, 0, TAU); ctx.fill(); ctx.stroke();
+      continue;
+    }
+    ctx.fillStyle = s.ref ? 'rgba(201,184,255,.5)' : 'rgba(255,227,107,.45)'; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.fill();
+    ctx.fillStyle = s.ref ? '#FFFFFF' : '#FFF6D0'; ctx.strokeStyle = s.ref ? '#6D5BD0' : COL.sun; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, TAU); ctx.fill(); ctx.stroke();
   }
 
   // Boss
@@ -578,6 +606,10 @@ function draw() {
     if (B.state === 'aim' && B.enter <= 0) {
       ctx.strokeStyle = 'rgba(232,64,64,' + (0.4 + 0.4 * Math.sin(S.t * 25)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
       ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.tx, B.ty); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (B.rage) {
+      const g = 0.5 + 0.5 * Math.sin(S.t * 10);
+      ctx.fillStyle = 'rgba(232,64,64,' + (0.18 + 0.17 * g) + ')'; ctx.beginPath(); ctx.arc(B.x, B.y, B.r + 12 + g * 5, 0, TAU); ctx.fill();
     }
     ctx.save(); ctx.translate(B.x, B.y);
     const sc = B.enter > 0 ? Math.max(0.05, 1 - B.enter) : 1; ctx.scale(sc, sc);
@@ -639,13 +671,16 @@ function draw() {
     const tag = S.rules.size ? ' · ' + [...S.rules].map(id => RULE_BY[id].name).join(' + ') : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
     CC.el('text');
     textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
-    if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 32, COL.warn, MONO, 'right');
+    if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 68, COL.warn, MONO, 'right');
+    const aTxt = S.anchor ? tr('Anker ', 'Anchor ') + S.anchor.life.toFixed(1) + tr(' s · E springt', ' s · E jumps') : S.anchorCd > 0 ? tr('Anker ', 'Anchor ') + S.anchorCd.toFixed(1) + ' s' : tr('Anker bereit', 'Anchor ready');
+    textOut(aTxt, W - 12, H - 50, S.anchor ? '#C9B8FF' : S.anchorCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
+    textOut(S.parryCd > 0 ? tr('Spiegel ', 'Mirror ') + S.parryCd.toFixed(1) + ' s' : tr('Spiegel bereit', 'Mirror ready'), W - 12, H - 32, S.parryCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
     const ready = S.charges > 0;
     textOut(ready ? (maxCharges() > 1 ? 'Dash ×' + S.charges : tr('Dash bereit', 'Dash ready')) : 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
       CC.el('bossBar');
-      textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
+      textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : B.rage ? tr(' · wütend', ' · enraged') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
       ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(bx - 2, by - 2, bw + 4, 14);
       ctx.fillStyle = COL.warn; ctx.fillRect(bx, by, bw * Math.max(0, B.hp) / B.maxHp, 8);
       if (isFinite(B.maxTime)) {

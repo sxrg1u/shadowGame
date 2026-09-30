@@ -272,7 +272,7 @@ RENDER.scrAch = () => {
       [tr('Bester Punktestand', 'Best score'), fmt(s.bestScore)], [tr('Höchste Stufe', 'Highest level'), s.maxLevel || 0], [tr('Längste Runde', 'Longest run'), fmtTime(s.longest)], [tr('Kampagnen gewonnen', 'Campaigns won'), s.wins],
       [tr('Bosse besiegt', 'Bosses defeated'), fmt(s.bosses)], [bossLabel('prisma'), s.prisma], [bossLabel('queen'), s.queen], [bossLabel('bull'), s.bull], [bossLabel('eater'), s.eater], [bossLabel('dusk'), s.dusk], [bossLabel('core'), s.core],
       [tr('Bosse ohne Treffer', 'Bosses without a hit'), s.cleanBoss], [tr('Käfer weggedasht', 'Bugs dashed through'), fmt(s.bugsDashed)], [tr('Tautropfen', 'Dew drops'), fmt(s.dews)], [tr('Größte Kombo', 'Biggest combo'), '×' + (s.maxCombo || 0)],
-      ['Dashes', fmt(s.dashes)], [tr('Treffer kassiert', 'Hits taken'), fmt(s.hits)], [tr('Extras eingesammelt', 'Extras collected'), fmt(s.items)], [tr('In Fallen getappt', 'Traps stepped in'), fmt(s.traps)],
+      ['Dashes', fmt(s.dashes)], [tr('Paraden', 'Parries'), fmt(s.parries || 0)], [tr('Ankersprünge', 'Anchor jumps'), fmt(s.anchorJumps || 0)], [tr('Treffer kassiert', 'Hits taken'), fmt(s.hits)], [tr('Extras eingesammelt', 'Extras collected'), fmt(s.items)], [tr('In Fallen getappt', 'Traps stepped in'), fmt(s.traps)],
       [tr('Raketen zerstört', 'Missiles destroyed'), fmt(s.missiles)], [tr('Upgrades gewählt', 'Upgrades picked'), fmt(s.upgrades)], [tr('Von Herzen gerettet', 'Saved by hearts'), fmt(s.revives)],
       [tr('Duelle gewonnen', 'Duels won'), s.duelWins + tr(' von ', ' of ') + s.duels], [tr('Tägliche geschafft', 'Dailies completed'), s.dailyDone], [tr('Wochen geschafft', 'Weeklies completed'), s.weeklyDone],
       ...MAPS.map(m => [tr('Beste Stufe: ', 'Best level: ') + mapName(m), s['lvl_' + m.id] || 0]), [tr('Serie jetzt / beste', 'Streak now / best'), streakNow() + ' / ' + P.streak.best],
@@ -819,6 +819,8 @@ document.addEventListener('keydown', e => {
   if (t) return;
   if (KEYMAP[e.key]) { keys.add(KEYMAP[e.key]); e.preventDefault(); }
   else if (S.mode === 'play' && (e.key === 'Shift' || e.key === ' ')) { dash(); e.preventDefault(); }
+  else if (S.mode === 'play' && (e.key === 'e' || e.key === 'E') && !e.repeat) { anchor(); e.preventDefault(); }
+  else if (S.mode === 'play' && (e.key === 'q' || e.key === 'Q') && !e.repeat) { parry(); e.preventDefault(); }
 });
 document.addEventListener('keyup', e => { if (KEYMAP[e.key]) keys.delete(KEYMAP[e.key]); });
 window.addEventListener('blur', () => { keys.clear(); if (S) S.target = null; if (S && S.mode === 'play' && !isDuel() && !topScr()) pause(); });
@@ -828,6 +830,9 @@ document.addEventListener('pointerdown', () => Sound.init(), { capture: true });
 
 cv.addEventListener('contextmenu', e => e.preventDefault());
 $('dashBtn').addEventListener('click', () => dash());
+// Anker und Spiegel reagieren schon beim Antippen, beim Spiegel zählt jede Millisekunde
+$('anchorBtn').addEventListener('pointerdown', e => { e.preventDefault(); anchor(); });
+$('parryBtn').addEventListener('pointerdown', e => { e.preventDefault(); parry(); });
 function toGame(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; }
 // Rechtsklick-Dash über mousedown: Der Browser meldet einen Rechtsklick,
 // während die linke Taste gehalten wird, nicht als eigenes pointerdown.

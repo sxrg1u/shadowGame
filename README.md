@@ -44,7 +44,7 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 | ![Endkampf auf Stufe 10 gegen den Sonnenkern, eine wütende Sonne, die vier Laser über den Innenhof schießt](screenshots/boss-sonnenkern.png) | ![Garderobe mit Reitern für Skins, Hüte und Spuren und einer Vorschau der Spielfigur](screenshots/garderobe.png) |
 | *Sonnenkern: der Endboss der Kampagne* | *Garderobe: Skins, Hüte und Spuren* |
 | ![Liste der Erfolge mit Fortschrittsbalken, zum Beispiel Käferschreck, Bossjäger und Kombokönig](screenshots/erfolge.png) | ![Animation: Farbchaos auf Stufe 8 mit gedämpften Blitzen, die Farben gleiten weich ineinander](screenshots/farbchaos.gif) |
-| *41 Erfolge, Statistik und Bestenliste* | *Farbchaos mit gedämpften Blitzen* |
+| *44 Erfolge, Statistik und Bestenliste* | *Farbchaos mit gedämpften Blitzen* |
 | ![Farbchaos auf Stufe 2: ein Teil der Farben ist vertauscht, in der Mitte die Ankündigung „Chaos-Rad: Farbchaos“](screenshots/farbchaos-stufe-2.png) | ![Farbchaos auf Stufe 6: Hof, Schatten, Säulen und Anzeige in wild gemischten Farben](screenshots/farbchaos-stufe-6.png) |
 | *Farbchaos auf Stufe 2: nur ein Teil der Farben kippt* | *Farbchaos auf Stufe 6: kaum noch etwas hat seine echte Farbe* |
 
@@ -66,14 +66,16 @@ Alle Bilder erzeugt [`tools/screenshots.mjs`](tools/screenshots.mjs) automatisch
 
 Wichtig: `index.html` braucht die Ordner `css`, `js` und `assets` daneben. Die Datei allein reicht nicht mehr.
 
-Beim ersten Klick auf **Spielen** startet ein kurzes **Tutorial** in acht Schritten (laufen, Schatten suchen, Tau sammeln, dashen, Käfer wegdashen, Boss treffen, Upgrade wählen). Du kannst es überspringen und später unter **Anleitung** noch einmal spielen. Wer es abschließt, bekommt die Spur „Schattenecho“.
+Beim ersten Klick auf **Spielen** startet ein kurzes **Tutorial** in zehn Schritten (laufen, Schatten suchen, Tau sammeln, dashen, Käfer wegdashen, Schattenanker, Spiegel, Boss treffen, Upgrade wählen). Du kannst es überspringen und später unter **Anleitung** noch einmal spielen. Wer es abschließt, bekommt die Spur „Schattenecho“.
 
 ## So funktioniert es
 
 - **Licht kostet Kraft.** Im Licht sinkt deine Kraftleiste schnell, im Schatten lädt sie langsam wieder auf. Bei null bist du verdampft, außer ein Herz rettet dich.
 - **Die Schatten wandern.** Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht gerade kommt.
 - **Stufen:** Alle 12 Sekunden steigt die Stufe. Eine Säule stürzt ein, eine neue wächst woanders, und danach kommt ein Boss.
-- **Dash:** Ein schneller Sprung, der dich kurz unverwundbar macht. Er ist die einzige Waffe gegen Bosse.
+- **Dash:** Ein schneller Sprung, der dich kurz unverwundbar macht. Er ist deine Hauptwaffe gegen Bosse.
+- **Schattenanker (E):** Einmal drücken setzt einen Anker, nochmal drücken springt zu ihm zurück. Der Anker hält 8 Sekunden, danach lädt er 6 Sekunden. So kannst du kurz ins Licht laufen, Tau holen und zurück in den sicheren Schatten springen.
+- **Spiegel (Q):** Eine Parade mit einem kleinen Zeitfenster. Drückst du genau vor einem Treffer, fliegen Lichtkugeln zum Boss zurück und machen Schaden. Laser, Sonnenfunken, Sägeblätter und Suchraketen prallen ab, und den Ansturm von Sonnenstier und Sonnenkern konterst du, sodass er benommen ist. Klappt die Parade, ist der Spiegel sofort wieder bereit. Drückst du daneben, dauert es 1,5 Sekunden.
 - **Tau:** Tautropfen liegen immer im Licht. Sie geben Kraft und Punkte. Schnell hintereinander gesammelt steigt die Kombo bis ×5.
 - **Punkte:** 10 pro Sekunde, dazu Tau, Goldtau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem **Punktekonto**, mit dem du in der Garderobe einkaufst.
 
@@ -123,7 +125,7 @@ Die tägliche und die wöchentliche Herausforderung dürfen jede Karte benutzen,
 
 ## Bosse
 
-Nach jeder Stufe kommt ein Boss. Nur ein Dash verletzt ihn.
+Nach jeder Stufe kommt ein Boss. Ihn verletzen ein Dash oder eine Lichtkugel, die du mit dem Spiegel zurückschlägst.
 
 | Boss | Was er tut |
 | --- | --- |
@@ -133,6 +135,12 @@ Nach jeder Stufe kommt ein Boss. Nur ein Dash verletzt ihn.
 | **Schattenfresser** | Frisst die Schatten in seinem Umkreis und verschlingt die Säule, die dir am nächsten ist. Danach ist er satt und träge. |
 | **Nachtmahr** | Verdunkelt alles. Die Sonne brennt dann nicht mehr, dafür jagen dich Lichtflecken, und du siehst nur wenig. |
 | **Sonnenkern** | Der Endboss. Kämpft in drei Phasen: erst Laser, dann Kugelringe, zum Schluss stürmt er los. |
+
+**Wut-Phase:** Ab halben Leben wird jeder Boss außer dem Sonnenkern wütend. Er ist 35 % schneller, greift öfter an und feuert zusätzlich Fächer aus drei Glutkugeln auf dich. Der Sonnenstier schießt wütend beim Aufprall an der Wand einen Kugelring.
+
+**Glutkugeln:** Rot umrandete Kugeln mit dunklem Kern. Der Spiegel wirkt nicht gegen sie, du musst ausweichen oder hindurchdashen. Käferkönigin, Schattenfresser, Nachtmahr und Sonnenkern mischen sie unter ihre normalen Lichtkugeln, du musst also blitzschnell entscheiden: parieren oder ausweichen.
+
+**Anker-Jäger:** Läuft ein Boss über deinen Schattenanker, zertritt er ihn, und der Anker muss neu laden. Der Schattenfresser jagt den Anker gezielt und heilt sich um ein Leben, wenn er ihn frisst. Du kannst ihn so aber auch weglocken.
 
 ## Chaos-Rad
 
@@ -175,7 +183,7 @@ Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen
 
 ## Erfolge und Statistik
 
-41 Erfolge wie „10 Käfer weggedasht“, „Boss ohne Treffer“, „Kombo ×5“ oder je einer für Garten, Dach und Keller. Dazu eine Statistik (Runden, Spielzeit, Bosse pro Typ, Dashes, Treffer und mehr) und eine Bestenliste mit den zehn besten Runden in Kampagne und Endlosmodus.
+44 Erfolge wie „10 Käfer weggedasht“, „Boss ohne Treffer“, „Kombo ×5“ oder je einer für Garten, Dach und Keller. Dazu eine Statistik (Runden, Spielzeit, Bosse pro Typ, Dashes, Treffer und mehr) und eine Bestenliste mit den zehn besten Runden in Kampagne und Endlosmodus.
 
 ## Online-Duell
 
@@ -193,6 +201,8 @@ Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https:
 | --- | --- | --- | --- |
 | Laufen | WASD oder Pfeiltasten | Linke Taste gedrückt halten | Finger aufs Feld halten |
 | Dash | Shift oder Leertaste (Laufrichtung) | Rechtsklick (Richtung Maus) | Dash-Knopf |
+| Schattenanker | E | | Anker-Knopf |
+| Spiegel (Parade) | Q | | Spiegel-Knopf |
 | Upgrade wählen | 1, 2, 3 | Karte anklicken | Karte antippen |
 | Pause | Esc oder P | Pause-Knopf | Pause-Knopf |
 | Ton an/aus | M | Lautsprecher-Knopf | Lautsprecher-Knopf |
@@ -223,6 +233,8 @@ Wer lieber echte Musikstücke hören will, legt sie in den Ordner [`assets/music
 - Im Keller liegt der Schatten immer auf der Seite der Säule, die von der Fackel weg zeigt.
 - Auf dem Dach zeigt der Pfeil oben rechts, wohin der Wind dich schiebt.
 - Lock Suchraketen gegen eine Säule.
+- Setz den Anker im Schatten, bevor du ins Licht läufst. Wird es eng, bist du mit einem Tastendruck zurück.
+- Gegen die Käferkönigin lohnt sich der Spiegel: Jede zurückgeschlagene Kugel ist ein Treffer, ohne dass du nah ran musst. Aber Vorsicht vor den roten Glutkugeln.
 - Der Magnet zieht auch Fallen an, also Vorsicht in der Nähe von Säuretropfen.
 - Schattenspur und Zäher Schatten zusammen machen jeden Dash zu einem kleinen Schattenweg.
 
