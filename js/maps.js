@@ -66,8 +66,8 @@ const MAP_BY = Object.fromEntries(MAPS.map(m => [m.id, m]));
 const SUN_RULES = ['twosun', 'summer', 'night', 'clouds'];
 const mapName = m => tr(m.name[0], m.name[1]);
 const mapDesc = m => tr(m.desc[0], m.desc[1]);
-// NUR FUER DEN TEST-BRANCH: alle Karten frei. Vor dem Merge nach main auf false setzen.
-const TEST_ALL_MAPS = true;
+// Nur zum Testen: true schaltet alle Karten frei. In main immer false.
+const TEST_ALL_MAPS = false;
 const mapUnlocked = m => TEST_ALL_MAPS || !m.unlock || (P.owned.map || []).includes(m.id) || (P.stats[m.unlock.stat] || 0) >= m.unlock.n;
 const mapProgress = m => m.unlock ? Math.min(P.stats[m.unlock.stat] || 0, m.unlock.n) / m.unlock.n : 1;
 function mapLockText(m) {
