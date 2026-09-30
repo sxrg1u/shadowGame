@@ -131,7 +131,7 @@ Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik.
 | **Jahrmarkt** | Die Gondeln des Riesenrads werfen wandernde Schatten. Karussells drehen dich im Kreis. | Stufe 6 in der Wüste |
 | **Stadt bei Nacht** | Dunkel und sicher, bis eine Laterne flackert und angeht. Autoscheinwerfer fegen über die Strasse, und Autos schubsen dich weg. | Stufe 6 auf dem Jahrmarkt |
 | **Bibliothek** | Lange Regale werfen lange Schatten, der grosse Leuchter schwingt hin und her. Bücher fallen aus den Regalen und versperren Wege. | Stufe 6 in der Stadt |
-| **Spiegelsaal** | Keine Sonne. Lichtwerfer an den Wänden schicken grelle Strahlen durch den Saal, die an schwenkenden Spiegeln abprallen und fast doppelt so stark brennen wie Sonnenlicht. Säulen halten die Strahlen auf. Es gibt vier breite Strahlen, alle drei Stufen kommt einer dazu, bis zu sieben. | Stufe 6 in der Bibliothek |
+| **Spiegelsaal** | Keine Sonne. Lichtwerfer an den Wänden schicken grelle Strahlen durch den Saal, die an schwenkenden Spiegeln abprallen und mehr als doppelt so stark brennen wie Sonnenlicht. Säulen halten die Strahlen auf. Es gibt sechs breite Strahlen, alle zwei Stufen kommt einer dazu, bis zu zehn, und im Dunkeln erholst du dich langsamer. | Stufe 6 in der Bibliothek |
 | **Mond** | Geringe Schwerkraft: Du gleitest, und der Dash trägt fast doppelt so weit. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht, das halb so stark brennt. | Stufe 6 im Spiegelsaal |
 
 Nach **Spielen** siehst du alle Karten auf einen Blick. Tipp eine an, dann wählst du Schwierigkeit und Modus. Jede gesperrte Karte kannst du statt mit der Bedingung auch mit Punkten aus dem Punktekonto freischalten (1.500 bis 15.000 Punkte).

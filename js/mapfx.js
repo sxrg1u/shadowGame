@@ -51,11 +51,13 @@ function mapPillarShape() {
   return null;
 }
 // Spiegelsaal: Spiegel [x, y, Länge, Grundwinkel, Schwenk] und Lichtwerfer an den Wänden
-const MIRRORS = [[360, 112, 74, 0.6, 0.35], [120, 332, 74, -0.7, 0.3], [384, 312, 64, 1.2, 0.4], [104, 150, 64, -1.0, 0.3], [248, 414, 74, 0.1, 0.5]];
+const MIRRORS = [[360, 112, 74, 0.6, 0.45], [120, 332, 74, -0.7, 0.4], [384, 312, 64, 1.2, 0.5], [104, 150, 64, -1.0, 0.4], [248, 414, 74, 0.1, 0.6],
+                 [240, 76, 70, 1.4, 0.55], [428, 210, 64, -0.3, 0.5], [52, 256, 64, 0.4, 0.5]];
 const EMITTERS = [{ x: 0, y: 112, a: 0.12, amp: 0.45, sp: 0.42 }, { x: W, y: 372, a: Math.PI + 0.1, amp: 0.45, sp: 0.37 },
                   { x: 150, y: 0, a: Math.PI / 2, amp: 0.5, sp: 0.33 }, { x: 340, y: H, a: -Math.PI / 2, amp: 0.5, sp: 0.46 },
                   { x: 0, y: 330, a: -0.2, amp: 0.5, sp: 0.39 }, { x: W, y: 150, a: Math.PI - 0.15, amp: 0.5, sp: 0.44 },
-                  { x: 330, y: 0, a: Math.PI / 2 + 0.3, amp: 0.45, sp: 0.35 }];
+                  { x: 330, y: 0, a: Math.PI / 2 + 0.3, amp: 0.45, sp: 0.35 }, { x: W, y: 262, a: Math.PI, amp: 0.55, sp: 0.51 },
+                  { x: 0, y: 214, a: 0, amp: 0.55, sp: 0.48 }, { x: 110, y: H, a: -Math.PI / 2 + 0.2, amp: 0.5, sp: 0.53 }];
 const CITY_LAMPS = [[60, 184], [180, 296], [300, 184], [420, 296], [120, 70], [360, 60], [110, 420], [370, 424]];
 
 function initMapFx() {
@@ -307,12 +309,12 @@ function updateMapFx(dt, sunDt, playing) {
 
   // Spiegelsaal: Spiegel schwenken, Strahlen prallen an ihnen ab
   if (m.beams) {
-    for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(S.t * 0.3 + M.ph);
-    const n = Math.min(EMITTERS.length, 4 + Math.floor(S.level / 3));
+    for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(S.t * 0.5 + M.ph);
+    const n = Math.min(EMITTERS.length, 6 + Math.floor(S.level / 2));
     F.beams = [];
     for (let i = 0; i < n; i++) {
       const E = EMITTERS[i];
-      E.cur = E.a + E.amp * Math.sin(S.t * E.sp + i * 1.3);
+      E.cur = E.a + E.amp * Math.sin(S.t * E.sp * 1.6 + i * 1.3);
       castBeam(E.x, E.y, E.cur, F.beams);
     }
   }
@@ -328,7 +330,7 @@ function updateMapFx(dt, sunDt, playing) {
 const tr_ = (de, en) => tr(de, en);
 
 // Ein Strahl läuft bis zur Wand oder Säule und prallt an Spiegeln ab (höchstens 6-mal)
-const BEAM_W = 13;
+const BEAM_W = 17;
 function castBeam(x, y, a, out) {
   let dx = Math.cos(a), dy = Math.sin(a), left = 1500, last = null;
   for (let k = 0; k < 7 && left > 1; k++) {
@@ -564,7 +566,7 @@ function drawMapTop() {
       ctx.fillStyle = '#6B5C8E'; ctx.beginPath(); ctx.arc(M.x, M.y, 4, 0, TAU); ctx.fill();
     }
     // Lichtwerfer an den Wänden; noch nicht aktive bleiben grau
-    const n = Math.min(EMITTERS.length, 4 + Math.floor(S.level / 3));
+    const n = Math.min(EMITTERS.length, 6 + Math.floor(S.level / 2));
     EMITTERS.forEach((E, i) => {
       ctx.save(); ctx.translate(Math.max(8, Math.min(W - 8, E.x)), Math.max(8, Math.min(H - 8, E.y))); ctx.rotate(E.cur ?? E.a);
       ctx.fillStyle = '#2B2F3A'; ctx.fillRect(-9, -8, 16, 16);
