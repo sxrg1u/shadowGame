@@ -1,7 +1,7 @@
 {
-  "name": "shady-tools",
+  "name": "stay-shady-tools",
   "private": true,
-  "description": "Hilfsskripte für Shady. Das Spiel selbst braucht nichts davon.",
+  "description": "Hilfsskripte für Stay Shady. Das Spiel selbst braucht nichts davon.",
   "type": "module",
   "scripts": {
     "screenshots": "node screenshots.mjs",

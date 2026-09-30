@@ -1,6 +1,6 @@
-# Eigene Musik für Shady
+# Eigene Musik für Stay Shady
 
-Shady erzeugt seine Musik normalerweise selbst im Browser. Wenn du echte Musikstücke verwenden willst, leg sie in diesen Ordner und trag sie in `tracks.json` ein. Das Spiel spielt sie dann in Schleife ab. Stücke, die nicht eingetragen sind, bleiben synthetisch.
+Stay Shady erzeugt seine Musik normalerweise selbst im Browser. Wenn du echte Musikstücke verwenden willst, leg sie in diesen Ordner und trag sie in `tracks.json` ein. Das Spiel spielt sie dann in Schleife ab. Stücke, die nicht eingetragen sind, bleiben synthetisch.
 
 ## So geht's
 
