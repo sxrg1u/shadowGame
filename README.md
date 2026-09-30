@@ -53,6 +53,11 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
   <em>Farbchaos auf Stufe 10 im Bosskampf gegen den Sonnenkern</em>
 </p>
 
+<p align="center">
+  <img src="screenshots/boss-wut-spiegel.png" alt="Die wütende Käferkönigin mit rotem Schein schießt rote Glutkugeln. Die Spielfigur pariert mit dem Spiegel, eine lila Kugel fliegt zum Boss zurück, daneben liegt der Schattenanker." width="420"><br>
+  <em>Wütende Käferkönigin: Spiegel pariert die gelben Kugeln, den roten Glutkugeln musst du ausweichen. Daneben der Schattenanker.</em>
+</p>
+
 Alle Bilder erzeugt [`tools/screenshots.mjs`](tools/screenshots.mjs) automatisch, siehe [Für Entwickler](#für-entwickler).
 
 ## Spielen
@@ -307,6 +312,7 @@ index.html?debug=1&lang=de&map=cellar&level=5&boss=eater&event=colorchaos&frames
 | `lang`, `flashes` | `de` oder `en`, `1` oder `0` |
 | `frames` | Nach so vielen Bildern bleibt das Bild stehen |
 | `screen` | `menu`, `modes`, `wardrobe`, `ach`, `help`, `settings` zeigt einen Menübildschirm statt einer Runde |
+| `rage`, `anchor`, `parry` | `1`: Boss startet wütend (halbe Leben), Anker liegt schon, Figur pariert automatisch jede Lichtkugel |
 
 ### Veröffentlichen
 

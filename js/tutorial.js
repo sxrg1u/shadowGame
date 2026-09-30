@@ -43,6 +43,19 @@ function nearestShade() {
   }
   return best;
 }
+// Oben steht das Hinweisfeld. Deshalb liegen Tropfen in der unteren Hälfte, und Käfer und Kugeln kommen von links oder unten.
+function tutLowSpot(minFromPlayer) {
+  for (let k = 0; k < 80; k++) {
+    const x = rand(30, W - 30), y = rand(H * 0.55, H - 30);
+    if (inPillar(x, y, 10) || inShadow(x, y)) continue;   // Tau liegt immer im Licht
+    if (Math.hypot(x - S.p.x, y - S.p.y) < minFromPlayer) continue;
+    return { x, y };
+  }
+  return { x: W / 2, y: H - 40 };
+}
+function tutEdge() {
+  return rng() < 0.5 ? { x: -12, y: rand(H * 0.4, H - 20) } : { x: rand(20, W - 20), y: H + 12 };
+}
 function tutUpdate(dt) {
   const T = S.tut;
   if (!T) return;
@@ -59,7 +72,7 @@ function tutUpdate(dt) {
       if (T.shade > 1.2) tutNext();
       break;
     case 2:
-      if (!T.dew) { const s = freeSpot(110, true) || { x: 60, y: 60 }; T.dew = { x: s.x, y: s.y, life: 1e9 }; S.dews.push(T.dew); }
+      if (!T.dew) { const s = tutLowSpot(110); T.dew = { x: s.x, y: s.y, life: 1e9 }; S.dews.push(T.dew); }
       T.target = T.dew;
       if (T.dew.life <= 0) { T.dew = null; tutNext(); }
       break;
@@ -69,7 +82,7 @@ function tutUpdate(dt) {
     case 4:
       if (!T.bug || T.bug.life <= 0) {
         if ((P.stats.bugsDashed || 0) > T.b0) { T.bug = null; tutNext(); break; }
-        const e = edgePoint(); T.bug = { x: e.x, y: e.y, life: 1e9, ph: 1, tame: true }; S.bugs.push(T.bug);
+        const e = tutEdge(); T.bug = { x: e.x, y: e.y, life: 1e9, ph: 1, tame: true }; S.bugs.push(T.bug);
       }
       T.target = T.bug;
       break;
@@ -80,7 +93,7 @@ function tutUpdate(dt) {
       // Eine langsame Lichtkugel nach der anderen, jeweils von einer Seite auf die Figur gezielt
       T.shotIn = (T.shotIn ?? 0.8) - dt;
       if (T.shotIn <= 0 && !S.shots.some(q => !q.ref)) {
-        const e = edgePoint(), dx = S.p.x - e.x, dy = S.p.y - e.y, d = Math.hypot(dx, dy) || 1;
+        const e = tutEdge(), dx = S.p.x - e.x, dy = S.p.y - e.y, d = Math.hypot(dx, dy) || 1;
         S.shots.push({ x: e.x, y: e.y, vx: dx / d * 120, vy: dy / d * 120, life: 8 });
         T.shotIn = 1;
       }
