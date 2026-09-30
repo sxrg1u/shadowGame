@@ -3,7 +3,8 @@
 
 // ---------- Debug-Start (nur für automatische Screenshots) ----------
 // ?debug=1 startet direkt eine Runde mit festem Zufall und fester Bildrate, z. B.
-// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120&map=cellar (screen=menu zeigt das Hauptmenü, screen=wardrobe|modes|ach|help|settings den jeweiligen Bildschirm).
+// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120&map=cellar
+// &rage=1 (Boss startet mit halben Leben, also wütend) &anchor=1 (Anker liegt schon) &parry=1 (pariert automatisch jede Lichtkugel) (screen=menu zeigt das Hauptmenü, screen=wardrobe|modes|ach|help|settings den jeweiligen Bildschirm).
 // Nach „frames“ Bildern bleibt das Bild stehen. Ohne ?debug=1 ändert sich nichts. Im Debug-Modus wird nie gespeichert.
 const DEBUG = (() => {
   const q = new URLSearchParams(location.search);
@@ -11,14 +12,18 @@ const DEBUG = (() => {
   const num = (k, d) => { const v = parseInt(q.get(k), 10); return Number.isFinite(v) ? v : d; };
   const d = { seed: num('seed', 1) >>> 0, level: Math.max(1, num('level', 1)), frames: num('frames', 1e9), event: q.get('event'), boss: q.get('boss'),
               mode: q.get('mode') || 'endless', diff: q.get('diff') || 'normal', lang: q.get('lang'), flashes: q.get('flashes'), screen: q.get('screen') || 'play', map: q.get('map'),
+              rage: q.get('rage') === '1', anchor: q.get('anchor') === '1', parry: q.get('parry') === '1',
               frame: 0, left: 0, done: false };
   Math.random = mulberry32(d.seed ^ 0x9E3779B9);   // auch Effekte würfeln reproduzierbar
   return d;
 })();
 
+// ?slow=0.25 laesst das Spiel mit einem Viertel der Geschwindigkeit laufen, um Bewegung Bild fuer Bild zu pruefen (tools/motion-check.mjs).
+const SLOW = (() => { const v = parseFloat(new URLSearchParams(location.search).get('slow')); return v > 0 && v < 1 ? v : 1; })();
+
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
-const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
+const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, haptics: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
 function freshProfile() {
   return {
     v: 2, wallet: 0, settings: { ...DEF_SETTINGS },

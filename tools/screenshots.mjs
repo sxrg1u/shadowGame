@@ -10,7 +10,8 @@
 // deshalb sehen die Bilder bei jedem Lauf gleich aus. Er speichert nichts im localStorage.
 //
 // Browser: Playwright-Chromium, falls installiert (npx playwright install chromium),
-// sonst das installierte Microsoft Edge oder Google Chrome. SHADY_BROWSER=msedge|chrome|chromium erzwingt einen.
+// sonst das installierte Microsoft Edge oder Google Chrome. SHADY_BROWSER=msedge|chrome|chromium erzwingt einen,
+// SHADY_EXE=/pfad/zu/chrome nimmt ein bestimmtes Chromium.
 
 import http from 'node:http';
 import fs from 'node:fs';
@@ -35,6 +36,7 @@ const SHOTS = [
   { file: 'boss-schattenfresser.png', query: 'level=6&seed=31&boss=eater&frames=360' },
   { file: 'boss-nachtmahr.png', query: 'map=garden&level=6&seed=32&boss=dusk&frames=250' },
   { file: 'boss-sonnenkern.png', query: 'level=10&seed=33&mode=campaign&boss=core&frames=300' },
+  { file: 'boss-wut-spiegel.png', query: 'level=5&seed=43&boss=queen&rage=1&anchor=1&parry=1&frames=310' },
   { file: 'modi.png', query: 'screen=modes&frames=40', full: true },
   { file: 'garderobe.png', query: 'screen=wardrobe&frames=40', full: true },
   { file: 'erfolge.png', query: 'screen=ach&frames=40', full: true },
@@ -61,7 +63,7 @@ async function launch() {
   const want = process.env.SHADY_BROWSER;
   const tries = want ? [want] : ['chromium', 'msedge', 'chrome'];
   for (const ch of tries) {
-    try { return await chromium.launch(ch === 'chromium' ? {} : { channel: ch }); }
+    try { return await chromium.launch(ch === 'chromium' ? (process.env.SHADY_EXE ? { executablePath: process.env.SHADY_EXE } : {}) : { channel: ch }); }
     catch (e) { if (want) throw e; }
   }
   throw new Error('Kein Browser gefunden. Entweder „npx playwright install chromium“ ausführen oder Edge/Chrome installieren.');

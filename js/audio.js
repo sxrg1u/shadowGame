@@ -2,6 +2,13 @@
 // ---------- Sound und Musik ----------
 // Alles wird mit der Web Audio API erzeugt. Liegen echte Musikdateien in assets/music/ und stehen in tracks.json,
 // spielt das Spiel diese stattdessen ab (nur wenn die Seite über http(s) läuft, z. B. auf GitHub Pages).
+// Haptik: nur fuer die Momente, die zaehlen (Treffer, Parade, Ankersprung, Bosstreffer). Ton, Bild und Vibration laufen im selben Frame.
+const Haptics = (() => {
+  const PAT = { hurt: 32, block: 14, parry: [10, 24, 16], portal: 16, bossHit: 22, bossDown: [30, 50, 70], over: [60, 50, 90], revive: [20, 40, 20] };
+  const can = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  return { can, play(name) { if (can && PAT[name] && P.settings.haptics) navigator.vibrate(PAT[name]); } };
+})();
+
 const Sound = (() => {
   let ac = null, musG, sfxG, fileG, leadBus, nbuf, cur = null, want = null, step = 0, nextT = 0, level = 0;
   let fileNow = null, fileSrc = null;
@@ -138,6 +145,7 @@ const Sound = (() => {
   };
   const GAP = { laser: 0.12, hurt: 0.1, sizzle: 0.35, dew: 0.03, boom: 0.06, click: 0.03, bossHit: 0.05, block: 0.08, parry: 0.05, deny: 0.15, chirp: 0.3, pickup: 0.05, pop: 0.03, whoosh: 0.1 };
   function sfx(name, arg) {
+    Haptics.play(name);
     if (!ac || ac.state !== 'running' || P.settings.muted || !P.settings.sfx) return;
     const now = ac.currentTime;
     if (GAP[name] && lastPlay[name] && now - lastPlay[name] < GAP[name]) return;

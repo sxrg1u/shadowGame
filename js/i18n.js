@@ -235,6 +235,7 @@ const STATIC_EN = {
   'Musik': 'Music', 'Lautstärke der Hintergrundmusik': 'Background music volume', 'Effekte': 'Effects', 'Lautstärke der Geräusche': 'Sound effects volume',
   'Ton an': 'Sound on', 'Taste': 'Key', 'schaltet jederzeit um': 'toggles it at any time',
   'Bildschirmwackeln': 'Screen shake', 'Bei Treffern, Beben und Explosionen': 'On hits, quakes and explosions',
+  'Vibration': 'Vibration', 'Kurzes Feedback bei Treffern, Paraden und Ankersprung': 'Short feedback on hits, parries and anchor jumps',
   'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht, Donner und Farbchaos werden abgedämpft': 'Off: flashbang, thunder and color chaos are toned down',
   'Sprache': 'Language', 'Sprache des Spiels': 'Game language',
   'Design': 'Theme', 'Hell, dunkel oder wie dein System': 'Light, dark or like your system', 'System': 'System', 'Hell': 'Light', 'Dunkel': 'Dark',
