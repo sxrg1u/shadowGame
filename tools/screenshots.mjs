@@ -31,7 +31,7 @@ const SHOTS = [
   { file: 'spiel-normal.png', query: 'level=3&seed=11&frames=330' },
   { file: 'karte-garten.png', query: 'map=garden&level=4&seed=21&frames=300' },
   { file: 'karte-dach.png', query: 'map=roof&level=5&seed=22&frames=300' },
-  { file: 'karte-keller.png', query: 'map=cellar&level=5&seed=23&frames=300' },
+  { file: 'karte-keller.png', query: 'map=cellar&level=5&seed=23&frames=600' },
   { file: 'boss-schattenfresser.png', query: 'level=6&seed=31&boss=eater&frames=360' },
   { file: 'boss-nachtmahr.png', query: 'map=garden&level=6&seed=32&boss=dusk&frames=250' },
   { file: 'boss-sonnenkern.png', query: 'level=10&seed=33&mode=campaign&boss=core&frames=300' },

@@ -37,7 +37,7 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 | *Das Hauptmenü* | *Modus und Karte wählen* |
 | ![Normales Spiel auf Stufe 3: gelber Innenhof, dunkelblaue Schatten der Säulen, in der Mitte die kleine schwarze Spielfigur](screenshots/spiel-normal.png) | ![Garten: grüne Wiese mit Blumen, runde Bäume und Hecken werfen dunkelgrüne Schatten](screenshots/karte-garten.png) |
 | *Innenhof: die erste Karte* | *Garten: runde Bäume, weiche Schatten* |
-| ![Dach: orange Ziegel, Schornsteine mit Rauch, lange lila Schatten, oben rechts ein Pfeil für die Windrichtung](screenshots/karte-dach.png) | ![Keller: dunkler Raum, vier wandernde Fackeln werfen orange Lichtkreise, Säulen werfen Schatten von den Fackeln weg](screenshots/karte-keller.png) |
+| ![Dach: orange Ziegel, Schornsteine mit Rauch, lange lila Schatten, oben rechts ein Pfeil für die Windrichtung](screenshots/karte-dach.png) | ![Keller: dunkler Raum, wandernde Fackeln werfen orange Lichtkreise, Säulen werfen Schatten von den Fackeln weg](screenshots/karte-keller.png) |
 | *Dach: der Wind schiebt dich über die Ziegel* | *Keller: keine Sonne, nur Fackeln* |
 | ![Bosskampf gegen den Schattenfresser: ein lila Wesen mit Zähnen, um ihn herum ein Kreis, in dem kein Schatten mehr liegt](screenshots/boss-schattenfresser.png) | ![Bosskampf gegen den Nachtmahr: der Garten ist fast schwarz, nur um die Spielfigur und um wandernde Lichtflecken ist etwas zu sehen](screenshots/boss-nachtmahr.png) |
 | *Schattenfresser: frisst die Schatten um sich herum* | *Nachtmahr: macht alles dunkel* |
@@ -117,7 +117,7 @@ Jede Karte ändert die Regeln ein wenig und hat eigene Farben und eigene Musik.
 | **Innenhof** | Die Sonne wandert im Kreis, eckige Säulen werfen lange Schatten. | Von Anfang an |
 | **Garten** | Runde Bäume werfen weiche Schatten. Es gibt mehr Tau, aber die Käfer sind flinker. | Erreiche Stufe 4 |
 | **Dach** | Der Wind schiebt dich ständig über die Ziegel. Viele Schornsteine, viele Wolken. | Besiege 5 Bosse |
-| **Keller** | Keine Sonne, nur wandernde Fackeln. Ihr Licht brennt, und die Säulen werfen Schatten von den Fackeln weg. | Besiege 12 Bosse |
+| **Keller** | Keine Sonne, nur Fackeln, die quer durch den Raum wandern, auch durch die Mitte. Ihr Licht brennt, und die Säulen werfen Schatten von den Fackeln weg. | Besiege 12 Bosse |
 
 Die tägliche und die wöchentliche Herausforderung dürfen jede Karte benutzen, auch wenn du sie noch nicht freigeschaltet hast.
 

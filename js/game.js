@@ -56,8 +56,10 @@ const up = k => S.up[k] || 0;
 // Wie stark jede Stufe das Spiel härter macht (1 = die ursprüngliche Steigerung). Gilt für Sonne, Hitze, Gegner, Bosse und
 // das Tempo des Chaos-Rads, nicht für Punkte, Bossreihenfolge, freigeschaltete Ereignisse oder Farbchaos.
 const RAMP = 0.7;
-const dl = () => S.level * RAMP;              // Schwierigkeit der aktuellen Stufe
-const lv = () => Math.min(S.level, 14) * RAMP;
+const CAMPAIGN_RAMP = 0.85;   // die Kampagne zieht etwas schneller an als Endlos
+const ramp = () => S.cfg.mode === 'campaign' ? CAMPAIGN_RAMP : RAMP;
+const dl = () => S.level * ramp();              // Schwierigkeit der aktuellen Stufe
+const lv = () => Math.min(S.level, 14) * ramp();
 const isDuel = () => !!(S && S.cfg.duel);
 const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1);
 const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);

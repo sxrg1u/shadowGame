@@ -90,31 +90,31 @@ function initMap() {
   const m = S.map;
   S.roofA = rand(0, TAU); S.gust = 0;
   S.torches = [];
-  if (m.dark) for (let i = 0; i < 2; i++) S.torches.push(newTorch(i));
+  if (m.dark) for (let i = 0; i < 3; i++) S.torches.push(newTorch(i));
   // Dekor: Blumen im Garten, Risse im Keller (nur optisch)
   S.deco = [];
   const n = m.id === 'garden' ? 26 : m.id === 'cellar' ? 14 : 0;
   for (let i = 0; i < n; i++) S.deco.push({ x: fx(8, W - 8), y: fx(8, H - 8), k: Math.floor(fx(0, 3)), s: fx(0.7, 1.2) });
 }
+// Fackeln wandern auf verschlungenen Bahnen quer durch den Keller, auch durch die Mitte. Es gibt keinen Platz, der immer dunkel bleibt.
 function newTorch(i) {
-  const per = 4 * (W - 28);
-  const T = { s: (i * per / 2.7 + fx(0, 60)) % per, dir: i % 2 ? 1 : -1, r: 150, ph: fx(0, 6), x: 0, y: 0 };
-  torchPos(T);
+  const T = { s: 0, dir: i % 2 ? 1 : -1, r: 150, ph: fx(0, 6), x: 0, y: 0,
+              wx: 1 + (i % 3) * 0.35, wy: 1.3 + ((i + 1) % 3) * 0.3, px: i * 2.1, py: i * 1.3 + 0.7 };
+  // nicht direkt neben der Figur anfangen
+  for (let k = 0; k < 40; k++) { T.s = fx(0, 40); torchPos(T); if (!S.p || Math.hypot(T.x - S.p.x, T.y - S.p.y) > 210) break; }
   return T;
 }
 function torchPos(T) {
-  const L = W - 28, per = 4 * L, k = ((T.s % per) + per) % per, m = 14;
-  if (k < L) { T.x = m + k; T.y = m; }
-  else if (k < 2 * L) { T.x = W - m; T.y = m + k - L; }
-  else if (k < 3 * L) { T.x = W - m - (k - 2 * L); T.y = H - m; }
-  else { T.x = m; T.y = H - m - (k - 3 * L); }
+  const a = W / 2 - 22;
+  T.x = W / 2 + a * Math.sin(T.wx * T.s + T.px);
+  T.y = H / 2 + a * Math.sin(T.wy * T.s + T.py);
 }
 function updateMap(dt, sunDt, playing) {
   const m = S.map;
   if (m.dark) {
-    const want = Math.min(4, 2 + (S.level >= 3 ? 1 : 0) + (S.level >= 7 ? 1 : 0));
+    const want = 3 + (S.level >= 3 ? 1 : 0) + (S.level >= 6 ? 1 : 0);
     while (S.torches.length < want) S.torches.push(newTorch(S.torches.length));
-    for (const T of S.torches) { T.s += T.dir * (20 + lv() * 3) * sunDt; torchPos(T); }
+    for (const T of S.torches) { T.s += T.dir * (0.13 + lv() * 0.018) * sunDt; torchPos(T); }
   }
   if (m.wind) {
     S.roofA += dt * 0.12;
