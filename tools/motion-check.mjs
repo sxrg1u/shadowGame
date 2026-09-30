@@ -107,7 +107,7 @@ async function main() {
     sheet.push({ name, frames });
     await ctx.close();
   }
-  const html = `<!doctype html><meta charset="utf-8"><title>Shady Bewegung (Faktor ${RATE}${REDUCED ? ', weniger Bewegung' : ''})</title>
+  const html = `<!doctype html><meta charset="utf-8"><title>Stay Shady Bewegung (Faktor ${RATE}${REDUCED ? ', weniger Bewegung' : ''})</title>
 <style>body{font:14px system-ui;margin:16px;background:#111;color:#eee}h2{margin:24px 0 8px}div.r{display:flex;flex-wrap:wrap;gap:8px}figure{margin:0;width:240px}img{width:100%;border:1px solid #444}figcaption{font-size:12px;color:#aaa}</style>
 ${sheet.map(s => `<h2>${s.name}</h2><div class="r">${s.frames.map(f => `<figure><img src="${f.file}" loading="lazy"><figcaption>${f.label}</figcaption></figure>`).join('')}</div>`).join('')}`;
   fs.writeFileSync(path.join(OUT, 'index.html'), html);

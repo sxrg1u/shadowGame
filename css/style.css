@@ -1,4 +1,4 @@
-/* Shady – Stile */
+/* Stay Shady – Stile */
 :root{
   --bg:#ECEEF3; --panel:#F8F9FB; --panel2:#FFFFFF; --ink:#1A1F2B; --muted:#5B6376; --line:#D2D7E1;
   --sun:#B07A05; --shade:#3F4C6B; --danger:#C3402C; --ok:#2F7D5B; --gold:#F4CF63;
@@ -314,6 +314,9 @@ input.text{font:700 var(--fs-body) var(--body);padding:10px 12px;border-radius:8
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .logo-mark .lm-body{stroke:#8E9CC2;stroke-width:1.4}}
 .logo-word{font:800 clamp(2.7rem,8.5vw,4.2rem)/1 var(--display);letter-spacing:-.03em;color:var(--ink);
   text-shadow:1px 1px 0 color-mix(in srgb,var(--ls) 55%,transparent),2px 2px 0 color-mix(in srgb,var(--ls) 50%,transparent),3px 3px 0 color-mix(in srgb,var(--ls) 44%,transparent),4px 4px 0 color-mix(in srgb,var(--ls) 38%,transparent),5px 5px 0 color-mix(in srgb,var(--ls) 32%,transparent),6px 6px 0 color-mix(in srgb,var(--ls) 26%,transparent),7px 7px 0 color-mix(in srgb,var(--ls) 20%,transparent),8px 8px 0 color-mix(in srgb,var(--ls) 14%,transparent),9px 9px 0 color-mix(in srgb,var(--ls) 8%,transparent)}
+
+/* "Stay" klein über "Shady", damit der Name auch auf schmalen Schirmen in eine Zeile passt */
+.logo-pre{display:block;font-size:.42em;letter-spacing:.02em;margin:0 0 .12em .06em;color:var(--shade);text-shadow:none}
 
 /* Tutorial */
 .tut-skip{position:absolute;top:8px;right:8px;z-index:2;min-height:36px;padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(20,24,33,.78);color:#F2F4F8;font:700 var(--fs-small) var(--body);cursor:pointer}

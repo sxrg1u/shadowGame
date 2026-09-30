@@ -923,7 +923,7 @@ function setLang(l) {
   LANG = l === 'de' ? 'de' : 'en';
   P.settings.lang = LANG;
   document.documentElement.lang = LANG;
-  document.title = 'Shady';
+  document.title = 'Stay Shady';
   const md = document.querySelector('meta[name="description"]');
   if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. 6 Bosse, 4 Karten, tägliche und wöchentliche Herausforderungen, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. 6 bosses, 4 maps, daily and weekly challenges, upgrades, wardrobe and online duel.');
   applyDataLang(); translateStatic();

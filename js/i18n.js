@@ -203,7 +203,7 @@ function applyDataLang() {
 const STATIC_EN = {
   // Anzeige
   'Punkte': 'Score', 'Rekord': 'Best', 'Stufe': 'Level', 'Leben': 'Lives', 'Kraft': 'Energy', 'Gegner': 'Opponent', 'lebt': 'alive',
-  'Pause': 'Pause', 'Spielfeld von Shady': 'Shady playfield',
+  'Pause': 'Pause', 'Spielfeld von Stay Shady': 'Stay Shady playfield',
   // Hauptmenü
   'Ein Spiel über Licht und Schatten': 'A game of light and shadow',
   'Du bist ein kleines Schattenwesen. Die Sonne wandert, das Chaos-Rad dreht sich, und nach jeder Stufe wartet ein Boss.': 'You are a little shadow creature. The sun keeps moving, the chaos wheel keeps spinning, and after every level a boss is waiting.',
