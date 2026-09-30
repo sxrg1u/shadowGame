@@ -51,7 +51,7 @@ function tutLowSpot(minFromPlayer) {
     if (Math.hypot(x - S.p.x, y - S.p.y) < minFromPlayer) continue;
     return { x, y };
   }
-  return { x: W / 2, y: H - 40 };
+  return freeSpot(minFromPlayer, true) || { x: W / 2, y: H - 40 };
 }
 function tutEdge() {
   return rng() < 0.5 ? { x: -12, y: rand(H * 0.4, H - 20) } : { x: rand(20, W - 20), y: H + 12 };
