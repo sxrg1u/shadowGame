@@ -63,8 +63,15 @@ const ramp = () => ['campaign', 'daily', 'weekly'].includes(S.cfg.mode) ? CAMPAI
 const dl = () => S.level * ramp();              // Schwierigkeit der aktuellen Stufe
 const lv = () => Math.min(S.level, 14) * ramp();
 const isDuel = () => !!(S && S.cfg.duel);
-const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1);
-const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);
+// Extra-Modus der laufenden Runde (siehe js/modes.js), sonst null. xf('noWheel') fragt einen Schalter des Modus ab.
+const XM = () => (S && typeof EXTRA !== 'undefined' && Object.prototype.hasOwnProperty.call(EXTRA, S.cfg.mode) && EXTRA[S.cfg.mode]) || null;
+const xf = k => { const X = XM(); return !!(X && X[k]); };
+const omega = () => { const X = XM(); return X && X.omega ? X.omega() : (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1); };
+const shadowLen = () => {
+  const X = XM();
+  if (X && X.shadowLen) return X.shadowLen();
+  return (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1) * (X && X.shadowF ? X.shadowF() : 1);
+};
 const dirOf = az => ({ x: Math.cos(az), y: Math.sin(az) });
 // Zweite Sonne dicht neben der ersten: Die Schatten überlappen, hinter jeder Säule bleibt ein Kernschatten zum Verstecken
 const az2 = () => S.az + 0.75;
@@ -72,7 +79,7 @@ const sun2On = () => on('sun2') || ruleOn('twosun');
 const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : PR;
 const inverted = () => on('invert') || ruleOn('mirror');
 const maxEnergy = () => ruleOn('glass') ? 60 : 100;
-const maxHearts = () => ruleOn('glass') ? 0 : 2 + up('heart');
+const maxHearts = () => ruleOn('glass') || xf('noHearts') ? 0 : 2 + up('heart');
 const lingerF = () => 1 + 0.5 * up('linger');
 const comboMax = () => up('combo') ? 8 : 5;
 const mult = () => (on('star') ? 2 : 1) * S.diff.pts * (1 + 0.25 * up('greed')) * (ruleOn('glass') ? 2 : 1) * (1 + 0.1 * Math.floor(S.level / 5));
@@ -136,7 +143,7 @@ function freeSpot(minFromPlayer, needLight) {
     const x = rand(22, W - 22), y = rand(22, H - 22);
     if (inPillar(x, y, 10) || offLimits(x, y)) continue;
     if (Math.hypot(x - S.p.x, y - S.p.y) < minFromPlayer) continue;
-    if (needLight && inShadow(x, y)) continue;
+    if (needLight && inShadow(x, y) !== xf('invert')) continue;   // Im Modus „Umgekehrt“ liegt Tau im Schatten
     return { x, y };
   }
   return null;
@@ -160,6 +167,8 @@ function segDist(px, py, x1, y1, x2, y2) {
 
 // ---------- Dash ----------
 function dash(tx, ty) {
+  if (S.cfg.remote) { if (S.mode === 'play') RNet.send({ t: 'act' }); return; }
+  const X = XM(); if (X && X.dash && S.mode === 'play') { X.dash(tx, ty); return; }
   if (S.mode !== 'play' || S.dash || S.charges <= 0) return;
   let dx = S.face.x, dy = S.face.y;
   if (tx !== undefined) {
@@ -224,12 +233,13 @@ const BOSSES = [{ type: 'prisma', name: 'Prisma' }, { type: 'queen', name: 'Käf
                 { type: 'eater', name: 'Schattenfresser' }, { type: 'dusk', name: 'Nachtmahr' }];
 const CORE = { type: 'core', name: 'Sonnenkern' };
 function bossFor(level) {
+  const X = XM(); if (X && X.bossFor) return X.bossFor(level);
   if (S.cfg.mode === 'campaign') return level >= 9 ? CORE : BOSSES[(level - 1) % BOSSES.length];
   return (level + 1) % 10 === 0 ? CORE : BOSSES[(level - 1) % BOSSES.length];
 }
 function spawnBoss(b) {
   b = b || bossFor(S.level);
-  const core = b.type === 'core', final = core && S.cfg.mode === 'campaign';
+  const core = b.type === 'core', final = core && (S.cfg.mode === 'campaign' || xf('coreFinal'));
   let hp = core ? 12 + Math.floor(dl() * 0.4) : 3 + Math.floor(dl() * 0.7);
   if (ruleOn('rush')) hp = Math.max(2, hp - 1);
   const time = final ? Infinity : core ? 35 : 20;
@@ -243,7 +253,7 @@ function spawnBoss(b) {
   Sound.sfx('boss'); Sound.music(core ? 'final' : 'boss');
 }
 function defeatBoss(B) {
-  const final = B.type === 'core' && S.cfg.mode === 'campaign';
+  const final = B.type === 'core' && (S.cfg.mode === 'campaign' || xf('coreFinal'));
   const p = pts((400 + S.level * 150) * (B.type === 'core' ? 3 : 1));
   S.score += p; S.bossKills++;
   if (S.cfg.mode !== 'tutorial') {
@@ -253,7 +263,7 @@ function defeatBoss(B) {
   }
   sparks(B.x, B.y, COL.gold, 30); sparks(B.x, B.y, COL.white, 20); S.shake = 0.9;
   S.shots = [];
-  if (!final) {
+  if (!final && !xf('noItems')) {
     const cx = Math.max(24, Math.min(W - 24, B.x));
     S.items.push({ x: Math.max(20, cx - 20), y: B.y, kind: S.hearts < maxHearts() ? 'heart' : 'crystal', life: 10 },
                  { x: Math.min(W - 20, cx + 20), y: B.y, kind: pick(['bubble', 'star', 'dashy', 'umbrella', 'frost']), life: 10 });
@@ -264,8 +274,10 @@ function defeatBoss(B) {
   Sound.sfx('bossDown');
   if (isDuel()) Net.attack('boss');
   if (final) { S.winT = 2.2; S.grace = 99; Sound.music(null); }
+  else if (xf('noUpgrades')) { const b = pts(300); S.score += b; flash(tr('Ohne Upgrades: +', 'No upgrades: +') + fmt(b), COL.gold); Sound.music(gameTrack()); }
   else { S.pickT = 1.4; Sound.music(gameTrack()); }
   S.spots = [];
+  const X = XM(); if (X && X.bossDown) X.bossDown(B);
 }
 function prismaAct(B, dt, ef, n, every, spin) {
   const gx = W / 2 + Math.cos(B.t * 0.5) * 130, gy = H / 2 + Math.sin(B.t * 0.7) * 120;
@@ -480,10 +492,10 @@ const EVENTS = [
   { name: 'Glassäulen', min: 1, run() { for (const r of S.pillars) if (rng() < 0.5) r.glass = 5; } },
   // Rein optisch, siehe CC in draw.js. Kommt mit steigender Stufe etwas häufiger und hält etwas länger.
   { name: 'Farbchaos', id: 'colorchaos', min: 0, weight: () => CC.weight(), run() { S.E.colorchaos = Math.max(S.E.colorchaos || 0, CC.duration()); } },
-  { name: 'Beuteregen', good: true, min: 0, run() {
+  { name: 'Beuteregen', good: true, min: 0, skip: () => xf('noItems'), run() {
       for (let i = 0; i < 3; i++) { const s = freeSpot(50, false); if (s) S.items.push({ x: s.x, y: s.y, kind: pick(['umbrella', 'crystal', 'bubble', 'star', 'magnet', 'boots', 'spikes', 'decoy', 'frost']), life: 9 }); }
     } },
-  { name: 'Mondfinsternis', good: true, min: 0, run() { S.E.eclipse = 4; } },
+  { name: 'Mondfinsternis', good: true, min: 0, skip: () => xf('invert'), run() { S.E.eclipse = 4; } },
   { name: 'Tauregen', good: true, min: 0, run() { for (let i = 0; i < 8; i++) { const s = freeSpot(40, true); if (s) S.dews.push({ x: s.x, y: s.y, life: 7 }); } } },
 ];
 function spinWheel() {
@@ -659,13 +671,16 @@ function update(dt) {
     return;
   }
   if (S.mode !== 'play') return;
-  const calm = S.cfg.mode === 'tutorial';
+  const calm = S.cfg.mode === 'tutorial', X = XM();
+  const off = k => calm || !!(X && X[k]);   // Teil des Spiels, den Tutorial oder Extra-Modus abschalten
 
-  // Bewegung
+  // Bewegung (in Zwei-Spieler-Modi bestimmt der Modus, welche Tasten die Figur steuern)
+  const mk = X && X.moveKeys ? X.moveKeys() : keys;
   let mx = 0, my = 0;
-  if (keys.has('left')) mx -= 1; if (keys.has('right')) mx += 1;
-  if (keys.has('up')) my -= 1; if (keys.has('down')) my += 1;
-  if (!mx && !my && S.target) {
+  if (mk.has('left')) mx -= 1; if (mk.has('right')) mx += 1;
+  if (mk.has('up')) my -= 1; if (mk.has('down')) my += 1;
+  if (X && X.noMove) mx = my = 0;
+  else if (!mx && !my && S.target) {
     const dx = S.target.x - S.p.x, dy = S.target.y - S.p.y, dd = Math.hypot(dx, dy);
     if (dd > 3) { mx = dx / dd; my = dy / dd; }
   }
@@ -711,7 +726,8 @@ function update(dt) {
     if (Math.random() < dt * 40) S.parts.push({ x: fx(0, W), y: fx(0, H), vx: S.wind.x * 4, vy: S.wind.y * 4, life: 0.35, streak: true });
   }
   resolve();
-  if (calm) tutUpdate(dt);
+  if (S.cfg.mode === 'tutorial') tutUpdate(dt);
+  if (X && X.update) { X.update(dt); if (S.mode !== 'play') return; }
 
   if (S.grace > 0) S.grace -= dt;
   if (S.hurt > 0) S.hurt -= dt;
@@ -723,12 +739,12 @@ function update(dt) {
   }
 
   // Chaos-Rad und Angriffe aus dem Duell
-  if (!calm) S.eventIn -= dt;
+  if (!off('noWheel')) S.eventIn -= dt;
   if (S.eventIn <= 0) { spinWheel(); S.eventIn = ruleOn('chaos') ? 3 : Math.max(3.5, 8 - dl() * 0.5); }
   if (S.incoming.length && !S.banner) receiveAttack(S.incoming.shift());
 
   // Wolken
-  if (!calm && !S.map.dark && !S.map.noClouds) S.cloudIn -= dt;
+  if (!off('noClouds') && !S.map.dark && !S.map.noClouds) S.cloudIn -= dt;
   if (S.cloudIn <= 0) {
     const dir = rng() < 0.5 ? 1 : -1, rx = rand(50, 72);
     S.clouds.push({ x: dir > 0 ? -rx - 10 : W + rx + 10, y: rand(60, H - 60), vx: dir * rand(22, 36), rx, ry: rx * 0.65 });
@@ -753,7 +769,7 @@ function update(dt) {
   }
 
   // Heiße Fliesen
-  if (!calm) S.hotIn -= dt;
+  if (!off('noHot')) S.hotIn -= dt;
   if (S.hotIn <= 0) {
     if (S.hot.length < Math.min(12, 2 + Math.floor(dl()))) {
       for (let k = 0; k < 20; k++) {
@@ -769,7 +785,7 @@ function update(dt) {
   S.hot = S.hot.filter(h => h.life > 0);
 
   // Brennglas
-  if (!calm && (S.level >= 1 || ruleOn('night'))) {
+  if (!off('noLens') && (S.level >= 1 || ruleOn('night'))) {
     if (!S.lens) {
       S.lensIn -= dt;
       if (S.lensIn <= 0) {
@@ -914,7 +930,7 @@ function update(dt) {
   }
 
   // Lichtkäfer
-  if (!calm) S.bugIn -= dt;
+  if (!off('noBugs')) S.bugIn -= dt;
   if (S.bugIn <= 0) {
     if (S.bugs.length < Math.min(10, 2 + Math.floor(dl())) * (ruleOn('bugs') ? 2 : 1)) { const e = edgePoint(); S.bugs.push({ x: e.x, y: e.y, life: 12, ph: rand(0, 6) }); }
     S.bugIn = Math.max(2.2, 5.5 - dl() * 0.5) / (ruleOn('bugs') ? 3 : 1);
@@ -942,14 +958,14 @@ function update(dt) {
   S.bugs = S.bugs.filter(b => b.life > 0);
 
   // Tautropfen
-  if (!calm) S.dewIn -= dt;
-  if (S.dewIn <= 0 && S.dews.length < (S.map.dewCap || 3)) {
+  if (!off('noDew')) S.dewIn -= dt * (X && X.dewF || 1);
+  if (S.dewIn <= 0 && S.dews.length < (X && X.dewCap || S.map.dewCap || 3)) {
     const s = freeSpot(60, true);
     if (s) S.dews.push({ x: s.x, y: s.y, life: 6 });
     S.dewIn = rand(2, 3.5) * (S.map.dewF || 1);
   }
   // Hilfsmittel und Fallen
-  if (!calm) S.itemIn -= dt;
+  if (!off('noItems')) S.itemIn -= dt;
   if (S.itemIn <= 0 && S.items.length < 4) {
     const kind = rollItem();
     if (kind === 'portal') {
@@ -1011,24 +1027,25 @@ function update(dt) {
   S.magpies = S.magpies.filter(g => g.life > 0 && g.x > -60 && g.x < W + 60);
 
   // Licht, Hitze, Kraft
-  const shielded = on('shield');
-  const light = shielded ? 0 : lightAt(S.p.x, S.p.y);
+  const shielded = on('shield'), inv = !!(X && X.invert);
+  // Umgekehrt: Du bist ein Lichtwesen, der Schatten brennt und das Licht lädt dich auf. Lichtgefahren tun dir nichts.
+  const light = shielded ? 0 : inv ? 1 - lightAt(S.p.x, S.p.y) : lightAt(S.p.x, S.p.y);
   S.lit = light > 0;
   let burn = 0;
   if (S.lit) burn += (32 + lv() * 4) * light * Math.pow(0.85, up('cream')) * (ruleOn('dashfever') ? 1.3 : 1);
   const gx = Math.floor(S.p.x / CELL), gy = Math.floor(S.p.y / CELL);
   if (S.hot.some(h => h.warn <= 0 && h.gx === gx && h.gy === gy)) burn += 30;
-  if (!shielded && S.lens && S.lens.warn <= 0 && dist(S.lens, S.p) < S.lens.r) burn += 60;
-  if (!shielded && S.spots.some(sp => sp.warn <= 0 && dist(sp, S.p) < sp.r)) burn += 55;
-  if (!shielded && S.beam && S.beam.warn <= 0) {
+  if (!shielded && !inv && S.lens && S.lens.warn <= 0 && dist(S.lens, S.p) < S.lens.r) burn += 60;
+  if (!shielded && !inv && S.spots.some(sp => sp.warn <= 0 && dist(sp, S.p) < sp.r)) burn += 55;
+  if (!shielded && !inv && S.beam && S.beam.warn <= 0) {
     const a = Math.atan2(S.p.y - S.beam.y, S.p.x - S.beam.x);
     const da = Math.abs(((a - S.beam.a) % TAU + TAU + Math.PI) % TAU - Math.PI);
     if (da < 0.13) burn += 55;
   }
-  burn *= S.diff.burn * (S.map.burnF || 1);
-  if (S.grace > 0) burn = 0;
+  burn *= S.diff.burn * (S.map.burnF || 1) * (X && X.burnF ? X.burnF() : 1);
+  if (S.grace > 0 || (X && X.noBurn)) burn = 0;
   S.burn = burn;
-  S.energy += (burn > 0 ? -burn : 7 * (S.map.regenF || 1) * (1 + 0.5 * up('regen'))) * dt;
+  if (!(X && X.noBurn)) S.energy += (burn > 0 ? -burn : 7 * (S.map.regenF || 1) * (1 + 0.5 * up('regen'))) * dt;
   S.energy = Math.max(0, Math.min(maxEnergy(), S.energy));
   if (burn > 0 && Math.random() < dt * (20 + burn * 0.4))
     S.parts.push({ x: S.p.x + fx(-6, 6), y: S.p.y - 4, vx: fx(-8, 8), vy: fx(-45, -20), life: fx(0.4, 0.8) });
@@ -1037,12 +1054,12 @@ function update(dt) {
   if (S.energy < 20) { S.beatT -= dt; if (S.beatT <= 0) { Sound.sfx('beat'); S.beatT = 0.8; } } else S.beatT = 0;
   if (S.energy < 3 && S.energy > 0) S.closeArmed = true;
   if (S.closeArmed && S.energy > 50) { S.closeArmed = false; stat('close'); }
-  S.score += dt * 10 * mult();
+  if (!(X && X.noTimeScore)) S.score += dt * 10 * mult();
 
   // Stufe und Einsturz
-  if (!S.boss && S.pickT <= 0 && S.winT <= 0 && !calm) S.levelIn -= dt;
-  if (!calm && S.levelIn <= 2.5 && !up('architect') && !S.pillars.some(r => r.doomed)) {
-    const r = pick(S.pillars.filter(q => !q.fixed && !q.books));
+  if (!S.boss && S.pickT <= 0 && S.winT <= 0 && !off('noLevels')) S.levelIn -= dt;
+  if (!off('noLevels') && S.levelIn <= 2.5 && !up('architect') && !S.pillars.some(r => r.doomed)) {
+    const r = pick(S.pillars.filter(q => !q.fixed && !q.books && !q.carried));
     if (r) { r.doomed = true; r.crumble = 2.5; }
   }
   for (const r of S.pillars) if (r.crumble > 0) r.crumble -= dt;
@@ -1068,7 +1085,7 @@ function update(dt) {
       if (ph) S.E.frost = 2;
       S.closeArmed = false; stat('revives');
       sparks(S.p.x, S.p.y, COL.heart, 16); flash(ph ? tr('Phönix! Volle Kraft', 'Phoenix! Full energy') : tr('Zweites Leben!', 'Second life!'), COL.heart); Sound.sfx('revive');
-    } else { finish(false); return; }
+    } else if (!(X && X.onDeath && X.onDeath())) { finish(false); return; }
   }
   if (S.pickT > 0) { S.pickT -= dt; if (S.pickT <= 0) openPick(); }
   if (S.winT > 0) { S.winT -= dt; if (S.winT <= 0) { finish(true); return; } }

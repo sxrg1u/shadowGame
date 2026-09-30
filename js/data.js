@@ -27,7 +27,7 @@ const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: t
 function freshProfile() {
   return {
     v: 2, wallet: 0, settings: { ...DEF_SETTINGS },
-    best: { campaign: 0, endless: 0, daily: 0, weekly: 0 }, top: { campaign: [], endless: [] },
+    best: { campaign: 0, endless: 0, daily: 0, weekly: 0 }, top: { campaign: [], endless: [], onelife: [] }, xm: {},
     stats: { runs: 0, time: 0, points: 0, bosses: 0, prisma: 0, queen: 0, bull: 0, core: 0, bugsDashed: 0, bugs: 0, dews: 0,
              dashes: 0, hits: 0, items: 0, traps: 0, missiles: 0, upgrades: 0, maxLevel: 0, endlessLevel: 0, maxCombo: 0,
              wins: 0, hardWins: 0, duels: 0, duelWins: 0, dailyDone: 0, cleanBoss: 0, longest: 0, bestScore: 0, revives: 0,
@@ -204,6 +204,12 @@ const ACH = [
   { id: 'moon10', name: 'Mondlandung', icon: 'mond', desc: 'Erreiche Stufe 10: Mond.', goal: 10, val: s => s.lvl_moon || 0 },
   { id: 'mapwin3', name: 'Kartenkenner', icon: 'trophy', desc: 'Gewinne die Kampagne auf 3 verschiedenen Karten.', goal: 3, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
   { id: 'mapwinall', name: 'Weltmeister', icon: 'sonnenkrone', desc: 'Gewinne die Kampagne auf allen 12 Karten.', goal: 12, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
+  { id: 'xrace', name: 'Schattenläufer', icon: 'boots', desc: 'Komm im Schattenrennen ins Ziel.', goal: 1, val: s => s.raceDone || 0 },
+  { id: 'xpillar', name: 'Säulenheilig', icon: 'noon', desc: 'Halte eine Minute an der einen Säule durch.', goal: 60, val: s => s.pillarBest || 0 },
+  { id: 'xrush', name: 'Im Rausch', icon: 'core', desc: 'Besiege alle Bosse im Bossrausch.', goal: 1, val: s => s.rushWins || 0 },
+  { id: 'xstars', name: 'Rätselmeister', icon: 'star', desc: 'Sammle 20 Sterne in den Rätselstufen.', goal: 20, val: () => puzzleStars() },
+  { id: 'xonelife', name: 'Ohne Netz', icon: 'heart', desc: 'Erreiche Stufe 8 im Modus „Ein Leben“.', goal: 8, val: s => s.onelifeLevel || 0 },
+  { id: 'xroyale', name: 'Letzter Schatten', icon: 'decoy', desc: 'Gewinne ein Battle Royale.', goal: 1, val: s => s.royaleWins || 0 },
   { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));

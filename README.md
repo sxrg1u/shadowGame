@@ -16,13 +16,14 @@ Es gibt nichts zu installieren. Das Spiel läuft auf dem PC und auf dem Handy, a
 - [Spielen](#spielen)
 - [So funktioniert es](#so-funktioniert-es)
 - [Spielmodi](#spielmodi)
+- [Extra-Modi](#extra-modi)
 - [Karten](#karten)
 - [Bosse](#bosse)
 - [Chaos-Rad](#chaos-rad)
 - [Upgrades nach jedem Boss](#upgrades-nach-jedem-boss)
 - [Garderobe: Skins, Hüte und Spuren](#garderobe-skins-hüte-und-spuren)
 - [Erfolge und Statistik](#erfolge-und-statistik)
-- [Online-Duell](#online-duell)
+- [Mehrspieler](#mehrspieler)
 - [Steuerung](#steuerung)
 - [Einstellungen](#einstellungen)
 - [Eigene Musik](#eigene-musik)
@@ -93,10 +94,26 @@ Beim ersten Klick auf **Spielen** startet ein kurzes **Tutorial** in zehn Schrit
 | **Tägliche Herausforderung** | Jeden Tag eine andere Regel und eine andere Karte, für alle gleich. Ziel: Stufe 6. Belohnung: 1 500 Punkte. Mehrere Tage hintereinander bauen eine Serie auf. |
 | **Wochenherausforderung** | Jede Woche zwei Regeln gleichzeitig auf einer zufälligen Karte. Ziel: Stufe 10. Belohnung: 5 000 Punkte, beim ersten Mal dazu der Skin „Wochenheld“ und der Hut „Lorbeerkranz“, die es nirgends sonst gibt. |
 | **Boss üben** | Direkt gegen einen Boss deiner Wahl. Dafür gibt es nur die halben Punkte aufs Konto. |
-| **Online-Duell** | Zu zweit über das Internet, siehe [Online-Duell](#online-duell). |
+| **Mehrspieler** | Online-Duell, Battle Royale, Koop und Fangen, siehe [Mehrspieler](#mehrspieler). |
 | **Tutorial** | Die ruhige Übungsrunde vom ersten Start, jederzeit wiederholbar. |
 
 Kampagne, Endlos und Boss üben gibt es auf **Leicht**, **Normal** und **Schwer** und auf jeder freigeschalteten Karte.
+
+## Extra-Modi
+
+Im Hauptmenü unter **Extra-Modi** (die Mehrspieler-Spiele stehen unter [Mehrspieler](#mehrspieler)). Oben wählst du die Karte. Modi, die eine Sonne brauchen, weichen auf Karten ohne Sonne (Keller, Stadt, Bibliothek, Spiegelsaal) auf den Innenhof aus.
+
+| Modus | Was dich erwartet |
+| --- | --- |
+| **Schattenrennen** | Von Schatten zu Schatten durch sieben Tore ins Ziel, auf Zeit. Chaos-Rad, Bosse und Extras sind aus, die Sonne brennt etwas stärker. Pro Karte wird deine Bestzeit gespeichert, und ab dann läuft ein Geist diese Bestzeit mit. An jedem Tor siehst du, ob du vor oder hinter ihm liegst. |
+| **Eine Säule** | Nur eine einzige Säule in der Mitte des Innenhofs. Die Sonne dreht sich jede Sekunde ein Stück schneller. Gemessen wird, wie lange du durchhältst. |
+| **Bossrausch** | Prisma, Käferkönigin, Sonnenstier, Schattenfresser, Nachtmahr und zum Schluss der Sonnenkern, direkt nacheinander. Keine Stufen dazwischen, die Bosse ziehen nicht ab. Nach jedem Boss gibt es wie gewohnt eine Upgrade-Karte. |
+| **Sammler** | 60 Sekunden: So viel Tau wie möglich einsammeln. Tau liegt immer im Licht, ab und zu taucht Goldtau auf, und die Sonne brennt mit der Zeit immer stärker. Wer verdampft, verliert die Hälfte der Punkte. |
+| **Umgekehrt** | Du bist ein Lichtwesen: Im Schatten verlierst du Kraft, im Licht lädst du auf. Tau liegt im Schatten, Wolken werden gefährlich, Brennglas und Leuchtturm tun dir nichts. Mondfinsternis und Nachtmahr (beides nur Schatten) gibt es in diesem Modus nicht. |
+| **Ein Leben** | Keine Herzen, keine Upgrades, keine Extras, nur Können. Hat eine eigene Bestenliste unter *Erfolge & Statistik → Bestenliste*. |
+| **Rätselstufen** | Zehn feste Level auf dem Fliesenraster mit festen Säulen und fester Sonnenbahn. Ein Schritt geht ein Feld, ein Dash zwei Felder, Warten bleibt stehen. Jeder Zug zählt, danach dreht sich die Sonne. Wer einen Zug im Licht beendet, verliert eines von drei Leben. Grüne Punkte zeigen Felder, die nach dem Zug im Schatten liegen, gestrichelt siehst du die Schatten des nächsten Zugs. Bis zu 3 Sterne je nach Zahl der Züge. Jedes Level ist mit dem eingebauten Löser geprüft: Es gibt immer einen Weg ganz ohne Verbrennen, und Par ist der kürzeste Weg. |
+
+**Tasten in den Rätselstufen:** Pfeile oder WASD für einen Schritt (zwei Tasten gleichzeitig für schräg), mit **Shift** ein Dash, **Leertaste** wartet, **Z** nimmt einen Zug zurück, **R** startet neu. Mit Maus oder Finger: nah tippen ist ein Schritt, weiter weg ein Dash, auf die Figur tippen heißt warten.
 
 ### Regeln für Tag und Woche
 
@@ -202,15 +219,24 @@ Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen
 
 44 Erfolge wie „10 Käfer weggedasht“, „Boss ohne Treffer“, „Kombo ×5“ oder je einer für Garten, Dach und Keller. Dazu eine Statistik (Runden, Spielzeit, Bosse pro Typ, Dashes, Treffer und mehr) und eine Bestenliste mit den zehn besten Runden in Kampagne und Endlosmodus.
 
-## Online-Duell
+## Mehrspieler
 
-1. Einer klickt auf **Mehrspieler → Raum erstellen** und schickt den fünfstelligen Code oder den Einladungslink.
-2. Der andere gibt den Code ein und klickt **Beitreten**, oder öffnet einfach den Link.
-3. Der Gastgeber startet das Duell.
+Unter **Mehrspieler** gibt es vier Spiele, alle online:
 
-Beide starten auf derselben Karte mit demselben Zufall und sehen den anderen als Geist. Jeder besiegte Boss schickt dem Gegner einen Angriff (Käferschwarm, Suchraketen, Lasergitter und mehr), eine ×5-Kombo einen kleinen. Wer länger überlebt, gewinnt. Danach gibt es eine Revanche.
+| Spiel | Spieler | Was dich erwartet |
+| --- | --- | --- |
+| **Online-Duell** | 2 | Beide starten auf derselben Karte mit demselben Zufall, jeder in seiner eigenen Welt, und sehen den anderen als Geist. Jeder besiegte Boss schickt dem Gegner einen Angriff (Käferschwarm, Suchraketen, Lasergitter und mehr), eine ×5-Kombo einen kleinen. Wer länger überlebt, gewinnt. |
+| **Battle Royale light** | 2–8 | Alle starten auf derselben Karte und sehen die anderen als Geister. Keine Bosse, keine Herzen, und die Schatten werden immer kürzer, bis auf 30 %. Der letzte Schatten gewinnt. |
+| **Koop** | 2 | Zusammen in einer Welt. Der Gastgeber läuft und hat Dash, Anker und Spiegel. Der Gast trägt Säulen: hinlaufen, **Leertaste** hebt sie an, noch einmal setzt sie ab. So wandert der Schatten mit. |
+| **Fangen im Duell** | 2 | Zwei Runden à 45 Sekunden in einer Welt. Einer ist die Sonne: links/rechts dreht sie, hoch/runter macht die Schatten länger oder kürzer, **Leertaste** wirft einen Sonnenfunken. Der andere überlebt, danach wird getauscht. Wer länger durchhält, gewinnt. |
 
-Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https://peerjs.com)). Der öffentliche PeerJS-Server vermittelt nur den ersten Kontakt. In manchen Firmen- oder Schulnetzen blockiert eine Firewall WebRTC, dann klappt das Duell dort nicht.
+1. **Beitreten:** Code oben eingeben und **Beitreten** klicken, oder einfach den Einladungslink öffnen. Der Code funktioniert für alle vier Spiele, man muss nicht wissen, welches es ist.
+2. **Raum erstellen:** Eines der vier Spiele anklicken. Dann erscheint der fünfstellige Code und der Knopf für den Einladungslink.
+3. Der Gastgeber startet, sobald alle da sind. Danach kann er direkt eine Revanche starten.
+
+Koop und Fangen lassen sich über den Link unter den vier Spielen auch **lokal an einer Tastatur** spielen (Spieler 1 mit WASD und Leertaste, Spieler 2 mit den Pfeiltasten und Enter).
+
+Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https://peerjs.com)). Der öffentliche PeerJS-Server vermittelt nur den ersten Kontakt. In manchen Firmen- oder Schulnetzen blockiert eine Firewall WebRTC, dann klappt Mehrspieler dort nicht.
 
 ## Steuerung
 
@@ -281,6 +307,7 @@ js/mapfx.js         Sonderregeln der neuen Karten (Züge, Segel, Laternen ...)
 js/game.js          Spielablauf, Bosse, Chaos-Rad, Upgrades
 js/draw.js          Zeichnen des Spielfelds, Farbchaos
 js/tutorial.js      Tutorial
+js/modes.js         Extra-Modi, Rätsel-Level und Löser, Mehrspieler-Räume (Royale, Koop, Fangen)
 js/ui.js            Menüs, Eingabe, Online-Duell, Start
 assets/             Symbol, Vorschaubild, itch.io-Titelbild, Musikordner
 screenshots/        Bilder für diese README

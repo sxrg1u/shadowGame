@@ -152,6 +152,12 @@ const EN = {
     weekly3: ['Regular', 'Complete three weekly challenges.'],
     lvl25: ['Tireless', 'Reach level 25 in Endless mode.'],
     trails5: ['Trailblazer', 'Own 5 trails.'],
+    xrace: ['Shadow runner', 'Reach the finish in Shadow race.'],
+    xpillar: ['Pillar saint', 'Last one minute at the single pillar.'],
+    xrush: ['Rush hour', 'Defeat every boss in Boss rush.'],
+    xstars: ['Puzzle master', 'Collect 20 stars in the puzzle levels.'],
+    xonelife: ['No safety net', 'Reach level 8 in "One life".'],
+    xroyale: ['Last shadow', 'Win a battle royale.'],
     parry25: ['Mirror master', 'Parry 25 attacks with the mirror.'],
     reflect: ['Return to sender', 'Hit a boss with its own light orb 10 times.'],
     anchor20: ['Time traveler', 'Jump back to your shadow anchor 20 times.'],
@@ -283,6 +289,10 @@ const STATIC_EN = {
   // Lexikon
   'Bosse': 'Bosses', 'nach jeder Stufe': 'after every level', 'Gut': 'Good', 'einsammeln': 'collect', 'Schlecht': 'Bad', 'ausweichen': 'dodge',
   // Pause, Upgrade, Ergebnis
+  // Extra-Modi
+  'Extra-Modi': 'Extra modes', '10 Modi': '10 modes', 'Duell · Royale · Koop · Fangen': 'Duel · royale · co-op · tag', 'Mit Code beitreten': 'Join with a code', 'oder Raum erstellen': 'or create a room',
+  'Raum für': 'Room for', 'Starten': 'Start',
+  'Rätselstufen': 'Puzzle levels', 'Battle Royale light': 'Battle royale light', 'Runde starten': 'Start round',
   'Weiter': 'Resume', 'Aufgeben': 'Give up', 'Upgrade wählen': 'Choose an upgrade', 'Boss besiegt': 'Boss defeated', 'Wähl ein Upgrade': 'Choose an upgrade',
   'Ergebnis': 'Result', 'Verdampft': 'Evaporated', 'Nochmal': 'Again',
 };

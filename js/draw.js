@@ -502,6 +502,10 @@ function draw() {
     }
   }
 
+  // Extra-Modi: Ziele, Geister, zweite Figur (js/modes.js)
+  const XX = XM();
+  if (XX && XX.drawWorld && S.mode !== 'ready') { CC.el('extra'); XX.drawWorld(); }
+
   // Spielfigur
   if (S.mode !== 'ready') {
     const p = S.p, R = pr();
@@ -547,7 +551,7 @@ function draw() {
     const alpha = (0.35 + 0.65 * S.energy / 100) * (S.hurt > 0 && Math.floor(S.hurt * 20) % 2 ? 0.3 : 1);
     CC.el('player');
     drawCreature(ctx, p.x, p.y, R, { skin: P.equip.skin, hat: P.equip.hat, t: S.t, alpha, eyeAlpha: 1, ccHat: 'hat',
-      tint: on('invert') ? COL.shroom : null, eyes: S.burn > 0 ? 'burn' : on('invert') ? 'dizzy' : S.mode === 'over' && S.won ? 'happy' : 'open' });
+      tint: on('invert') ? COL.shroom : (XX && ((S.xr && S.xr.tint) || XX.tint)) || null, eyes: S.burn > 0 ? 'burn' : on('invert') ? 'dizzy' : S.mode === 'over' && S.won ? 'happy' : 'open' });
   }
 
   // Käfer
@@ -690,15 +694,17 @@ function draw() {
   if (S.mode === 'play' || S.mode === 'pick' || S.mode === 'pause') {
     const tag = S.rules.size ? ' · ' + [...S.rules].map(id => RULE_BY[id].name).join(' + ') : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
     CC.el('text');
-    textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
+    textOut(XX && XX.label ? XX.label() : tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
     if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 68, COL.warn, MONO, 'right');
-    // Mit Tastatur steht die Taste vor jeder Faehigkeit, auf dem Handy gibt es Knoepfe darunter
-    const kE = KEY_HINTS ? 'E · ' : '', kQ = KEY_HINTS ? 'Q · ' : '', kD = KEY_HINTS ? 'Shift · ' : '';
-    const aTxt = S.anchor ? kE + tr('Anker ', 'Anchor ') + S.anchor.life.toFixed(1) + tr(' s · springt', ' s · jump') : S.anchorCd > 0 ? kE + tr('Anker ', 'Anchor ') + S.anchorCd.toFixed(1) + ' s' : kE + tr('Anker bereit', 'Anchor ready');
-    textOut(aTxt, W - 12, H - 50, S.anchor ? '#C9B8FF' : S.anchorCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
-    textOut(S.parryCd > 0 ? kQ + tr('Spiegel ', 'Mirror ') + S.parryCd.toFixed(1) + ' s' : kQ + tr('Spiegel bereit', 'Mirror ready'), W - 12, H - 32, S.parryCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
-    const ready = S.charges > 0;
-    textOut(ready ? (maxCharges() > 1 ? kD + 'Dash ×' + S.charges : kD + tr('Dash bereit', 'Dash ready')) : kD + 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
+    if (!(XX && XX.noAbilityHud) && !S.cfg.remote) {   // der Gast im Koop hat keine eigenen Fähigkeiten
+      // Mit Tastatur steht die Taste vor jeder Faehigkeit, auf dem Handy gibt es Knoepfe darunter
+      const kE = KEY_HINTS ? 'E · ' : '', kQ = KEY_HINTS ? 'Q · ' : '', kD = KEY_HINTS ? 'Shift · ' : '';
+      const aTxt = S.anchor ? kE + tr('Anker ', 'Anchor ') + S.anchor.life.toFixed(1) + tr(' s · springt', ' s · jump') : S.anchorCd > 0 ? kE + tr('Anker ', 'Anchor ') + S.anchorCd.toFixed(1) + ' s' : kE + tr('Anker bereit', 'Anchor ready');
+      textOut(aTxt, W - 12, H - 50, S.anchor ? '#C9B8FF' : S.anchorCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
+      textOut(S.parryCd > 0 ? kQ + tr('Spiegel ', 'Mirror ') + S.parryCd.toFixed(1) + ' s' : kQ + tr('Spiegel bereit', 'Mirror ready'), W - 12, H - 32, S.parryCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
+      const ready = S.charges > 0;
+      textOut(ready ? (maxCharges() > 1 ? kD + 'Dash ×' + S.charges : kD + tr('Dash bereit', 'Dash ready')) : kD + 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
+    }
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
       CC.el('bossBar');
@@ -722,13 +728,14 @@ function draw() {
     if (S.lucky > 0) list.push([tr('Glück ×', 'Luck ×') + S.lucky, '#5FBE90']);
     if (S.combo > 1) list.push([tr('Kombo ×', 'Combo ×') + S.combo, COL.dew]);
     list.forEach((f, i) => { CC.el('status', i); textOut(f[0], 12, H - 14 - i * 18, f[1], MONO); });
+    if (XX && XX.drawHud) { CC.el('extraHud'); XX.drawHud(); }
   }
   if (S.mode === 'count') {
     const n = Math.ceil(S.countT), k = S.countT - Math.floor(S.countT);
     ctx.globalAlpha = 0.35 + 0.65 * k;
     textOut(n > 0 ? String(n) : tr('LOS!', 'GO!'), W / 2, H / 2 + 26, '#F4CF63', '800 ' + Math.round(56 + (1 - k) * 18) + 'px "Unbounded", "Arial Black", sans-serif', 'center');
     ctx.globalAlpha = 1;
-    textOut(tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…'), W / 2, H / 2 - 50, '#FFFFFF', '800 15px "Unbounded", "Arial Black", sans-serif', 'center');
+    textOut(XX ? xmName(XX) : tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…'), W / 2, H / 2 - 50, '#FFFFFF', '800 15px "Unbounded", "Arial Black", sans-serif', 'center');
   }
   if (S.msg) {
     CC.el('msg');

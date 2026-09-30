@@ -127,10 +127,12 @@ function resetTo(id) { stack = [id]; show(); }
 
 const MODE_NAME = { get campaign() { return tr('Kampagne', 'Campaign'); }, get endless() { return tr('Endlos', 'Endless'); }, get daily() { return tr('Tägliche Herausforderung', 'Daily challenge'); },
                     get practice() { return tr('Boss üben', 'Practice boss'); }, get duel() { return tr('Online-Duell', 'Online duel'); },
-                    get weekly() { return tr('Wochenherausforderung', 'Weekly challenge'); }, get tutorial() { return 'Tutorial'; } };
+                    get weekly() { return tr('Wochenherausforderung', 'Weekly challenge'); }, get tutorial() { return 'Tutorial'; },
+                    get onelife() { return tr('Ein Leben', 'One life'); } };
 const rulesLabel = rules => rules.map(r => (typeof r === 'string' ? RULE_BY[r] : r).name).join(' + ');
 function modeName() {
-  const m = S.cfg.mode;
+  const m = S.cfg.mode, X = XM();
+  if (X) return xmName(X) + (X.maps !== 'none' ? ' · ' + mapName(S.map) : '');
   if (m === 'daily') return tr('Täglich · ', 'Daily · ') + rulesLabel([...S.rules]) + ' · ' + mapName(S.map);
   if (m === 'weekly') return tr('Woche · ', 'Week · ') + rulesLabel([...S.rules]) + ' · ' + mapName(S.map);
   if (m === 'tutorial') return 'Tutorial';
@@ -325,7 +327,7 @@ RENDER.scrAch = () => {
   for (const b of document.querySelectorAll('[data-atab]')) b.setAttribute('aria-selected', String(b.dataset.atab === aTab));
   $('achView').hidden = aTab !== 'ach'; $('statsView').hidden = aTab !== 'stats'; $('topView').hidden = aTab !== 'top';
   const n = ACH.filter(a => P.ach[a.id]).length;
-  $('achSummary').textContent = aTab === 'ach' ? tr(n + ' von ' + ACH.length + ' Erfolgen freigeschaltet.', n + ' of ' + ACH.length + ' achievements unlocked.') : aTab === 'stats' ? tr('Alles, was du bisher geschafft hast.', 'Everything you have achieved so far.') : tr('Deine zehn besten Runden in Kampagne und Endlosmodus.', 'Your ten best runs in campaign and endless mode.');
+  $('achSummary').textContent = aTab === 'ach' ? tr(n + ' von ' + ACH.length + ' Erfolgen freigeschaltet.', n + ' of ' + ACH.length + ' achievements unlocked.') : aTab === 'stats' ? tr('Alles, was du bisher geschafft hast.', 'Everything you have achieved so far.') : tr('Deine zehn besten Runden in Kampagne, Endlosmodus und „Ein Leben“.', 'Your ten best runs in campaign, endless mode and "One life".');
   if (aTab === 'ach') {
     const el = $('achView'); el.innerHTML = '';
     for (const a of ACH) {
@@ -360,11 +362,11 @@ RENDER.scrAch = () => {
     for (const [k, v] of rows) { const d = document.createElement('div'); d.className = 'stat'; const a = document.createElement('span'); a.textContent = k; const b = document.createElement('b'); b.textContent = v; d.append(a, b); $('statsView').appendChild(d); }
   } else {
     const el = $('topView'); el.innerHTML = '';
-    for (const m of ['campaign', 'endless']) {
+    for (const m of ['campaign', 'endless', 'onelife']) {
       const sec = document.createElement('section');
       const h = document.createElement('h3'); h.textContent = MODE_NAME[m]; h.style.marginBottom = '8px';
       sec.appendChild(h);
-      const list = P.top[m];
+      const list = P.top[m] || [];
       if (!list.length) { const p = document.createElement('p'); p.className = 'muted'; p.textContent = tr('Noch keine Runde.', 'No run yet.'); sec.appendChild(p); }
       else {
         const t = document.createElement('table'); t.className = 'top';
@@ -417,31 +419,75 @@ RENDER.scrHelp = () => {
   }
 };
 
+// Die vier Mehrspieler-Spiele. Das Duell läuft über Net, die anderen über RNet (js/modes.js).
+const MP_GAMES = [
+  { id: 'duel', icon: 'spear', name: ['Online-Duell', 'Online duel'], n: '2',
+    desc: ['Jeder in seiner eigenen Welt, ihr seht euch als Geist. Besiegte Bosse schicken dem anderen einen Angriff. Wer länger überlebt, gewinnt.', 'Each in your own world, you see each other as ghosts. Defeated bosses send attacks to the other. Whoever survives longer wins.'] },
+  { id: 'royale', icon: 'decoy', name: ['Battle Royale light', 'Battle royale light'], n: '2–8',
+    desc: ['Bis zu 8 Spieler als Geister auf derselben Karte. Die Schatten werden immer kürzer. Der letzte Schatten gewinnt.', 'Up to 8 players as ghosts on the same map. Shadows keep shrinking. The last shadow standing wins.'] },
+  { id: 'coop', icon: 'twin', name: ['Koop', 'Co-op'], n: '2',
+    desc: ['Zusammen auf einer Karte: Einer läuft, der andere trägt Säulen und spendet ihm Schatten.', 'Together on one map: one runs, the other carries pillars and provides shade.'] },
+  { id: 'tag', icon: 'lens', name: ['Fangen im Duell', 'Sun tag'], n: '2',
+    desc: ['Einer steuert die Sonne und wirft Funken, der andere überlebt 45 Sekunden. Dann wird getauscht.', 'One steers the sun and throws sparks, the other survives for 45 seconds. Then you swap.'] },
+];
+const mpName = g => { const x = MP_GAMES.find(q => q.id === g); return x ? tr(x.name[0], x.name[1]) : g; };
+let mpNet = null;   // wessen Statusmeldung gerade angezeigt wird (Net oder RNet)
 RENDER.scrMulti = () => {
-  const inRoom = !!Net.role;
+  const inNet = !!Net.role, inR = !!RNet.role, inRoom = inNet || inR;
   $('mpName').value = P.settings.name;
   $('mpIdle').hidden = inRoom; $('mpRoom').hidden = !inRoom;
   if (Net.pendingCode && !$('mpCode').value) $('mpCode').value = Net.pendingCode;
-  if (inRoom) {
-    $('mpCodeShow').textContent = Net.code || '·····';
-    $('mpCopy').hidden = Net.role !== 'host' || !Net.ready;
+  if (!inRoom) {
+    const grid = $('mpGames');
+    if (!grid.children.length || grid.dataset.lang !== LANG) {
+      grid.innerHTML = ''; grid.dataset.lang = LANG;
+      for (const g of MP_GAMES) {
+        const b = document.createElement('button'); b.className = 'mp-game'; b.dataset.game = g.id;
+        const c = document.createElement('canvas'); c.setAttribute('aria-hidden', 'true');
+        const nm = document.createElement('b'); nm.textContent = tr(g.name[0], g.name[1]);
+        const d = document.createElement('p'); d.textContent = tr(g.desc[0], g.desc[1]);
+        const k = document.createElement('span'); k.className = 'kind'; k.textContent = g.n + tr(' Spieler', ' players');
+        b.append(c, nm, d, k); grid.appendChild(b); iconCanvas(g.icon, 32, c);
+        b.setAttribute('aria-label', tr('Raum erstellen: ', 'Create room: ') + nm.textContent + ', ' + k.textContent);
+      }
+      const loc = $('mpLocal'); loc.innerHTML = '';
+      loc.append(document.createTextNode(tr('Lieber an einer Tastatur?', 'Rather on one keyboard?')));
+      for (const id of ['coop', 'tag']) { const b = document.createElement('button'); b.dataset.local = id; b.textContent = mpName(id) + tr(' lokal', ' locally'); loc.appendChild(b); }
+    }
+  } else {
+    const game = inNet ? 'duel' : RNet.game, g = MP_GAMES.find(q => q.id === game);
+    $('mpGameName').textContent = mpName(game) + ' · ' + (inNet ? 2 : RNet.max()) + tr(' Plätze', ' slots');
+    iconCanvas(g ? g.icon : 'decoy', 40, $('mpGameIcon'));
+    $('mpCodeShow').textContent = (inNet ? Net.code : RNet.code) || '·····';
+    $('mpCopy').hidden = (inNet ? Net.role : RNet.role) !== 'host' || !(inNet ? Net.ready : RNet.ready);
     const ul = $('mpPlayers'); ul.innerHTML = '';
     const row = (skin, hat, name, tag, wait) => {
       const li = document.createElement('li'); if (wait) li.className = 'wait';
       if (!wait) li.appendChild(creatureCanvas(skin, hat, 40));
       const b = document.createElement('b'); b.textContent = name;
-      const s = document.createElement('small'); s.textContent = tag;
-      li.append(b, s); ul.appendChild(li);
+      const sm = document.createElement('small'); sm.textContent = tag;
+      li.append(b, sm); ul.appendChild(li);
     };
-    row(P.equip.skin, P.equip.hat, P.settings.name, Net.role === 'host' ? tr('Du · Gastgeber', 'You · Host') : tr('Du', 'You'));
-    if (Net.opp && !Net.opp.left) row(Net.opp.skin, Net.opp.hat, Net.opp.name, Net.role === 'host' ? tr('Gast', 'Guest') : tr('Gastgeber', 'Host'));
-    else row(null, null, Net.role === 'host' ? tr('Warte auf Mitspieler …', 'Waiting for a player …') : tr('Verbinde …', 'Connecting …'), '', true);
-    $('mpStart').hidden = !(Net.role === 'host' && Net.opp && !Net.opp.left);
+    if (inNet) {
+      row(P.equip.skin, P.equip.hat, P.settings.name, Net.role === 'host' ? tr('Du · Gastgeber', 'You · Host') : tr('Du', 'You'));
+      if (Net.opp && !Net.opp.left) row(Net.opp.skin, Net.opp.hat, Net.opp.name, Net.role === 'host' ? tr('Gast', 'Guest') : tr('Gastgeber', 'Host'));
+      else row(null, null, Net.role === 'host' ? tr('Warte auf Mitspieler …', 'Waiting for a player …') : tr('Verbinde …', 'Connecting …'), '', true);
+      $('mpStart').hidden = !(Net.role === 'host' && Net.opp && !Net.opp.left); $('mpStart').disabled = false;
+    } else {
+      for (const p of RNet.players) {
+        const tags = []; if (p.id === RNet.me) tags.push(tr('Du', 'You')); if (p.id === 0) tags.push(tr('Gastgeber', 'Host'));
+        row(p.skin, p.hat, p.name, tags.join(' · '));
+      }
+      const free = RNet.max() - RNet.players.length;
+      if (free > 0) row(null, null, RNet.role === 'host' ? (free === 1 ? tr('Warte auf Mitspieler …', 'Waiting for a player …') : tr('Freie Plätze: ', 'Free slots: ') + free) : tr('Verbinde …', 'Connecting …'), '', true);
+      $('mpStart').hidden = RNet.role !== 'host';
+      $('mpStart').disabled = RNet.players.length < 2 || RNet.inMatch;
+    }
   }
-  const st = $('mpStatus');
-  st.className = 'status' + (Net.err ? ' err' : '');
-  st.textContent = Net.status;
-  if (Net.busy) { const sp = document.createElement('span'); sp.className = 'spin'; st.prepend(sp); }
+  const N = inNet ? Net : inR ? RNet : mpNet || Net, st = $('mpStatus');
+  st.className = 'status' + (N.err ? ' err' : '');
+  st.textContent = N.status;
+  if (N.busy) { const sp = document.createElement('span'); sp.className = 'spin'; st.prepend(sp); }
 };
 
 // ---------- Runden ----------
@@ -462,6 +508,8 @@ function startRun(cfg) {
   lastCfg = cfg;
   const m = cfg.mode;
   S.bestLabel = m === 'campaign' || m === 'endless' ? fmt(P.best[m] || 0) : m === 'daily' ? fmt((P.daily[cfg.dailyKey] || {}).best || 0) : m === 'weekly' ? fmt((P.weekly[cfg.weekKey] || {}).best || 0) : '–';
+  const X = XM();
+  if (X) { if (X.init) X.init(); if (X.bestLabel) S.bestLabel = X.bestLabel(); }
   $('oppBar').hidden = !cfg.duel;
   document.body.classList.toggle('duel', !!cfg.duel);
   for (const k in hc) delete hc[k];
@@ -481,15 +529,16 @@ function toMenu() {
   resetTo('scrMain');
   Sound.music('menu'); Sound.setLevel(0);
 }
+const isOnline = () => isDuel() || !!(S && S.cfg.online);
 function pause() {
   if (!S || S.mode !== 'play' || topScr() || DEBUG) return;   // Debug-Runden laufen auch ohne Fokus weiter
-  if (!isDuel()) S.mode = 'pause';
+  if (!isOnline()) S.mode = 'pause';
   resetTo('scrPause');
 }
 RENDER.scrPause = () => {
   if (!S || !S.cfg) return;
   $('pauseMode').textContent = modeName();
-  $('pauseNote').textContent = isDuel() ? tr('Achtung: Im Duell läuft das Spiel weiter!', 'Careful: the game keeps running in a duel!') : S.upList.length ? tr('Deine Upgrades in dieser Runde:', 'Your upgrades this run:') : tr('Noch keine Upgrades. Besieg einen Boss, dann darfst du wählen.', 'No upgrades yet. Defeat a boss, then you get to choose.');
+  $('pauseNote').textContent = isOnline() ? tr('Achtung: Im Duell läuft das Spiel weiter!', 'Careful: the game keeps running in a duel!') : S.upList.length ? tr('Deine Upgrades in dieser Runde:', 'Your upgrades this run:') : tr('Noch keine Upgrades. Besieg einen Boss, dann darfst du wählen.', 'No upgrades yet. Defeat a boss, then you get to choose.');
   const box = $('pauseUps'); box.innerHTML = '';
   const counts = {};
   for (const id of S.upList) counts[id] = (counts[id] || 0) + 1;
@@ -505,6 +554,7 @@ function resume() { if (S.mode === 'pause') S.mode = 'play'; closeAll(); }
 function quit() {
   if (S.mode === 'over') return;
   if (S.cfg.mode === 'tutorial') { closeAll(); tutFinish(true); return; }
+  if (S.cfg.remote) { RNet.leave(); toMenu(); open('scrMulti'); return; }
   S.quit = true;
   closeAll();
   finish(false);
@@ -550,10 +600,12 @@ function finish(won) {
   stat('runs'); P.stats.time += S.t; statMax('longest', Math.floor(S.t)); statMax('bestScore', sc); P.stats.points += sc;
   if (won && m === 'campaign') { stat('wins'); stat('win_' + S.map.id); if (S.cfg.diff === 'hard') stat('hardWins'); }
   if (m === 'duel') { stat('duels'); if (won) stat('duelWins'); }
-  const earned = Math.round(sc * (m === 'practice' ? 0.5 : 1));
+  const X = XM();
+  const earned = Math.round(sc * (m === 'practice' ? 0.5 : X && X.walletF != null ? X.walletF : 1));
   P.wallet += earned;
   let rec = false;
   if ((m === 'campaign' || m === 'endless') && sc > (P.best[m] || 0)) { P.best[m] = sc; rec = true; }
+  if (X && X.record) rec = !!X.record(won, sc);
   if (m === 'campaign' || m === 'endless') {
     const list = P.top[m];
     list.push({ s: sc, l: S.level + 1, d: dayKey(), w: won ? 1 : 0, df: S.cfg.diff });
@@ -571,6 +623,7 @@ function finish(won) {
   }
   checkAch(); save();
   S.result = { sc, earned, rec };
+  if (S.cfg.online && RNet.role === 'host' && S.cfg.mode !== 'royale') RNet.sendOver();
   S.target = null; keys.clear();
   Sound.music(null); Sound.sfx(won ? 'victory' : 'over');
   if (isDuel()) Net.send(won ? { t: 'won', s: sc } : { t: 'dead', s: sc, time: S.t, l: S.level });
@@ -615,13 +668,18 @@ function showResults() {
   if (m === 'weekly') text += S.run.weeklyDone ? tr(' Wochenziel geschafft!', ' Weekly goal reached!') : tr(' Fürs Wochenziel brauchst du Stufe ' + WEEKLY_GOAL + '.', ' For the weekly goal you need level ' + WEEKLY_GOAL + '.');
   if (m === 'daily') text += S.run.dailyDone ? tr(' Tagesziel geschafft!', ' Daily goal reached!') : tr(' Fürs Tagesziel brauchst du Stufe ' + DAILY_GOAL + '.', ' For the daily goal you need level ' + DAILY_GOAL + '.');
   if (m === 'practice') text += tr(' Beim Üben gibt es nur die halben Punkte aufs Konto.', ' Practice runs only give half the points.');
+  const X = XM(), xr = X && X.result ? X.result() : null;
+  if (xr) { title = xr.title; text = xr.text; }
   const t = $('ovTitle'); t.textContent = title;
   if (R.rec && !duel) { const b = document.createElement('span'); b.className = 'badge'; b.textContent = tr('Neuer Rekord', 'New record'); t.appendChild(b); }
   $('ovText').textContent = text;
   const tiles = $('ovTiles'); tiles.innerHTML = '';
+  if (xr && xr.tiles) tiles.append(...xr.tiles.map(([a, b, hl]) => tile(a, b, hl)), tile(tr('Aufs Konto', 'To balance'), '+' + fmt(R.earned)));
+  else {
   tiles.append(tile(tr('Punkte', 'Score'), fmt(R.sc), true), tile(tr('Zeit', 'Time'), fmtTime(S.t)), tile(tr('Stufe', 'Level'), String(S.level + 1)));
   if (duel) tiles.append(tile(o ? o.name : tr('Gegner', 'Opponent'), fmt(o ? o.score || 0 : 0)), tile(tr('Bosse', 'Bosses'), String(S.bossKills)), tile(tr('Aufs Konto', 'To balance'), '+' + fmt(R.earned)));
   else tiles.append(tile(tr('Bosse', 'Bosses'), String(S.bossKills)), tile('Upgrades', String(S.upList.length)), tile(tr('Aufs Konto', 'To balance'), '+' + fmt(R.earned)));
+  }
   const nl = $('ovNew'); nl.innerHTML = '';
   for (const id of S.run.newAch) { const c = document.createElement('span'); c.className = 'chip'; c.appendChild(iconCanvas(ACH_BY[id].icon, 22)); c.appendChild(document.createTextNode(tr('Erfolg: ', 'Achievement: ') + ACH_BY[id].name)); nl.appendChild(c); }
   for (const [kind, id] of S.run.newItems) {
@@ -633,7 +691,8 @@ function showResults() {
   if (duel) {
     again.textContent = Net.role === 'host' ? tr('Revanche starten', 'Start rematch') : Net.meAgain ? tr('Revanche angefragt', 'Rematch requested') : tr('Revanche anfragen', 'Request rematch');
     again.disabled = !connected || (Net.role === 'guest' && Net.meAgain);
-  } else { again.textContent = m === 'daily' || m === 'weekly' ? tr('Nochmal versuchen', 'Try again') : tr('Nochmal', 'Again'); again.disabled = false; }
+  } else if (X && X.againLabel) { const a = X.againLabel(); again.textContent = a[0]; again.disabled = !!a[1]; }
+  else { again.textContent = m === 'daily' || m === 'weekly' ? tr('Nochmal versuchen', 'Try again') : tr('Nochmal', 'Again'); again.disabled = false; }
   if (topScr() === 'scrOver') { show(true); } else resetTo('scrOver');
 }
 function oppDied(m) {
@@ -685,7 +744,7 @@ const Net = {
     });
     return this._lib;
   },
-  setStatus(text, err, busy) { this.status = text || ''; this.err = !!err; this.busy = !!busy; if (topScr() === 'scrMulti') RENDER.scrMulti(); },
+  setStatus(text, err, busy) { this.status = text || ''; this.err = !!err; this.busy = !!busy; mpNet = this; if (topScr() === 'scrMulti') RENDER.scrMulti(); },
   teardown() {
     clearTimeout(this.joinTimer);
     const c = this.conn, p = this.peer;
@@ -804,6 +863,51 @@ const Net = {
   },
 };
 
+// ---------- Extra-Modi: Bildschirme ----------
+RENDER.scrExtra = () => {
+  const sel = $('xMap'); sel.innerHTML = '';
+  for (const m of MAPS) {
+    if (!mapUnlocked(m)) continue;
+    const o = document.createElement('option'); o.value = m.id; o.textContent = mapName(m); o.selected = m.id === P.settings.map; sel.appendChild(o);
+  }
+  $('xMapNote').textContent = tr('Manche Modi brauchen eine Sonne oder spielen immer im Innenhof.', 'Some modes need a sun or always play in the courtyard.');
+  const grid = $('xGrid'); grid.innerHTML = '';
+  for (const id in EXTRA) {
+    if (EXTRA[id].mp) continue;   // Koop, Fangen und Battle Royale gibt es unter Mehrspieler
+    const X = EXTRA[id], b = document.createElement('button');
+    b.className = 'mode-card'; b.dataset.xmode = id;
+    const c = document.createElement('canvas'); c.setAttribute('aria-hidden', 'true');
+    const h = document.createElement('h3'); h.textContent = xmName(X);
+    const d = document.createElement('p'); d.textContent = tr(X.desc[0], X.desc[1]);
+    const mapTxt = id === 'puzzle' ? '' : ' · ' + mapName(MAP_BY[xmMap(X)]);
+    const m = document.createElement('span'); m.className = 'meta'; m.textContent = (X.meta ? X.meta() : '') + mapTxt;
+    b.append(c, h, d, m);
+    grid.appendChild(b);
+    iconCanvas(X.icon, 36, c);
+  }
+};
+RENDER.scrPuzzle = () => {
+  $('pzIntro').textContent = tr('Jeder Sprung ist ein Zug, danach wandert die Sonne. Grüne Punkte landen im Schatten, rote im Licht. Drei Züge im Licht und du bist verbrannt. ', 'Every jump is a move, then the sun moves on. Green dots land in the shade, red ones in the light. Three moves in the light and you are burned. ') + tr('Sterne: ', 'Stars: ') + puzzleStars() + ' / ' + PUZZLES.length * 3;
+  const grid = $('pzGrid'), d = xmData('puzzle'); grid.innerHTML = '';
+  PUZZLES.forEach((L, i) => {
+    const b = document.createElement('button'), ok = pzUnlocked(i), r = d[i];
+    b.className = 'pz'; b.dataset.pz = i; b.disabled = !ok;
+    const n = document.createElement('i'); n.textContent = tr('Rätsel ', 'Puzzle ') + (i + 1) + ' · Par ' + L.par;
+    const nm = document.createElement('b'); nm.textContent = tr(L.name[0], L.name[1]);
+    const st = document.createElement('span'); st.textContent = r ? '★'.repeat(r.stars) + '☆'.repeat(3 - r.stars) : ok ? '☆☆☆' : tr('gesperrt', 'locked');
+    b.append(n, nm, st);
+    b.setAttribute('aria-label', tr('Rätsel ', 'Puzzle ') + (i + 1) + ', ' + nm.textContent + ', ' + (r ? r.stars + tr(' Sterne', ' stars') : ok ? tr('offen', 'open') : tr('gesperrt', 'locked')));
+    grid.appendChild(b);
+  });
+};
+$('xGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-xmode]'); if (!b) return;
+  const id = b.dataset.xmode;
+  if (id === 'puzzle') open('scrPuzzle');
+  else startExtra(id);
+});
+$('xMap').addEventListener('change', e => { const m = MAP_BY[e.target.value]; if (m && mapUnlocked(m)) { P.settings.map = m.id; save(); RENDER.scrExtra(); } });
+$('pzGrid').addEventListener('click', e => { const b = e.target.closest('[data-pz]'); if (b && !b.disabled) startExtra('puzzle', { level: +b.dataset.pz }); });
 // ---------- Knöpfe ----------
 document.addEventListener('click', e => {
   const b = e.target.closest('button');
@@ -840,9 +944,9 @@ $('againBtn').addEventListener('click', () => {
   if (isDuel()) {
     if (Net.role === 'host') Net.startMatch();
     else { Net.send({ t: 'again' }); Net.meAgain = true; showResults(); }
-  } else startRun(lastCfg);
+  } else { const X = XM(); if (X && X.again) X.again(); else startRun(lastCfg); }
 });
-$('menuBtn').addEventListener('click', () => { const wasDuel = isDuel(); toMenu(); if (wasDuel && Net.role) open('scrMulti'); });
+$('menuBtn').addEventListener('click', () => { const wasDuel = isDuel(), X = XM(); toMenu(); if (wasDuel && Net.role) open('scrMulti'); else if (X && X.backTo) X.backTo(); });
 document.querySelectorAll('[data-wtab]').forEach(b => b.addEventListener('click', () => { wTab = b.dataset.wtab; wConfirm = null; RENDER.scrWardrobe(); }));
 document.querySelectorAll('[data-atab]').forEach(b => b.addEventListener('click', () => { aTab = b.dataset.atab; RENDER.scrAch(); }));
 document.querySelectorAll('[data-htab]').forEach(b => b.addEventListener('click', () => { hTab = b.dataset.htab; RENDER.scrHelp(); }));
@@ -869,20 +973,28 @@ $('resetBtn').addEventListener('click', () => {
   toast(tr('Fortschritt gelöscht', 'Progress deleted'), tr('Alles wieder auf Anfang', 'Back to square one'), 'crumble');
 });
 
-$('mpHost').addEventListener('click', () => { setName($('mpName').value); Net.host(); RENDER.scrMulti(); });
+$('mpGames').addEventListener('click', e => {
+  const b = e.target.closest('[data-game]'); if (!b) return;
+  setName($('mpName').value);
+  if (b.dataset.game === 'duel') Net.host(); else RNet.create(b.dataset.game);
+  RENDER.scrMulti();
+});
+$('mpLocal').addEventListener('click', e => { const b = e.target.closest('[data-local]'); if (b) startExtra(b.dataset.local); });
+// Ein Code für alle Spiele: erst als Raum von RNet versuchen, gibt es den nicht, ist es ein Duell-Raum
 const doJoin = () => {
   setName($('mpName').value);
   const code = $('mpCode').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (code.length !== 5) { Net.setStatus(tr('Der Code hat 5 Zeichen.', 'The code has 5 characters.'), true); return; }
-  Net.pendingCode = ''; Net.join(code); RENDER.scrMulti();
+  Net.pendingCode = ''; Net.teardown(); RNet.join(code, true); RENDER.scrMulti();
 };
 $('mpJoin').addEventListener('click', doJoin);
 $('mpCode').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(); });
-$('mpStart').addEventListener('click', () => Net.startMatch());
-$('mpLeave').addEventListener('click', () => { Net.leave(); RENDER.scrMulti(); });
+$('mpStart').addEventListener('click', () => { if (Net.role) Net.startMatch(); else RNet.start(); });
+$('mpLeave').addEventListener('click', () => { if (Net.role) Net.leave(); if (RNet.role) RNet.leave(); RENDER.scrMulti(); });
 $('mpCopy').addEventListener('click', () => {
-  const link = location.protocol.startsWith('http') ? location.origin + location.pathname + '?room=' + Net.code : Net.code;
-  const done = ok => Net.setStatus(ok ? (link === Net.code ? tr('Code kopiert. Schick ihn an deinen Mitspieler.', 'Code copied. Send it to your opponent.') : tr('Link kopiert. Wer ihn öffnet, landet direkt in deinem Raum.', 'Link copied. Whoever opens it lands straight in your room.')) : tr('Kopieren ging nicht. Schick einfach den Code ' + Net.code + '.', 'Copying failed. Just send the code ' + Net.code + '.'), !ok);
+  const N = Net.role ? Net : RNet, code = N.code;
+  const link = location.protocol.startsWith('http') ? location.origin + location.pathname + '?room=' + code : code;
+  const done = ok => N.setStatus(ok ? (link === code ? tr('Code kopiert. Schick ihn an deine Mitspieler.', 'Code copied. Send it to your friends.') : tr('Link kopiert. Wer ihn öffnet, landet direkt in deinem Raum.', 'Link copied. Whoever opens it lands straight in your room.')) : tr('Kopieren ging nicht. Schick einfach den Code ' + code + '.', 'Copying failed. Just send the code ' + code + '.'), !ok);
   if (navigator.clipboard) navigator.clipboard.writeText(link).then(() => done(true), () => done(false)); else done(false);
 });
 
@@ -904,14 +1016,16 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'p' || e.key === 'P') && !e.repeat) { if (t === 'scrPause') resume(); else if (!t) pause(); return; }
   if (t === 'scrPick') { const i = '123'.indexOf(e.key); if (i >= 0 && e.key.length === 1) { choose(i); e.preventDefault(); } return; }
   if (t) return;
+  const X = XM();
+  if (X && X.onKey && S.mode === 'play' && X.onKey(e)) { e.preventDefault(); return; }
   if (KEYMAP[e.key]) { keys.add(KEYMAP[e.key]); e.preventDefault(); }
   else if (S.mode === 'play' && (e.key === 'Shift' || e.key === ' ')) { dash(); e.preventDefault(); }
   else if (S.mode === 'play' && (e.key === 'e' || e.key === 'E') && !e.repeat) { anchor(); e.preventDefault(); }
   else if (S.mode === 'play' && (e.key === 'q' || e.key === 'Q') && !e.repeat) { parry(); e.preventDefault(); }
 });
 document.addEventListener('keyup', e => { if (KEYMAP[e.key]) keys.delete(KEYMAP[e.key]); });
-window.addEventListener('blur', () => { keys.clear(); if (S) S.target = null; if (S && S.mode === 'play' && !isDuel() && !topScr()) pause(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); if (S && S.mode === 'play' && !isDuel() && !topScr()) pause(); } });
+window.addEventListener('blur', () => { keys.clear(); keys2.clear(); if (S) S.target = null; if (S && S.mode === 'play' && !isOnline() && !topScr()) pause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); if (S && S.mode === 'play' && !isOnline() && !topScr()) pause(); } });
 window.addEventListener('pagehide', () => { save(); Net.send({ t: 'bye' }); });
 document.addEventListener('pointerdown', () => Sound.init(), { capture: true });
 
@@ -931,6 +1045,8 @@ cv.addEventListener('mousedown', e => {
   if (e.button === 2) { const g = toGame(e); dash(g.x, g.y); e.preventDefault(); }
 });
 cv.addEventListener('pointerdown', e => {
+  const X = XM();
+  if (X && X.onClick && e.button === 0 && S.mode === 'play') { X.onClick(toGame(e)); e.preventDefault(); return; }
   if (e.button !== 0 || S.mode !== 'play') return;
   S.target = toGame(e); cv.setPointerCapture?.(e.pointerId);
 });
@@ -952,7 +1068,8 @@ function loop(now) {
     DEBUG.left--; DEBUG.frame++; DEBUG.done = false; dt = 1 / 60; now = DEBUG.frame * 1000 / 60;
     if (DEBUG.parry && S.mode === 'play' && S.shots.some(q => !q.ref && !q.hard && Math.hypot(q.x - S.p.x, q.y - S.p.y) < 28)) parry();
   }
-  if (S.mode === 'pick') {
+  if (S.cfg && S.cfg.remote) RNet.guestFrame(dt);
+  else if (S.mode === 'pick') {
     if (pickTimer > 0) {
       pickTimer -= dt;
       $('pickTimer').textContent = tr('Im Duell zählt die Zeit: noch ', 'Time counts in a duel: ') + Math.max(0, Math.ceil(pickTimer)) + tr(' s', ' s left');
@@ -961,7 +1078,7 @@ function loop(now) {
   } else if (S.mode !== 'pause') update(dt);
   CC.frame();
   draw();
-  Net.tick(dt);
+  Net.tick(dt); RNet.tick(dt);
   if (achDirty) checkAch();
   const t = topScr();
   if (t === 'scrMain') drawHero('heroCv', P.equip.skin, P.equip.hat, now / 1000, P.equip.trail);
@@ -998,8 +1115,8 @@ function setLang(l) {
   // Auf hohen Bildschirmen liegen die Herausforderungen gleich offen, sonst sind sie eine Zeile und klappen auf
   if (matchMedia('(min-height:1000px)').matches && matchMedia('(min-width:781px)').matches) { $('dailyCard').open = true; $('weeklyCard').open = true; }
   reset('ready');
-  const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum');
-  if (q) { Net.pendingCode = q.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); stack = ['scrMain', 'scrMulti']; show(); }
+  const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum'), qr = qp.get('royale');
+  if (q || qr) { Net.pendingCode = (q || qr).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); stack = ['scrMain', 'scrMulti']; show(); }
   else resetTo('scrMain');
   Sound.music('menu');
   checkAch(); save();
