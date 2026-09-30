@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Shady</title>
+  <rect width="64" height="64" rx="14" fill="#F4CF63"/>
+  <path d="M16 64V48M32 64V48M48 64V48M0 32h64M0 48h64M16 0v32M32 0v32M48 0v32M0 16h64" stroke="#EABF4A" stroke-width="1.5"/>
+  <path d="M26 10L64 48V64H44L8 28z" fill="#3F4C6B"/>
+  <path d="M8 10h18v18H8z" fill="#1F2535"/>
+  <path d="M28 52Q27 30 41 30Q55 30 54 52Q49.7 57.5 45.3 52Q41 57.5 36.7 52Q32.3 57.5 28 52Z" fill="#141821"/>
+  <circle cx="36.5" cy="40.5" r="3" fill="#F4F6FA"/>
+  <circle cx="45.5" cy="40.5" r="3" fill="#F4F6FA"/>
+</svg>

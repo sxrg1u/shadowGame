@@ -87,10 +87,12 @@ const BAD = [
   ['glass','Glassäulen','Chaos-Rad: Die Hälfte der Säulen wird 5 s lang durchsichtig und wirft keinen Schatten.'],
 ];
 const BOSS_INFO = [
-  ['prisma','Prisma','Stufe 2, 5, 8 … Schwebt übers Feld und schießt drehende Laser in alle Richtungen.'],
-  ['queen','Käferkönigin','Stufe 3, 6, 9 … Kreist um die Mitte, schießt Ringe aus Lichtkugeln und ruft Käfer.'],
-  ['bull','Sonnenstier','Stufe 4, 7, 10 … Zielt mit einem roten Strich und stürmt los. Er zerlegt Säulen. Nach dem Aufprall an der Wand ist er benommen, dann zählt ein Dash doppelt.'],
-  ['core','Sonnenkern','Endboss der Kampagne, im Endlosmodus alle 10 Stufen. Kämpft in drei Phasen: erst Laser, dann Kugelringe, zum Schluss stürmt er los.'],
+  ['prisma','Prisma','Ab Stufe 2, danach alle 5 Stufen. Schwebt übers Feld und schießt drehende Laser in alle Richtungen.'],
+  ['queen','Käferkönigin','Ab Stufe 3, danach alle 5 Stufen. Kreist um die Mitte, schießt Ringe aus Lichtkugeln und ruft Käfer.'],
+  ['bull','Sonnenstier','Ab Stufe 4, danach alle 5 Stufen. Zielt mit einem roten Strich und stürmt los. Er zerlegt Säulen. Nach dem Aufprall an der Wand ist er benommen, dann zählt ein Dash doppelt.'],
+  ['eater','Schattenfresser','Ab Stufe 5. In seiner Aura gibt es keinen Schatten. Er verschlingt die Säule, die dir am nächsten ist, und ist danach satt und träge: Dann zählt ein Dash doppelt.'],
+  ['dusk','Nachtmahr','Ab Stufe 6. Verdunkelt den ganzen Hof. Die Sonne brennt nicht mehr, aber du siehst kaum etwas, Lichtflecken jagen dich und er springt ständig an neue Orte.'],
+  ['core','Sonnenkern','Endboss der Kampagne auf Stufe 10, im Endlosmodus alle 10 Stufen. Kämpft in drei Phasen: erst Laser, dann Kugelringe, zum Schluss stürmt er los.'],
 ];
 
 // ---------- Symbole (Spiel, Lexikon, Karten und Abzeichen teilen sie) ----------
@@ -195,7 +197,8 @@ function icon(c, k) {
     case 'hat': drawHat(c, 'zylinder', 0, 7, 1.15, 0); break;
     case 'calendar': c.fillStyle = '#F2F4F8'; c.strokeStyle = '#5B6376'; c.lineWidth = 1.4; c.fillRect(-9, -8, 18, 17); c.strokeRect(-9, -8, 18, 17); c.fillStyle = COL.warn; c.fillRect(-9, -8, 18, 5);
       c.fillStyle = '#5B6376'; for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) c.fillRect(-6 + i * 5, 0 + j * 4, 2.5, 2.5); break;
-    case 'prisma': case 'queen': case 'bull': case 'core': c.scale(0.34, 0.34); bossBody(c, k, 0.4, null); break;
+    case 'prisma': case 'queen': case 'bull': case 'core': case 'eater': case 'dusk': c.scale(0.34, 0.34); bossBody(c, k, 0.4, null); break;
+    case 'sparkle': c.fillStyle = COL.gold; starPath(c, 0, 0, 11, 3, 4); c.fill(); c.fillStyle = '#FFF6D0'; starPath(c, 7, -7, 4, 1.2, 4); c.fill(); starPath(c, -7, 6, 3, 1, 4); c.fill(); break;
   }
   c.restore();
 }
@@ -222,6 +225,37 @@ function bossBody(c, type, t, B) {
     c.fillStyle = COL.gold; c.strokeStyle = '#8A5A00'; c.lineWidth = 1.2;
     c.beginPath(); c.moveTo(-9, -23); c.lineTo(-9, -33); c.lineTo(-4, -28); c.lineTo(0, -36); c.lineTo(4, -28); c.lineTo(9, -33); c.lineTo(9, -23); c.closePath(); c.fill(); c.stroke();
     c.fillStyle = '#fff'; c.beginPath(); c.arc(-3.5, -17, 2, 0, TAU); c.arc(3.5, -17, 2, 0, TAU); c.fill();
+  } else if (type === 'eater') {
+    const st = B ? B.state : 'move', open = st === 'gulp' ? 1 : st === 'stun' ? 0.05 : 0.3 + Math.sin(t * 4) * 0.08;
+    const puff = st === 'stun' ? 1.12 : 1;
+    c.save(); c.scale(puff, puff);
+    c.fillStyle = '#2A1840'; c.strokeStyle = '#C9B8FF'; c.lineWidth = 2.5;
+    c.beginPath();
+    for (let i = 0; i <= 20; i++) { const a = i * TAU / 20, rr = 26 + Math.sin(i * 3 + t * 5) * 1.6; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr * 0.92); }
+    c.closePath(); c.fill(); c.stroke();
+    for (const s of [-1, 1]) {
+      c.fillStyle = '#FFE36B'; c.beginPath(); c.ellipse(s * 9, -9, 4.2, st === 'stun' ? 1.2 : 4.2, 0, 0, TAU); c.fill();
+      if (st !== 'stun') { c.fillStyle = '#2A1840'; c.beginPath(); c.arc(s * 9 + 1, -8, 1.8, 0, TAU); c.fill(); }
+    }
+    const mh = 3 + open * 11;
+    c.fillStyle = '#7A1F3D'; c.beginPath(); c.ellipse(0, 7, 14, mh, 0, 0, TAU); c.fill();
+    c.fillStyle = '#F2F4F8';
+    for (let i = 0; i < 5; i++) { const x = -10 + i * 5; c.beginPath(); c.moveTo(x - 2, 7 - mh + 0.5); c.lineTo(x + 2, 7 - mh + 0.5); c.lineTo(x, 7 - mh + 4); c.closePath(); c.fill(); }
+    c.restore();
+  } else if (type === 'dusk') {
+    const fade = !B ? 1 : B.state === 'fade' ? B.fade / 0.5 : B.state === 'appear' ? 1 - B.fade / 0.5 : 1;
+    c.save(); c.globalAlpha *= Math.max(0.05, Math.min(1, fade));
+    const g = c.createRadialGradient(0, 0, 6, 0, 0, 46);
+    g.addColorStop(0, 'rgba(108,92,231,.5)'); g.addColorStop(1, 'rgba(108,92,231,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, 46, 0, TAU); c.fill();
+    c.fillStyle = '#1B1638'; c.strokeStyle = '#8E7CF0'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(-18, -4); c.quadraticCurveTo(-20, -30, 0, -30); c.quadraticCurveTo(20, -30, 18, -4);
+    for (let i = 0; i < 4; i++) { const x1 = 18 - (i + 0.5) * 9, x2 = 18 - (i + 1) * 9; c.quadraticCurveTo(x1 + 2, 28 + Math.sin(t * 4 + i) * 4, x2, 18 + Math.sin(t * 3 + i) * 3); }
+    c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#E8E3FF'; c.beginPath(); c.arc(0, -19, 5, Math.PI * 0.5, Math.PI * 1.5); c.quadraticCurveTo(-2.4, -19, 0, -14); c.fill();
+    c.fillStyle = '#DDE6FF';
+    for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 7, -7, 3.6, 1.8, s * 0.25, 0, TAU); c.fill(); }
+    c.restore();
   } else if (type === 'core') {
     const ph = B ? (B.phase || 0) : 0;
     const body = ['#FFB020', '#F08A24', '#E2572B'][ph], hi = ['#FFE9A8', '#FFD08A', '#FFB59E'][ph];
@@ -273,6 +307,12 @@ const SKINS = [
   { id: 'sternen', name: 'Sternenstaub', body: '#1A1440', eye: '#FFFFFF', fx: 'stars', req: { stat: 'wins', n: 1, text: 'Gewinne die Kampagne' } },
   { id: 'regenbogen', name: 'Regenbogen', body: 'rainbow', eye: '#FFFFFF', cost: 25000 },
   { id: 'gold', name: 'Goldschatten', body: '#D9A21B', eye: '#141821', rim: '#8A5A00', fx: 'shine', req: { stat: 'bosses', n: 25, text: 'Besiege 25 Bosse' } },
+  { id: 'tarn', name: 'Tarnung', body: '#3B4A2A', eye: '#E9F2D0', fx: 'camo', cost: 6000 },
+  { id: 'eis', name: 'Eis', body: '#A9D8F2', eye: '#1B3A5C', rim: '#5FA8D6', fx: 'shine', cost: 9000 },
+  { id: 'lava', name: 'Lava', body: '#2A0E0A', eye: '#FFB020', rim: '#E2572B', fx: 'cracks', cost: 14000 },
+  { id: 'nimmersatt', name: 'Nimmersatt', body: '#3A1C55', eye: '#FFE36B', rim: '#C9B8FF', req: { stat: 'eater', n: 3, text: 'Besiege den Schattenfresser 3×' } },
+  { id: 'nachtschatten', name: 'Nachtschatten', body: '#161233', eye: '#DDE6FF', fx: 'mist', req: { stat: 'dusk', n: 3, text: 'Besiege den Nachtmahr 3×' } },
+  { id: 'wochenheld', name: 'Wochenheld', body: '#4B2A7A', eye: '#FFE36B', rim: '#F4CF63', fx: 'shine', req: { stat: 'weeklyDone', n: 1, text: 'Schaffe eine Wochenherausforderung' } },
 ];
 const HATS = [
   { id: 'none', name: 'Ohne Hut' },
@@ -289,6 +329,13 @@ const HATS = [
   { id: 'heiligenschein', name: 'Heiligenschein', req: { stat: 'cleanBoss', n: 1, text: 'Besiege einen Boss ohne Treffer' } },
   { id: 'schlafmuetze', name: 'Schlafmütze', req: { stat: 'dailyDone', n: 3, text: 'Schaffe 3 tägliche Herausforderungen' } },
   { id: 'sonnenkrone', name: 'Sonnenkrone', req: { stat: 'core', n: 1, text: 'Besiege den Sonnenkern' } },
+  { id: 'kochmuetze', name: 'Kochmütze', cost: 4000 },
+  { id: 'cowboy', name: 'Cowboyhut', cost: 6000 },
+  { id: 'wikinger', name: 'Wikingerhelm', cost: 9000 },
+  { id: 'antennen', name: 'Fühler', req: { stat: 'bugsDashed', n: 50, text: 'Dashe 50 Käfer weg' } },
+  { id: 'mondsichel', name: 'Mondsichel', req: { stat: 'eater', n: 1, text: 'Besiege den Schattenfresser' } },
+  { id: 'kerze', name: 'Kerzenhut', req: { stat: 'dusk', n: 1, text: 'Besiege den Nachtmahr' } },
+  { id: 'lorbeer', name: 'Lorbeerkranz', req: { stat: 'weeklyDone', n: 1, text: 'Schaffe eine Wochenherausforderung' } },
 ];
 const SKIN_BY = Object.fromEntries(SKINS.map(s => [s.id, s]));
 const HAT_BY = Object.fromEntries(HATS.map(h => [h.id, h]));
@@ -325,6 +372,22 @@ function drawCreature(c, x, y, R, o) {
     }
     c.restore();
   }
+  if (sk.fx === 'camo' && !o.tint) {
+    c.save(); c.clip();
+    for (const [ox, oy, rr, col] of [[-0.5, -0.3, 0.35, '#5E6B3A'], [0.4, 0.2, 0.4, '#23291A'], [-0.1, 0.5, 0.3, '#6F7C45'], [0.5, -0.6, 0.28, '#23291A'], [-0.7, 0.4, 0.25, '#5E6B3A']]) {
+      c.fillStyle = col; c.beginPath(); c.ellipse(x + ox * R, y + oy * R, rr * R, rr * R * 0.7, ox, 0, TAU); c.fill();
+    }
+    c.restore();
+  }
+  if (sk.fx === 'cracks' && !o.tint) {
+    c.save(); c.clip();
+    c.strokeStyle = `rgba(255,150,40,${0.55 + 0.35 * Math.sin(t * 3)})`; c.lineWidth = Math.max(1, 1.3 * k); c.lineJoin = 'round';
+    c.beginPath();
+    c.moveTo(x - R * 0.8, y - R * 0.1); c.lineTo(x - R * 0.35, y + R * 0.1); c.lineTo(x - R * 0.1, y - R * 0.25); c.lineTo(x + R * 0.3, y);
+    c.moveTo(x + R * 0.1, y + R * 0.7); c.lineTo(x + R * 0.25, y + R * 0.35); c.lineTo(x + R * 0.7, y + R * 0.4);
+    c.moveTo(x - R * 0.3, y + R * 0.8); c.lineTo(x - R * 0.45, y + R * 0.45);
+    c.stroke(); c.restore();
+  }
   if (sk.fx === 'shine' && !o.tint) {
     c.save(); c.clip();
     const sx = x - R * 1.6 + ((t * 0.5) % 1.6) * R * 2.4;
@@ -332,6 +395,13 @@ function drawCreature(c, x, y, R, o) {
     g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,250,220,.75)'); g.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = g; c.fillRect(x - R * 2, y - R * 2, R * 4, R * 4);
     c.restore();
+  }
+  if (sk.fx === 'mist' && !o.tint) {
+    for (let i = 0; i < 3; i++) {
+      const f = (t * 0.45 + i / 3) % 1;
+      c.fillStyle = `rgba(221,230,255,${0.35 * (1 - f) * alpha})`;
+      c.beginPath(); c.arc(x + Math.sin(t * 1.3 + i * 2) * R * 0.7, y - R * 0.2 - f * R * 1.3, R * (0.12 + f * 0.12), 0, TAU); c.fill();
+    }
   }
   c.globalAlpha = a0 * Math.max(alpha, o.eyeAlpha ?? 0);
   c.fillStyle = sk.eye; c.strokeStyle = sk.eye; c.lineWidth = 1.6 * k; c.lineCap = 'round';
@@ -437,12 +507,122 @@ function drawHat(c, id, x, y, k, t) {
       c.fillRect(-6, -2.6, 12, 3.2); c.strokeRect(-6, -2.6, 12, 3.2);
       c.save(); c.translate(0, -8); c.rotate(t * 1.2); sunShape(c, 0, 0, 3.2); c.restore();
       break;
+    case 'kochmuetze':
+      c.fillStyle = '#F7F8FB';
+      c.beginPath(); c.arc(-4, -7, 4, 0, TAU); c.arc(0, -9.5, 4.6, 0, TAU); c.arc(4, -7, 4, 0, TAU); c.fill();
+      c.fillRect(-6, -5, 12, 5.5);
+      c.strokeStyle = '#C9CFDB'; c.lineWidth = 0.8; c.strokeRect(-6, -2.5, 12, 3);
+      break;
+    case 'cowboy':
+      c.fillStyle = '#8A5A2B';
+      c.beginPath(); c.ellipse(0, 0.3, 11.5, 2.6, 0, 0, TAU); c.fill();
+      c.beginPath(); c.moveTo(-6, 0); c.lineTo(-5.5, -7); c.quadraticCurveTo(-3, -9.5, -1.5, -8); c.quadraticCurveTo(0, -6.5, 1.5, -8); c.quadraticCurveTo(3, -9.5, 5.5, -7); c.lineTo(6, 0); c.closePath(); c.fill();
+      c.fillStyle = '#3A2410'; c.fillRect(-5.9, -2.8, 11.8, 1.8);
+      break;
+    case 'wikinger':
+      c.fillStyle = '#F2E6D8';
+      for (const sx of [-1, 1]) { c.beginPath(); c.moveTo(sx * 6, -2); c.quadraticCurveTo(sx * 12.5, -3, sx * 12, -11); c.quadraticCurveTo(sx * 9.5, -6, sx * 5, -5.5); c.closePath(); c.fill(); }
+      c.fillStyle = '#8A93A6'; c.beginPath(); c.ellipse(0, -0.5, 8, 8, 0, Math.PI, 0); c.fill();
+      c.fillStyle = '#5B6376'; c.fillRect(-8.2, -2.4, 16.4, 2.8); c.fillRect(-0.9, -2, 1.8, 4.5);
+      c.fillStyle = '#D2D7E1'; for (const rx of [-5.5, -2.5, 2.5, 5.5]) { c.beginPath(); c.arc(rx, -1, 0.6, 0, TAU); c.fill(); }
+      break;
+    case 'antennen': {
+      const b = Math.sin(t * 6) * 0.9;
+      c.strokeStyle = '#5B6376'; c.lineWidth = 1.2;
+      c.beginPath(); c.moveTo(-3, 0.5); c.quadraticCurveTo(-4, -6, -6.5, -10 + b); c.moveTo(3, 0.5); c.quadraticCurveTo(4, -6, 6.5, -10 - b); c.stroke();
+      for (const [bx, by] of [[-6.5, -10 + b], [6.5, -10 - b]]) {
+        c.fillStyle = 'rgba(255,227,107,.35)'; c.beginPath(); c.arc(bx, by, 3.6, 0, TAU); c.fill();
+        c.fillStyle = '#FFE36B'; c.beginPath(); c.arc(bx, by, 2, 0, TAU); c.fill();
+      }
+      break;
+    }
+    case 'mondsichel':
+      c.save(); c.translate(0, -9 + Math.sin(t * 2) * 0.6);
+      c.fillStyle = 'rgba(244,241,224,.25)'; c.beginPath(); c.arc(0, 0, 7, 0, TAU); c.fill();
+      c.fillStyle = '#F4F1E0'; c.beginPath(); c.arc(0, 0, 5, Math.PI * 0.5, Math.PI * 1.5); c.quadraticCurveTo(-2.2, 0, 0, 5); c.fill();
+      c.restore();
+      break;
+    case 'kerze': {
+      c.fillStyle = '#C98A1B'; c.beginPath(); c.ellipse(0, 0, 5.5, 1.6, 0, 0, TAU); c.fill();
+      c.fillStyle = '#F2E6D8'; c.fillRect(-2.2, -9, 4.4, 9);
+      c.fillStyle = '#E3D5BF'; c.fillRect(1, -9, 1.2, 4);
+      c.strokeStyle = '#2B2F3A'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(0, -9); c.lineTo(0, -10.5); c.stroke();
+      c.fillStyle = 'rgba(255,214,120,.3)'; c.beginPath(); c.arc(0, -12.5, 4.5, 0, TAU); c.fill();
+      c.save(); c.translate(0, -12.5); c.scale(0.26 + Math.sin(t * 13) * 0.02, 0.32 + Math.sin(t * 17) * 0.03); icon(c, 'flame'); c.restore();
+      break;
+    }
+    case 'lorbeer':
+      for (let i = 0; i < 10; i++) {
+        if (i === 4 || i === 5) continue;
+        const a = Math.PI * (1.08 + i * 0.093), lx = Math.cos(a) * 8.5, ly = 4 + Math.sin(a) * 8.5;
+        c.save(); c.translate(lx, ly); c.rotate(a + Math.PI / 2 + (i < 5 ? 0.5 : -0.5));
+        c.fillStyle = i % 2 ? '#5E8C3A' : '#77A84A'; c.beginPath(); c.ellipse(0, 0, 2.8, 1.3, 0, 0, TAU); c.fill();
+        c.restore();
+      }
+      c.fillStyle = COL.gold; c.beginPath(); c.arc(0, -4.3, 1.1, 0, TAU); c.fill();
+      break;
   }
   c.restore();
 }
 
+// ---------- Spuren (Partikel hinter der Figur) ----------
+const TRAILS = [
+  { id: 'none', name: 'Ohne Spur' },
+  { id: 'funken', name: 'Funken', cost: 2000 },
+  { id: 'blasen', name: 'Blasen', cost: 3000 },
+  { id: 'herzen', name: 'Herzen', cost: 5000 },
+  { id: 'noten', name: 'Noten', cost: 6000 },
+  { id: 'sterne', name: 'Sternschnuppe', cost: 9000 },
+  { id: 'regenbogen', name: 'Regenbogen', cost: 20000 },
+  { id: 'echo', name: 'Schattenecho', req: { stat: 'tutorial', n: 1, text: 'Schließe das Tutorial ab' } },
+  { id: 'blaetter', name: 'Blätter', req: { stat: 'lvl_garden', n: 6, text: 'Erreiche Stufe 6 im Garten' } },
+  { id: 'feuer', name: 'Feuer', req: { stat: 'bosses', n: 10, text: 'Besiege 10 Bosse' } },
+  { id: 'mond', name: 'Mondstaub', req: { stat: 'dusk', n: 2, text: 'Besiege den Nachtmahr 2×' } },
+];
+const TRAIL_BY = Object.fromEntries(TRAILS.map(t => [t.id, t]));
+function emitTrail(arr, kind, x, y) {
+  const q = { x: x + fx(-3, 3), y: y + fx(-3, 3), vx: fx(-12, 12), vy: fx(-12, 12), life: 0.7, max: 0.7, trail: kind, rot: fx(0, TAU), hue: (performance.now() / 8) % 360 };
+  if (kind === 'blasen') { q.vy = fx(-30, -12); q.life = q.max = 1.1; }
+  else if (kind === 'feuer') { q.vy = fx(-40, -20); q.life = q.max = 0.5; }
+  else if (kind === 'blaetter') { q.vy = fx(10, 25); q.life = q.max = 1; }
+  else if (kind === 'noten' || kind === 'herzen') { q.vy = fx(-28, -12); q.life = q.max = 0.9; }
+  else if (kind === 'echo') { q.vx = q.vy = 0; q.life = q.max = 0.45; }
+  arr.push(q);
+}
+function drawTrailPart(c, q, t) {
+  const k = Math.max(0, q.life / q.max);
+  c.save(); c.globalAlpha *= k; c.translate(q.x, q.y);
+  switch (q.trail) {
+    case 'funken': c.fillStyle = k > 0.5 ? '#FFE9A8' : '#FFB020'; c.beginPath(); c.arc(0, 0, 1.2 + k * 1.8, 0, TAU); c.fill(); break;
+    case 'blasen': c.strokeStyle = '#8FD3FF'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, 0, 2 + (1 - k) * 3, 0, TAU); c.stroke(); break;
+    case 'herzen': c.scale(0.3 + k * 0.15, 0.3 + k * 0.15); icon(c, 'heart'); break;
+    case 'noten':
+      c.fillStyle = '#C9B8FF'; c.strokeStyle = '#C9B8FF'; c.lineWidth = 1.2;
+      c.beginPath(); c.ellipse(-1.5, 2, 2.2, 1.6, -0.4, 0, TAU); c.fill();
+      c.beginPath(); c.moveTo(0.5, 1.5); c.lineTo(0.5, -5); c.quadraticCurveTo(3, -4, 3.5, -1.5); c.stroke(); break;
+    case 'sterne': c.rotate(q.rot + t * 3); c.fillStyle = '#FFF6D0'; starPath(c, 0, 0, 2 + k * 2.5, 0.9 + k, 5); c.fill(); break;
+    case 'regenbogen': c.fillStyle = `hsl(${q.hue} 85% 62%)`; c.beginPath(); c.arc(0, 0, 2 + k * 2.5, 0, TAU); c.fill(); break;
+    case 'echo': c.fillStyle = 'rgba(20,24,33,.5)'; c.beginPath(); c.arc(0, -2, 6 * k + 2, 0, TAU); c.fill(); break;
+    case 'blaetter': c.rotate(q.rot + t * 2); c.fillStyle = k > 0.5 ? '#77A84A' : '#C98A1B'; c.beginPath(); c.ellipse(0, 0, 3.2, 1.5, 0, 0, TAU); c.fill(); break;
+    case 'feuer': c.fillStyle = k > 0.6 ? '#FFD37A' : k > 0.3 ? '#F08A24' : '#C3402C'; c.beginPath(); c.arc(0, 0, 1.5 + k * 3, 0, TAU); c.fill(); break;
+    case 'mond':
+      c.fillStyle = '#DDE6FF'; c.beginPath(); c.arc(0, 0, 0.8 + k * 1.6, 0, TAU); c.fill();
+      c.globalAlpha *= 0.4; c.beginPath(); c.arc(0, 0, 3 + k * 3, 0, TAU); c.fill(); break;
+  }
+  c.restore();
+}
+// Feste Reihe von Partikeln nach links, für Vorschaubilder
+function drawTrailSample(c, kind, x, y, s, t) {
+  if (!kind || kind === 'none') return;
+  for (let i = 1; i < 8; i++) {
+    const q = { x: 0, y: 0, trail: kind, rot: i * 1.7, hue: (i * 40 + t * 60) % 360, life: 1 - i / 8, max: 1 };
+    c.save(); c.translate(x - i * 5 * s + Math.sin(t * 3 + i) * s, y + Math.sin(i * 1.3 + t * 2) * 2.5 * s); c.scale(s, s);
+    drawTrailPart(c, q, t); c.restore();
+  }
+}
+
 // Kleiner Innenhof mit Säule, Schatten und Figur: für Hauptmenü, Garderobe und Vorschau
-function drawYard(c, w, h, skin, hat, t) {
+function drawYard(c, w, h, skin, hat, t, trail) {
   c.save();
   c.fillStyle = COL.lit; c.fillRect(0, 0, w, h);
   const cell = w / 7;
@@ -463,6 +643,7 @@ function drawYard(c, w, h, skin, hat, t) {
   c.strokeStyle = COL.edge; c.lineWidth = Math.max(2, w / 110); c.strokeRect(px + w / 110 + 1, py + w / 110 + 1, pw - 2 * (w / 110 + 1), ph - 2 * (w / 110 + 1));
   c.save(); c.translate(w * 0.9, h * 0.1); c.rotate(t * 0.5); sunShape(c, 0, 0, w * 0.035); c.restore();
   const R = Math.min(w, h) * 0.17;
+  drawTrailSample(c, trail, w * 0.6 - R * 0.9, h * 0.6 + R * 0.45 + Math.sin(t * 2.2) * R * 0.06, R / 9, t);
   drawCreature(c, w * 0.6, h * 0.6 + Math.sin(t * 2.2) * R * 0.06, R, { skin, hat, t, wob: Math.sin(t * 3) * R * 0.06, eyes: Math.sin(t * 0.9) > 0.97 ? 'happy' : 'open' });
   c.restore();
 }
@@ -491,12 +672,13 @@ function iconCanvas(k, size, el) {
   icon(cc, k);
   return c;
 }
-function creatureCanvas(skin, hat, size, el, t) {
+function creatureCanvas(skin, hat, size, el, t, trail) {
   const c = el || document.createElement('canvas');
   c.setAttribute('aria-hidden', 'true');
   const cc = sizeCanvas(c, size, size);
   cc.clearRect(0, 0, size, size);
   const R = size * 0.26;
-  drawCreature(cc, size / 2, size * 0.6, R, { skin, hat, t: t ?? 1.1, wob: 0 });
+  if (trail) drawTrailSample(cc, trail, size / 2 - R * 0.6, size * 0.6 + R * 0.5, R / 10, t ?? 1.1);
+  drawCreature(cc, size / 2 + (trail && trail !== 'none' ? R * 0.35 : 0), size * 0.6, R, { skin, hat, t: t ?? 1.1, wob: 0 });
   return c;
 }

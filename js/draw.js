@@ -25,7 +25,7 @@ function pillarShadows(az) {
   return () => {
     for (const r of S.pillars) {
       if (r.glass > 0) continue;
-      const c = [[r.x, r.y], [r.x + r.w, r.y], [r.x + r.w, r.y + r.h], [r.x, r.y + r.h]];
+      const c = pillarOutline(r);
       const h = hull(c.concat(c.map(q => [q[0] + vx, q[1] + vy])));
       ctx.moveTo(h[0][0], h[0][1]);
       for (let i = 1; i < h.length; i++) ctx.lineTo(h[i][0], h[i][1]);
@@ -50,12 +50,18 @@ function draw() {
   const flashes = P.settings.flashes;
   ctx.save();
   if (S.shake > 0 && P.settings.shake) ctx.translate(fx(-1, 1) * S.shake * 9, fx(-1, 1) * S.shake * 9);
-  ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
-  tiles(COL.tile);
-
-  if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5); shadeRegion(pillarShadows(az2()), 0.5); }
-  else shadeRegion(pillarShadows(S.az), 1);
-  if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } });
+  if (S.map.dark) {
+    ctx.fillStyle = COL.shade; ctx.fillRect(-10, -10, W + 20, H + 20);
+    tiles(COL.shadeTile);
+    drawTorchLight();
+  } else {
+    ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
+    tiles(COL.tile);
+    if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5); shadeRegion(pillarShadows(az2()), 0.5); }
+    else shadeRegion(pillarShadows(S.az), 1);
+    if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } });
+  }
+  drawDeco();
   if (S.puddles.length) shadeRegion(() => {
     for (const q of S.puddles) {
       const max = q.max || 8, r = q.r * Math.min(1, (max - q.life) * 4) * Math.min(1, q.life);
@@ -150,15 +156,33 @@ function draw() {
   }
 
   // Säulen
-  for (const r of S.pillars) {
-    const blink = r.doomed && Math.floor(r.crumble * 8) % 2 === 0;
-    const g = r.grow > 0 ? 1 - r.grow / 0.4 : 1;
-    const cx = r.x + r.w / 2, cy = r.y + r.h / 2, w = r.w * g, h = r.h * g;
-    const glass = r.glass > 0 && !(r.glass < 1 && Math.floor(r.glass * 10) % 2);
-    ctx.fillStyle = blink ? COL.warn : glass ? 'rgba(190,225,255,.55)' : COL.top;
-    ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
-    ctx.strokeStyle = glass ? '#8FC7EE' : COL.edge; ctx.lineWidth = 3;
-    if (w > 8) ctx.strokeRect(cx - w / 2 + 3, cy - h / 2 + 3, w - 6, h - 6);
+  for (const r of S.pillars) drawPillar(r);
+  drawTorches();
+
+  // Aura des Schattenfressers und Lichtflecken des Nachtmahrs
+  const E = eaterAura();
+  if (E) {
+    const g = ctx.createRadialGradient(E.x, E.y, 10, E.x, E.y, E.aura);
+    g.addColorStop(0, 'rgba(255,246,208,.55)'); g.addColorStop(1, 'rgba(255,246,208,.12)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(E.x, E.y, E.aura, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(201,184,255,.85)'; ctx.lineWidth = 2; ctx.setLineDash([7, 5]); ctx.lineDashOffset = S.t * 25;
+    ctx.stroke(); ctx.setLineDash([]);
+    if (E.state === 'gulp' && E.prey) {
+      const r = E.prey;
+      ctx.strokeStyle = 'rgba(201,184,255,' + (0.5 + 0.4 * Math.sin(S.t * 30)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([9, 6]);
+      ctx.beginPath(); ctx.moveTo(E.x, E.y); ctx.lineTo(pcx(r), pcy(r)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.lineWidth = 3; ctx.beginPath();
+      if (r.round) ctx.arc(pcx(r), pcy(r), r.w / 2 + 4, 0, TAU); else ctx.rect(r.x - 4, r.y - 4, r.w + 8, r.h + 8);
+      ctx.stroke();
+    }
+  }
+  for (const sp of S.spots) {
+    ctx.globalAlpha = sp.warn > 0 ? 0.35 + 0.3 * Math.sin(S.t * 20) : Math.min(1, sp.life);
+    const g = ctx.createRadialGradient(sp.x, sp.y, 2, sp.x, sp.y, sp.r);
+    g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.55, 'rgba(221,230,255,.85)'); g.addColorStop(1, 'rgba(160,170,255,.2)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = '#B8C4FF'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.lineDashOffset = -S.t * 30; ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   }
 
   // Lichtwirbel
@@ -208,6 +232,11 @@ function draw() {
     if (q.ghost) {
       ctx.globalAlpha = q.life * 2.2; ctx.fillStyle = skinCol === 'rainbow' ? `hsl(${(S.t * 70) % 360} 62% 36%)` : skinCol;
       ctx.beginPath(); ctx.arc(q.x, q.y, pr() * 0.9, 0, TAU); ctx.fill();
+    } else if (q.trail) {
+      ctx.globalAlpha = 1; drawTrailPart(ctx, q, S.t);
+    } else if (q.smoke) {
+      ctx.globalAlpha = Math.min(0.4, q.life * 0.35); ctx.fillStyle = '#6B6470';
+      ctx.beginPath(); ctx.arc(q.x, q.y, 3 + (1.4 - q.life) * 6, 0, TAU); ctx.fill();
     } else if (q.streak) {
       ctx.strokeStyle = COL.white; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - q.vx * 0.06, q.y - q.vy * 0.06); ctx.stroke();
@@ -355,7 +384,8 @@ function draw() {
   }
 
   // Sonne(n)
-  if (!on('eclipse')) { drawSun(S.az, on('noon') ? 1.6 : 1); if (sun2On()) drawSun(az2(), 1); }
+  if (!on('eclipse') && !S.map.dark && !duskDark()) { drawSun(S.az, on('noon') ? 1.6 : 1); if (sun2On()) drawSun(az2(), 1); }
+  if (duskDark()) drawDarkness();
 
   // Überblendungen
   if (on('eclipse')) { ctx.fillStyle = 'rgba(12,15,26,.45)'; ctx.fillRect(-10, -10, W + 20, H + 20); }
@@ -376,7 +406,7 @@ function draw() {
 
   // Anzeigen
   if (S.mode === 'play' || S.mode === 'pick' || S.mode === 'pause') {
-    const tag = S.cfg.mode === 'daily' && S.rule ? ' · ' + RULE_BY[S.rule].name : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
+    const tag = S.rules.size ? ' · ' + [...S.rules].map(id => RULE_BY[id].name).join(' + ') : S.cfg.mode === 'campaign' ? tr(' von 10', ' of 10') : '';
     textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
     if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 32, COL.warn, MONO, 'right');
     const ready = S.charges > 0;
@@ -391,6 +421,7 @@ function draw() {
         textOut(Math.ceil(Math.max(0, B.time)) + ' s', bx + bw + 8, by + 9, '#FFFFFF', '700 11px "JetBrains Mono", monospace');
       }
     }
+    drawWindVane();
     const list = [];
     const lab = { shield: [tr('Schirm', 'Umbrella'), COL.umbrella], slow: [tr('Sanduhr', 'Hourglass'), '#5FBE90'], magnet: ['Magnet', COL.magnet], boots: ['Turbo', '#6FB8F0'],
                   star: [tr('Punkte ×2', 'Points ×2'), COL.gold], frost: ['Frost', COL.frost], shrink: [tr('Winzig', 'Tiny'), COL.shrink], invert: [tr('Verdreht', 'Inverted'), '#C98AE6'],
@@ -424,4 +455,5 @@ function draw() {
     textOut(b.text, W / 2, H / 2 + 12, b.good ? '#5FBE90' : '#F4CF63', '800 24px "Unbounded", "Arial Black", sans-serif', 'center');
     ctx.globalAlpha = 1;
   }
+  if (S.cfg.mode === 'tutorial') tutDraw();
 }

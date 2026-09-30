@@ -54,10 +54,12 @@ const EN = {
     missile: ['Homing missiles', 'Chaos wheel: they chase you in curves. −20. Lure them into a pillar or dash through.'],
     vortex: ['Light vortex', 'Chaos wheel: pulls you in for 5 s, out of your shade.'],
     glass: ['Glass pillars', 'Chaos wheel: half of the pillars turn transparent for 5 s and cast no shadow.'],
-    prisma: ['Prisma', 'Levels 2, 5, 8 … Floats around the yard and fires spinning lasers in all directions.'],
-    queen: ['Beetle Queen', 'Levels 3, 6, 9 … Circles the middle, fires rings of light orbs and summons bugs.'],
-    bull: ['Sun Bull', 'Levels 4, 7, 10 … Aims with a red line and charges. Smashes pillars. After hitting the wall he is dazed, and a dash counts double.'],
-    core: ['Sun Core', 'Final boss of the campaign, every 10 levels in Endless. Fights in three phases: lasers first, then orb rings, finally he charges.'],
+    prisma: ['Prisma', 'From level 2, then every 5 levels. Floats around the yard and fires spinning lasers in all directions.'],
+    queen: ['Beetle Queen', 'From level 3, then every 5 levels. Circles the middle, fires rings of light orbs and summons bugs.'],
+    bull: ['Sun Bull', 'From level 4, then every 5 levels. Aims with a red line and charges. Smashes pillars. After hitting the wall he is dazed, and a dash counts double.'],
+    eater: ['Shadow Eater', 'From level 5. There is no shade inside his aura. He swallows the pillar closest to you and is full and sluggish afterwards: then a dash counts double.'],
+    dusk: ['Nightmare', 'From level 6. Darkens the whole yard. The sun stops burning, but you can barely see, patches of light hunt you and he keeps jumping to new places.'],
+    core: ['Sun Core', 'Final boss of the campaign on level 10, every 10 levels in Endless. Fights in three phases: lasers first, then orb rings, finally he charges.'],
   },
   rules: {
     traps: ['Traps only', 'Only traps show up. In return dew counts triple.'],
@@ -124,12 +126,32 @@ const EN = {
     fashion: ['Fashionista', 'Own 6 skins or hats.'],
     duel: ['Duelist', 'Win an online duel.'],
     traps: ['Bad luck', 'Step into 20 traps.'],
+    tutorial: ['Quick learner', 'Finish the tutorial.'],
+    eater: ['Fed up', 'Defeat the Shadow Eater.'],
+    dusk: ['Daybreak', 'Defeat the Nightmare.'],
+    allbosses: ['Boss slayer', 'Defeat each of the six bosses at least once.'],
+    boss50: ['Boss destroyer', 'Defeat 50 bosses in total.'],
+    explorer: ['Globetrotter', 'Play on all four maps.'],
+    garden10: ['Gardener', 'Reach level 10 in the garden.'],
+    roof10: ['Roofer', 'Reach level 10 on the rooftop.'],
+    cellar10: ['Cellar dweller', 'Reach level 10 in the cellar.'],
+    weekly1: ['Weekly hero', 'Complete a weekly challenge.'],
+    weekly3: ['Regular', 'Complete three weekly challenges.'],
+    lvl25: ['Tireless', 'Reach level 25 in Endless mode.'],
+    trails5: ['Trailblazer', 'Own 5 trails.'],
   },
-  skin: { schatten: 'Shadow', mitternacht: 'Midnight', pflaume: 'Plum', moos: 'Moss', tinte: 'Ink', glut: 'Ember', geist: 'Ghost', honig: 'Honey', stier: 'Bull blood', sternen: 'Stardust', regenbogen: 'Rainbow', gold: 'Golden shadow' },
+  skin: { schatten: 'Shadow', mitternacht: 'Midnight', pflaume: 'Plum', moos: 'Moss', tinte: 'Ink', glut: 'Ember', geist: 'Ghost', honig: 'Honey', stier: 'Bull blood', sternen: 'Stardust', regenbogen: 'Rainbow', gold: 'Golden shadow',
+          tarn: 'Camouflage', eis: 'Ice', lava: 'Lava', nimmersatt: 'Glutton', nachtschatten: 'Nightshade', wochenheld: 'Weekly hero' },
   hat: { none: 'No hat', zylinder: 'Top hat', party: 'Party hat', bommel: 'Bobble hat', blume: 'Little flower', pirat: 'Pirate hat', propeller: 'Propeller cap', zauberer: 'Wizard hat',
-         diadem: 'Prisma tiara', krone: 'Beetle crown', hoerner: 'Bull horns', heiligenschein: 'Halo', schlafmuetze: 'Nightcap', sonnenkrone: 'Sun crown' },
+         diadem: 'Prisma tiara', krone: 'Beetle crown', hoerner: 'Bull horns', heiligenschein: 'Halo', schlafmuetze: 'Nightcap', sonnenkrone: 'Sun crown',
+         kochmuetze: 'Chef hat', cowboy: 'Cowboy hat', wikinger: 'Viking helmet', antennen: 'Antennae', mondsichel: 'Crescent moon', kerze: 'Candle hat', lorbeer: 'Laurel wreath' },
+  trail: { none: 'No trail', funken: 'Sparks', blasen: 'Bubbles', herzen: 'Hearts', noten: 'Notes', sterne: 'Shooting star', regenbogen: 'Rainbow',
+           echo: 'Shadow echo', blaetter: 'Leaves', feuer: 'Fire', mond: 'Moon dust' },
   req: { geist: 'Defeat Prisma 3×', honig: 'Defeat the Beetle Queen 3×', stier: 'Defeat the Sun Bull 3×', sternen: 'Win the campaign', gold: 'Defeat 25 bosses',
-         diadem: 'Defeat Prisma', krone: 'Defeat the Beetle Queen', hoerner: 'Defeat the Sun Bull', heiligenschein: 'Defeat a boss without being hit', schlafmuetze: 'Complete 3 daily challenges', sonnenkrone: 'Defeat the Sun Core' },
+         diadem: 'Defeat Prisma', krone: 'Defeat the Beetle Queen', hoerner: 'Defeat the Sun Bull', heiligenschein: 'Defeat a boss without being hit', schlafmuetze: 'Complete 3 daily challenges', sonnenkrone: 'Defeat the Sun Core',
+         nimmersatt: 'Defeat the Shadow Eater 3×', nachtschatten: 'Defeat the Nightmare 3×', wochenheld: 'Complete a weekly challenge',
+         antennen: 'Dash through 50 bugs', mondsichel: 'Defeat the Shadow Eater', kerze: 'Defeat the Nightmare', lorbeer: 'Complete a weekly challenge' },
+  treq: { echo: 'Finish the tutorial', blaetter: 'Reach level 6 in the garden', feuer: 'Defeat 10 bosses', mond: 'Defeat the Nightmare 2×' },
   diff: { easy: ['Easy', 'Sun and hits hurt less. 75% points.'], normal: ['Normal', 'How the game is meant to be played.'], hard: ['Hard', 'More heat, harder hits. 130% points.'] },
   rar: { c: 'Common', r: 'Rare', e: 'Epic' },
   ev: { 'Mittagssonne': 'High noon', 'Zweite Sonne': 'Second sun', 'Sturmböe': 'Gale', 'Käferschwarm': 'Bug swarm', 'Sonnenfunken': 'Solar sparks', 'Erdbeben': 'Earthquake', 'Blitzlicht': 'Flashbang',
@@ -162,6 +184,10 @@ function applyDataLang() {
     swap(h, 'name', null, EN.hat[h.id] && [EN.hat[h.id]]);
     if (h.req) { if (!h.req._de) h.req._de = h.req.text; h.req.text = en && EN.req[h.id] ? EN.req[h.id] : h.req._de; }
   }
+  for (const t of TRAILS) {
+    swap(t, 'name', null, EN.trail[t.id] && [EN.trail[t.id]]);
+    if (t.req) { if (!t.req._de) t.req._de = t.req.text; t.req.text = en && EN.treq[t.id] ? EN.treq[t.id] : t.req._de; }
+  }
   for (const k in DIFF) swap(DIFF[k], 'name', 'note', EN.diff[k]);
   for (const k in RARITY) { if (!RARITY[k]._de) RARITY[k]._de = RARITY[k][0]; RARITY[k][0] = en ? EN.rar[k] : RARITY[k]._de; }
   for (const b of BOSSES.concat([CORE])) { const x = EN.lex[b.type]; swap(b, 'name', null, x && [x[0]]); }
@@ -186,6 +212,10 @@ const STATIC_EN = {
   '10 Stufen und 9 Bosse. Am Ende wartet der Sonnenkern. Besieg ihn und du gewinnst.': '10 levels and 9 bosses. The Sun Core waits at the end. Defeat him and you win.',
   'Kein Ende. Jede Stufe wird härter, alle 10 Stufen kommt der Sonnenkern. Wie weit schaffst du es?': 'No end. Every level gets harder, and every 10 levels the Sun Core shows up. How far can you get?',
   'Boss üben': 'Practice boss', 'Käferkönigin': 'Beetle Queen', 'Sonnenstier': 'Sun Bull', 'Sonnenkern': 'Sun Core',
+  'Schattenfresser': 'Shadow Eater', 'Nachtmahr': 'Nightmare', 'Woche': 'Week',
+  'Karte für Kampagne, Endlos und Boss üben': 'Map for campaign, endless and boss practice',
+  'Diese Woche': 'This week', 'Wochenherausforderung starten': 'Start weekly challenge',
+  'Tutorial überspringen': 'Skip tutorial', 'Tutorial spielen': 'Play tutorial', 'Spuren': 'Trails', 'Skins, Hüte & Spuren': 'Skins, hats & trails',
   // Mehrspieler
   'Mehrspieler': 'Multiplayer',
   'Zwei Spieler, derselbe Innenhof. Ihr startet mit denselben Säulen, jeder in seiner eigenen Welt, und seht euch als Geist. Jeder besiegte Boss schickt dem anderen einen Angriff. Wer länger überlebt, gewinnt.': 'Two players, the same yard. You both start with the same pillars, each in your own world, and see each other as a ghost. Every defeated boss sends an attack to the other. Whoever survives longer wins.',

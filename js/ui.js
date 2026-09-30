@@ -93,12 +93,16 @@ function closeAll() { stack = []; show(true); if (document.activeElement && docu
 function resetTo(id) { stack = [id]; show(); }
 
 const MODE_NAME = { get campaign() { return tr('Kampagne', 'Campaign'); }, get endless() { return tr('Endlos', 'Endless'); }, get daily() { return tr('Tägliche Herausforderung', 'Daily challenge'); },
-                    get practice() { return tr('Boss üben', 'Practice boss'); }, get duel() { return tr('Online-Duell', 'Online duel'); } };
+                    get practice() { return tr('Boss üben', 'Practice boss'); }, get duel() { return tr('Online-Duell', 'Online duel'); },
+                    get weekly() { return tr('Wochenherausforderung', 'Weekly challenge'); }, get tutorial() { return 'Tutorial'; } };
+const rulesLabel = rules => rules.map(r => (typeof r === 'string' ? RULE_BY[r] : r).name).join(' + ');
 function modeName() {
   const m = S.cfg.mode;
-  if (m === 'daily') return tr('Täglich · ', 'Daily · ') + RULE_BY[S.rule].name;
+  if (m === 'daily') return tr('Täglich · ', 'Daily · ') + rulesLabel([...S.rules]) + ' · ' + mapName(S.map);
+  if (m === 'weekly') return tr('Woche · ', 'Week · ') + rulesLabel([...S.rules]) + ' · ' + mapName(S.map);
+  if (m === 'tutorial') return 'Tutorial';
   if (m === 'duel') return tr('Duell gegen ', 'Duel against ') + (Net.opp ? Net.opp.name : '…');
-  return MODE_NAME[m] + (m === 'campaign' || m === 'endless' || m === 'practice' ? ' · ' + S.diff.name : '');
+  return MODE_NAME[m] + (m === 'campaign' || m === 'endless' || m === 'practice' ? ' · ' + S.diff.name + ' · ' + mapName(S.map) : '');
 }
 function fmtTime(sec) {
   sec = Math.floor(sec || 0);
@@ -111,12 +115,52 @@ RENDER.scrMain = () => {
   $('walletMain').textContent = fmt(P.wallet);
   $('achCountMain').textContent = Object.keys(P.ach).length + ' / ' + ACH.length;
   const di = dailyInfo(), dd = P.daily[di.key] || {};
-  $('dailyName').textContent = di.rule.name;
+  $('dailyName').textContent = di.rule.name + ' · ' + mapName(di.map);
   $('dailyDescMain').textContent = di.rule.desc;
   const st = streakNow();
   $('dailyMetaMain').textContent = (dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : tr('Ziel: Stufe ' + DAILY_GOAL + ' · Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Goal: level ' + DAILY_GOAL + ' · Reward ' + fmt(DAILY_REWARD) + ' points')) + (st ? tr(' · Serie: ' + st + (st === 1 ? ' Tag' : ' Tage'), ' · Streak: ' + st + (st === 1 ? ' day' : ' days')) : '');
   iconCanvas(di.rule.icon, 40, $('dailyIcon'));
+  const wi = weeklyInfo(), wd = P.weekly[wi.key] || {};
+  $('weeklyName').textContent = rulesLabel(wi.rules) + ' · ' + mapName(wi.map);
+  $('weeklyDescMain').textContent = wi.rules.map(r => r.desc).join(' ');
+  $('weeklyMetaMain').textContent = weeklyMeta(wi, wd);
+  iconCanvas('trophy', 40, $('weeklyIcon'));
 };
+function weeklyMeta(wi, wd) {
+  const left = weekEnds();
+  const time = tr(' · noch ' + left + (left === 1 ? ' Tag' : ' Tage'), ' · ' + left + (left === 1 ? ' day' : ' days') + ' left');
+  if (wd.done) return tr('Diese Woche geschafft', 'Done this week') + (wd.best ? tr(' · Bestwert ', ' · Best ') + fmt(wd.best) : '') + time;
+  return tr('Ziel: Stufe ' + WEEKLY_GOAL + ' · ' + fmt(WEEKLY_REWARD) + ' Punkte', 'Goal: level ' + WEEKLY_GOAL + ' · ' + fmt(WEEKLY_REWARD) + ' points') +
+    (P.stats.weeklyDone ? '' : tr(' + exklusiver Skin und Hut', ' + exclusive skin and hat')) + time;
+}
+// Kleines Vorschaubild einer Karte
+function drawMapPreview(el, m, t) {
+  const rc = el.getBoundingClientRect(), w = rc.width || 160, h = rc.height || 100, c = sizeCanvas(el, w, h), p = m.pal;
+  c.fillStyle = m.dark ? p.shade : p.lit; c.fillRect(0, 0, w, h);
+  const cell = w / 8;
+  const grid = col => { c.strokeStyle = col; c.lineWidth = 1; c.beginPath(); for (let x = cell; x < w; x += cell) { c.moveTo(x, 0); c.lineTo(x, h); } for (let y = cell; y < h; y += cell) { c.moveTo(0, y); c.lineTo(w, y); } c.stroke(); };
+  grid(m.dark ? p.shadeTile : p.tile);
+  const s = h * 0.34, px = w * 0.28, py = h * 0.28;
+  const outline = m.round ? Array.from({ length: 14 }, (_, i) => [px + s / 2 + Math.cos(i * TAU / 14) * s / 2, py + s / 2 + Math.sin(i * TAU / 14) * s / 2])
+                          : [[px, py], [px + s, py], [px + s, py + s], [px, py + s]];
+  const poly = pts => { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (const q of pts.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); };
+  if (m.dark) {
+    const tx = w * 0.06, ty = h * 0.12, g = c.createRadialGradient(tx, ty, 2, tx, ty, w * 0.75);
+    g.addColorStop(0, '#FFDC96'); g.addColorStop(0.7, p.lit); g.addColorStop(1, 'rgba(242,180,94,0)');
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    const far = outline.map(([x, y]) => { const dx = x - tx, dy = y - ty, d = Math.hypot(dx, dy); return [x + dx / d * w, y + dy / d * w]; });
+    c.fillStyle = p.shade; poly(hull(outline.concat(far))); c.fill();
+    c.fillStyle = '#FFD37A'; c.beginPath(); c.arc(tx, ty, 3.5, 0, TAU); c.fill();
+  } else {
+    const vx = w * 0.42, vy = h * 0.42;
+    c.fillStyle = p.shade; poly(hull(outline.concat(outline.map(([x, y]) => [x + vx, y + vy])))); c.fill();
+  }
+  c.fillStyle = p.top; poly(outline); c.fill();
+  if (m.chimneys) { c.fillStyle = '#15100F'; c.fillRect(px + s * 0.25, py + s * 0.25, s * 0.5, s * 0.5); }
+  if (m.wind) { c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 1.5; c.beginPath(); for (let i = 0; i < 3; i++) { const y = h * (0.2 + i * 0.28); c.moveTo(w * 0.6, y); c.lineTo(w * 0.9, y); } c.stroke(); }
+  drawCreature(c, w * 0.66, h * 0.66, h * 0.13, { skin: P.equip.skin, hat: P.equip.hat, t: t || 1, wob: 0 });
+}
+const selMap = () => { const m = MAP_BY[P.settings.map]; return m && mapUnlocked(m) ? m.id : 'yard'; };
 
 RENDER.scrModes = () => {
   for (const b of $('diffSeg').children) b.setAttribute('aria-pressed', String(b.dataset.diff === P.settings.diff));
@@ -125,32 +169,52 @@ RENDER.scrModes = () => {
   $('metaEndless').textContent = P.best.endless ? tr('Rekord ', 'Best ') + fmt(P.best.endless) + (P.stats.endlessLevel ? tr(' · bis Stufe ', ' · up to level ') + P.stats.endlessLevel : '') : tr('Noch nicht gespielt', 'Not played yet');
   const di = dailyInfo(), dd = P.daily[di.key] || {};
   $('dailyName2').textContent = tr('Täglich: ', 'Daily: ') + di.rule.name;
-  $('dailyDesc2').textContent = di.rule.desc + tr(' Erreiche Stufe ' + DAILY_GOAL + '. Immer auf Normal.', ' Reach level ' + DAILY_GOAL + '. Always on Normal.');
+  const wi = weeklyInfo(), wd = P.weekly[wi.key] || {};
+  $('weeklyName2').textContent = tr('Woche: ', 'Week: ') + rulesLabel(wi.rules);
+  $('weeklyDesc2').textContent = tr('Zwei Regeln gleichzeitig auf ', 'Two rules at once on ') + mapName(wi.map) + '. ' + wi.rules.map(r => r.desc).join(' ');
+  $('metaWeekly').textContent = weeklyMeta(wi, wd);
+  iconCanvas('trophy', 36, $('weeklyIcon2'));
+  const grid = $('mapGrid'); grid.innerHTML = '';
+  for (const m of MAPS) {
+    const ok = mapUnlocked(m), b = document.createElement('button');
+    b.className = 'map-card' + (ok ? '' : ' locked'); b.dataset.map = m.id;
+    b.setAttribute('aria-pressed', String(selMap() === m.id));
+    const cvs = document.createElement('canvas'); cvs.setAttribute('aria-hidden', 'true');
+    const nm = document.createElement('b'); nm.textContent = mapName(m);
+    const st = document.createElement('span'); st.textContent = ok ? mapDesc(m) : mapLockText(m);
+    b.append(cvs, nm, st); b.title = mapDesc(m);
+    grid.appendChild(b);
+    drawMapPreview(cvs, m);
+  }
+  $('dailyDesc2').textContent = di.rule.desc + tr(' Karte: ' + mapName(di.map) + '. Erreiche Stufe ' + DAILY_GOAL + '.', ' Map: ' + mapName(di.map) + '. Reach level ' + DAILY_GOAL + '.');
   $('metaDaily').textContent = dd.done ? tr('Heute geschafft', 'Done today') + (dd.best ? tr(' · Bestwert ', ' · Best ') + fmt(dd.best) : '') : dd.best ? tr('Heute bisher ', 'Today so far ') + fmt(dd.best) : tr('Belohnung ' + fmt(DAILY_REWARD) + ' Punkte', 'Reward ' + fmt(DAILY_REWARD) + ' points');
   iconCanvas(di.rule.icon, 36, $('dailyIcon2'));
   for (const c of document.querySelectorAll('.mode-card canvas[data-icon]')) iconCanvas(c.dataset.icon, 36, c);
-  const coreOk = P.stats.core > 0 || P.stats.maxLevel >= 11;
+  const coreOk = P.stats.core > 0 || P.stats.maxLevel >= 10;
   $('coreBtn').disabled = !coreOk;
-  $('coreBtn').title = coreOk ? '' : tr('Erreich zuerst Stufe 11', 'Reach level 11 first');
-  $('coreBtn').textContent = coreOk ? bossLabel('core') : bossLabel('core') + tr(' (ab Stufe 11)', ' (from level 11)');
+  $('coreBtn').title = coreOk ? '' : tr('Erreich zuerst Stufe 10', 'Reach level 10 first');
+  $('coreBtn').textContent = coreOk ? bossLabel('core') : bossLabel('core') + tr(' (ab Stufe 10)', ' (from level 10)');
+  for (const b of document.querySelectorAll('#practice [data-boss]')) if (b.dataset.boss !== 'core') b.textContent = bossLabel(b.dataset.boss);
 };
 
-const wardLabel = (skin, hat) => SKIN_BY[skin].name + (hat !== 'none' ? tr(' mit ', ' with ') + HAT_BY[hat].name : '');
-let wTab = 'skin', wConfirm = null, wPrev = { skin: P.equip.skin, hat: P.equip.hat };
+const wardLabel = (skin, hat, trail) => SKIN_BY[skin].name + (hat !== 'none' ? tr(' mit ', ' with ') + HAT_BY[hat].name : '') + (trail && trail !== 'none' ? ' · ' + TRAIL_BY[trail].name : '');
+const eqLabel = () => wardLabel(P.equip.skin, P.equip.hat, P.equip.trail);
+const WARD_LISTS = { skin: () => SKINS, hat: () => HATS, trail: () => TRAILS };
+let wTab = 'skin', wConfirm = null, wPrev = { skin: P.equip.skin, hat: P.equip.hat, trail: P.equip.trail };
 RENDER.scrWardrobe = () => {
   $('walletWard').textContent = fmt(P.wallet);
   for (const b of document.querySelectorAll('[data-wtab]')) b.setAttribute('aria-selected', String(b.dataset.wtab === wTab));
-  wPrev = { skin: P.equip.skin, hat: P.equip.hat };
-  $('wardName').textContent = wardLabel(P.equip.skin, P.equip.hat);
+  wPrev = { skin: P.equip.skin, hat: P.equip.hat, trail: P.equip.trail };
+  $('wardName').textContent = eqLabel();
   const focusId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.id : null;
   const grid = $('wardGrid'); grid.innerHTML = '';
-  for (const it of (wTab === 'skin' ? SKINS : HATS)) {
+  for (const it of WARD_LISTS[wTab]()) {
     const owned = isOwned(wTab, it), eq = P.equip[wTab] === it.id, conf = wConfirm === it.id;
-    const skin = wTab === 'skin' ? it.id : P.equip.skin, hat = wTab === 'hat' ? it.id : P.equip.hat;
+    const skin = wTab === 'skin' ? it.id : P.equip.skin, hat = wTab === 'hat' ? it.id : P.equip.hat, trail = wTab === 'trail' ? it.id : P.equip.trail;
     const b = document.createElement('button');
     b.className = 'item' + (eq ? ' on' : '') + (owned ? '' : ' locked') + (conf ? ' confirm' : '');
     b.dataset.id = it.id;
-    b.appendChild(creatureCanvas(skin, hat, 64));
+    b.appendChild(creatureCanvas(skin, hat, 64, null, 1.1, wTab === 'trail' ? trail : null));
     const nm = document.createElement('b'); nm.textContent = it.name;
     const st = document.createElement('span');
     if (eq) st.textContent = tr('Angelegt', 'Equipped');
@@ -159,8 +223,8 @@ RENDER.scrWardrobe = () => {
     else st.textContent = it.req.text + ' · ' + Math.min(P.stats[it.req.stat] || 0, it.req.n) + '/' + it.req.n;
     b.append(nm, st);
     b.setAttribute('aria-label', it.name + ', ' + st.textContent);
-    const prev = () => { wPrev = { skin, hat }; $('wardName').textContent = wardLabel(skin, hat); };
-    const unprev = () => { wPrev = { skin: P.equip.skin, hat: P.equip.hat }; $('wardName').textContent = wardLabel(P.equip.skin, P.equip.hat); };
+    const prev = () => { wPrev = { skin, hat, trail }; $('wardName').textContent = wardLabel(skin, hat, trail); };
+    const unprev = () => { wPrev = { skin: P.equip.skin, hat: P.equip.hat, trail: P.equip.trail }; $('wardName').textContent = eqLabel(); };
     b.addEventListener('pointerenter', prev); b.addEventListener('focus', prev);
     b.addEventListener('pointerleave', unprev); b.addEventListener('blur', unprev);
     b.addEventListener('click', () => wardClick(it, owned));
@@ -206,11 +270,12 @@ RENDER.scrAch = () => {
     const rows = [
       [tr('Runden gespielt', 'Runs played'), fmt(s.runs)], [tr('Spielzeit', 'Play time'), fmtTime(s.time)], [tr('Punkte insgesamt', 'Total points'), fmt(s.points)], [tr('Punktekonto', 'Points balance'), fmt(P.wallet)],
       [tr('Bester Punktestand', 'Best score'), fmt(s.bestScore)], [tr('Höchste Stufe', 'Highest level'), s.maxLevel || 0], [tr('Längste Runde', 'Longest run'), fmtTime(s.longest)], [tr('Kampagnen gewonnen', 'Campaigns won'), s.wins],
-      [tr('Bosse besiegt', 'Bosses defeated'), fmt(s.bosses)], [bossLabel('prisma'), s.prisma], [bossLabel('queen'), s.queen], [bossLabel('bull'), s.bull], [bossLabel('core'), s.core],
+      [tr('Bosse besiegt', 'Bosses defeated'), fmt(s.bosses)], [bossLabel('prisma'), s.prisma], [bossLabel('queen'), s.queen], [bossLabel('bull'), s.bull], [bossLabel('eater'), s.eater], [bossLabel('dusk'), s.dusk], [bossLabel('core'), s.core],
       [tr('Bosse ohne Treffer', 'Bosses without a hit'), s.cleanBoss], [tr('Käfer weggedasht', 'Bugs dashed through'), fmt(s.bugsDashed)], [tr('Tautropfen', 'Dew drops'), fmt(s.dews)], [tr('Größte Kombo', 'Biggest combo'), '×' + (s.maxCombo || 0)],
       ['Dashes', fmt(s.dashes)], [tr('Treffer kassiert', 'Hits taken'), fmt(s.hits)], [tr('Extras eingesammelt', 'Extras collected'), fmt(s.items)], [tr('In Fallen getappt', 'Traps stepped in'), fmt(s.traps)],
       [tr('Raketen zerstört', 'Missiles destroyed'), fmt(s.missiles)], [tr('Upgrades gewählt', 'Upgrades picked'), fmt(s.upgrades)], [tr('Von Herzen gerettet', 'Saved by hearts'), fmt(s.revives)],
-      [tr('Duelle gewonnen', 'Duels won'), s.duelWins + tr(' von ', ' of ') + s.duels], [tr('Tägliche geschafft', 'Dailies completed'), s.dailyDone], [tr('Serie jetzt / beste', 'Streak now / best'), streakNow() + ' / ' + P.streak.best],
+      [tr('Duelle gewonnen', 'Duels won'), s.duelWins + tr(' von ', ' of ') + s.duels], [tr('Tägliche geschafft', 'Dailies completed'), s.dailyDone], [tr('Wochen geschafft', 'Weeklies completed'), s.weeklyDone],
+      ...MAPS.map(m => [tr('Beste Stufe: ', 'Best level: ') + mapName(m), s['lvl_' + m.id] || 0]), [tr('Serie jetzt / beste', 'Streak now / best'), streakNow() + ' / ' + P.streak.best],
     ];
     $('statsView').innerHTML = '';
     for (const [k, v] of rows) { const d = document.createElement('div'); d.className = 'stat'; const a = document.createElement('span'); a.textContent = k; const b = document.createElement('b'); b.textContent = v; d.append(a, b); $('statsView').appendChild(d); }
@@ -305,28 +370,32 @@ function startRun(cfg) {
   rng = cfg.seed != null ? mulberry32(cfg.seed) : Math.random;
   reset(cfg.duel ? 'count' : 'play', cfg);
   if (cfg.duel) S.countT = 3.2;
-  if (cfg.bossIdx !== undefined) {
-    S.level = cfg.bossIdx === 3 ? 10 : cfg.bossIdx + 1; S.grace = 2.5;
-    spawnBoss(cfg.bossIdx === 3 ? CORE : BOSSES[cfg.bossIdx]);
-  } else Sound.music('game');
+  if (cfg.boss) {
+    const b = cfg.boss === 'core' ? CORE : BOSSES.find(x => x.type === cfg.boss) || BOSSES[0];
+    S.level = b === CORE ? 9 : BOSSES.indexOf(b) + 1; S.grace = 2.5;
+    spawnBoss(b);
+  } else Sound.music(gameTrack());
+  if (cfg.mode !== 'tutorial') stat('play_' + S.map.id);
+  $('tutSkip').hidden = cfg.mode !== 'tutorial';
   Sound.setLevel(S.level);
   lastCfg = cfg;
   const m = cfg.mode;
-  S.bestLabel = m === 'campaign' || m === 'endless' ? fmt(P.best[m] || 0) : m === 'daily' ? fmt((P.daily[cfg.dailyKey] || {}).best || 0) : '–';
+  S.bestLabel = m === 'campaign' || m === 'endless' ? fmt(P.best[m] || 0) : m === 'daily' ? fmt((P.daily[cfg.dailyKey] || {}).best || 0) : m === 'weekly' ? fmt((P.weekly[cfg.weekKey] || {}).best || 0) : '–';
   $('oppBar').hidden = !cfg.duel;
   document.body.classList.toggle('duel', !!cfg.duel);
   for (const k in hc) delete hc[k];
   closeAll(); hud();
 }
 function startMode(mode) {
-  if (mode === 'daily') { const di = dailyInfo(); startRun({ mode: 'daily', diff: 'normal', seed: di.seed, rule: di.rule.id, dailyKey: di.key }); }
-  else startRun({ mode, diff: P.settings.diff });
+  if (mode === 'daily') { const di = dailyInfo(); startRun({ mode: 'daily', diff: 'normal', seed: di.seed, rules: [di.rule.id], map: di.map.id, dailyKey: di.key }); }
+  else if (mode === 'weekly') { const wi = weeklyInfo(); startRun({ mode: 'weekly', diff: 'normal', seed: wi.seed, rules: wi.rules.map(r => r.id), map: wi.map.id, weekKey: wi.key }); }
+  else startRun({ mode, diff: P.settings.diff, map: selMap() });
 }
 function toMenu() {
   Net.inMatch = false;
   if (Net.opp && Net.opp.left) Net.opp = null;
   rng = Math.random; reset('ready');
-  $('oppBar').hidden = true;
+  $('oppBar').hidden = true; $('tutSkip').hidden = true;
   document.body.classList.remove('duel');
   resetTo('scrMain');
   Sound.music('menu'); Sound.setLevel(0);
@@ -354,6 +423,7 @@ RENDER.scrPause = () => {
 function resume() { if (S.mode === 'pause') S.mode = 'play'; closeAll(); }
 function quit() {
   if (S.mode === 'over') return;
+  if (S.cfg.mode === 'tutorial') { closeAll(); tutFinish(true); return; }
   S.quit = true;
   closeAll();
   finish(false);
@@ -393,7 +463,7 @@ function choose(i) {
 }
 
 function finish(won) {
-  if (S.mode === 'over') return;
+  if (S.mode === 'over' || S.cfg.mode === 'tutorial') return;
   S.mode = 'over'; S.won = won;
   const sc = Math.floor(S.score), m = S.cfg.mode;
   stat('runs'); P.stats.time += S.t; statMax('longest', Math.floor(S.t)); statMax('bestScore', sc); P.stats.points += sc;
@@ -412,6 +482,11 @@ function finish(won) {
     const d = P.daily[S.cfg.dailyKey] || (P.daily[S.cfg.dailyKey] = { best: 0 });
     if (sc > (d.best || 0)) { d.best = sc; rec = true; }
     P.best.daily = Math.max(P.best.daily, sc);
+  }
+  if (m === 'weekly') {
+    const w = P.weekly[S.cfg.weekKey] || (P.weekly[S.cfg.weekKey] = { best: 0 });
+    if (sc > (w.best || 0)) { w.best = sc; rec = true; }
+    P.best.weekly = Math.max(P.best.weekly || 0, sc);
   }
   checkAch(); save();
   S.result = { sc, earned, rec };
@@ -456,6 +531,7 @@ function showResults() {
     title = tr('Verdampft', 'Evaporated');
     text = tr('Du hast ' + Math.floor(S.t) + ' Sekunden Chaos überstanden und Stufe ' + (S.level + 1) + ' erreicht.', 'You survived ' + Math.floor(S.t) + ' seconds of chaos and reached level ' + (S.level + 1) + '.');
   }
+  if (m === 'weekly') text += S.run.weeklyDone ? tr(' Wochenziel geschafft!', ' Weekly goal reached!') : tr(' Fürs Wochenziel brauchst du Stufe ' + WEEKLY_GOAL + '.', ' For the weekly goal you need level ' + WEEKLY_GOAL + '.');
   if (m === 'daily') text += S.run.dailyDone ? tr(' Tagesziel geschafft!', ' Daily goal reached!') : tr(' Fürs Tagesziel brauchst du Stufe ' + DAILY_GOAL + '.', ' For the daily goal you need level ' + DAILY_GOAL + '.');
   if (m === 'practice') text += tr(' Beim Üben gibt es nur die halben Punkte aufs Konto.', ' Practice runs only give half the points.');
   const t = $('ovTitle'); t.textContent = title;
@@ -476,7 +552,7 @@ function showResults() {
   if (duel) {
     again.textContent = Net.role === 'host' ? tr('Revanche starten', 'Start rematch') : Net.meAgain ? tr('Revanche angefragt', 'Rematch requested') : tr('Revanche anfragen', 'Request rematch');
     again.disabled = !connected || (Net.role === 'guest' && Net.meAgain);
-  } else { again.textContent = m === 'daily' ? tr('Nochmal versuchen', 'Try again') : tr('Nochmal', 'Again'); again.disabled = false; }
+  } else { again.textContent = m === 'daily' || m === 'weekly' ? tr('Nochmal versuchen', 'Try again') : tr('Nochmal', 'Again'); again.disabled = false; }
   if (topScr() === 'scrOver') { show(true); } else resetTo('scrOver');
 }
 function oppDied(m) {
@@ -495,11 +571,11 @@ function oppDied(m) {
     }
   } else { closeAll(); S.mode = 'play'; finish(true); }
 }
-function startDuel(seed) {
+function startDuel(seed, map) {
   Net.inMatch = true; Net.oppAgain = false; Net.meAgain = false;
   const o = Net.opp;
   if (o) Object.assign(o, { alive: true, dead: null, left: false, finished: false, score: 0, energy: 100, level: 0, x: null, y: null, dx: null, dy: null });
-  startRun({ mode: 'duel', diff: 'normal', seed, duel: true });
+  startRun({ mode: 'duel', diff: 'normal', seed, duel: true, map: MAP_BY[map] ? map : 'yard' });
 }
 
 // ---------- Online-Duell (WebRTC über PeerJS) ----------
@@ -590,7 +666,7 @@ const Net = {
         toast(this.role === 'host' ? tr('Mitspieler da', 'Player joined') : tr('Verbunden', 'Connected'), this.opp.name, null, creatureCanvas(this.opp.skin, this.opp.hat, 38));
         break;
       case 'full': this.fail(tr('Der Raum ist schon voll.', 'The room is already full.')); break;
-      case 'start': if (this.opp && Number.isFinite(m.seed)) startDuel(m.seed >>> 0); break;
+      case 'start': if (this.opp && Number.isFinite(m.seed)) startDuel(m.seed >>> 0, String(m.map || 'yard')); break;
       case 'st':
         if (this.opp && this.inMatch) {
           const o = this.opp;
@@ -630,8 +706,9 @@ const Net = {
   startMatch() {
     if (!this.conn || !this.conn.open || !this.opp) return;
     const seed = (Math.random() * 4294967296) >>> 0;
-    this.send({ t: 'start', seed });
-    startDuel(seed);
+    const map = selMap();
+    this.send({ t: 'start', seed, map });
+    startDuel(seed, map);
   },
   tick(dt) {
     if (!this.inMatch) return;
@@ -652,11 +729,21 @@ document.addEventListener('click', e => {
   if (!b) return;
   Sound.init();
   if (!b.classList.contains('card') && !b.classList.contains('item')) Sound.sfx('click');
-  if (b.dataset.go) open(b.dataset.go);
+  if (b.dataset.go === 'scrModes' && !P.tutDone && topScr() === 'scrMain') startTutorial();
+  else if (b.dataset.go) open(b.dataset.go);
   else if (b.hasAttribute('data-back')) back();
 });
 document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
-document.querySelectorAll('[data-boss]').forEach(b => b.addEventListener('click', () => startRun({ mode: 'practice', diff: P.settings.diff, bossIdx: +b.dataset.boss })));
+document.querySelectorAll('[data-boss]').forEach(b => b.addEventListener('click', () => startRun({ mode: 'practice', diff: P.settings.diff, boss: b.dataset.boss, map: selMap() })));
+$('mapGrid').addEventListener('click', e => {
+  const b = e.target.closest('[data-map]'); if (!b) return;
+  const m = MAP_BY[b.dataset.map];
+  if (!mapUnlocked(m)) { Sound.sfx('deny'); toast(tr('Karte gesperrt', 'Map locked'), mapLockText(m), m.icon); return; }
+  P.settings.map = m.id; save(); RENDER.scrModes();
+});
+$('weeklyGo').addEventListener('click', () => startMode('weekly'));
+$('tutBtn').addEventListener('click', () => startTutorial());
+$('tutSkip').addEventListener('click', () => tutFinish(true));
 $('diffSeg').addEventListener('click', e => { const b = e.target.closest('[data-diff]'); if (!b) return; P.settings.diff = b.dataset.diff; save(); RENDER.scrModes(); });
 $('dailyGo').addEventListener('click', () => startMode('daily'));
 $('pauseBtn').addEventListener('click', () => { if (topScr() === 'scrPause') resume(); else pause(); });
@@ -756,10 +843,10 @@ const endPtr = () => { if (S) S.target = null; };
 cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
 
 // ---------- Hauptschleife ----------
-function drawHero(id, skin, hat, t) {
+function drawHero(id, skin, hat, t, trail) {
   const c = $(id), r = c.getBoundingClientRect();
   if (!r.width) return;
-  drawYard(sizeCanvas(c, r.width, r.height), r.width, r.height, skin, hat, t);
+  drawYard(sizeCanvas(c, r.width, r.height), r.width, r.height, skin, hat, t, trail);
 }
 let last = performance.now();
 function loop(now) {
@@ -775,8 +862,8 @@ function loop(now) {
   Net.tick(dt);
   if (achDirty) checkAch();
   const t = topScr();
-  if (t === 'scrMain') drawHero('heroCv', P.equip.skin, P.equip.hat, now / 1000);
-  else if (t === 'scrWardrobe') drawHero('wardCv', wPrev.skin, wPrev.hat, now / 1000);
+  if (t === 'scrMain') drawHero('heroCv', P.equip.skin, P.equip.hat, now / 1000, P.equip.trail);
+  else if (t === 'scrWardrobe') drawHero('wardCv', wPrev.skin, wPrev.hat, now / 1000, wPrev.trail);
   requestAnimationFrame(loop);
 }
 
@@ -787,7 +874,7 @@ function setLang(l) {
   document.documentElement.lang = LANG;
   document.title = 'Shady';
   const md = document.querySelector('meta[name="description"]');
-  if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. Mit Kampagne, Endlosmodus, täglicher Herausforderung, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. With campaign, endless mode, daily challenge, upgrades, wardrobe and online duel.');
+  if (md) md.content = tr('Ein chaotisches Browserspiel über Licht und Schatten. 6 Bosse, 4 Karten, tägliche und wöchentliche Herausforderungen, Upgrades, Garderobe und Online-Duell.', 'A chaotic browser game about light and shadow. 6 bosses, 4 maps, daily and weekly challenges, upgrades, wardrobe and online duel.');
   applyDataLang(); translateStatic();
   for (const k in hc) delete hc[k];
   legendBuilt = false; for (const id of ['legendGood', 'legendBad', 'legendBoss']) $(id).innerHTML = '';
@@ -800,7 +887,8 @@ function setLang(l) {
 (function boot() {
   const keysD = Object.keys(P.daily).sort();
   while (keysD.length > 40) delete P.daily[keysD.shift()];
-  for (const k of ['skin', 'hat']) if (!isOwned(k, (k === 'skin' ? SKIN_BY : HAT_BY)[P.equip[k]] || {})) P.equip[k] = k === 'skin' ? 'schatten' : 'none';
+  for (const k of ['skin', 'hat', 'trail']) if (!isOwned(k, ({ skin: SKIN_BY, hat: HAT_BY, trail: TRAIL_BY })[k][P.equip[k]])) P.equip[k] = k === 'skin' ? 'schatten' : 'none';
+  if (!MAP_BY[P.settings.map]) P.settings.map = 'yard';
   applyTheme(); setLang(P.settings.lang);
   reset('ready');
   const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum');

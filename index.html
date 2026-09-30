@@ -1,10 +1,27 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Shady</title>
-<meta name="description" content="Ein chaotisches Browserspiel über Licht und Schatten. Mit Kampagne, Endlosmodus, täglicher Herausforderung, Upgrades, Garderobe und Online-Duell.">
+<meta name="description" content="A chaotic browser game about light and shadow. Stay in the shade, dodge the chaos wheel, beat bosses and build your run with upgrade cards. Free, no install.">
+<meta name="theme-color" content="#1F2535">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Shady">
+<meta property="og:title" content="Shady – stay in the shadows">
+<meta property="og:description" content="A chaotic browser game about light and shadow. 6 bosses, 4 maps, daily and weekly challenges, online duels. Free, right in your browser.">
+<meta property="og:url" content="https://sxrg1u.github.io/shady/">
+<meta property="og:image" content="https://sxrg1u.github.io/shady/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Shady: a small shadow creature hiding in the long shadow of a pillar in a sunny courtyard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Shady – stay in the shadows">
+<meta name="twitter:description" content="A chaotic browser game about light and shadow. Free, right in your browser.">
+<meta name="twitter:image" content="https://sxrg1u.github.io/shady/assets/og-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -39,7 +56,7 @@
     <span class="tag">Gegner</span><b id="oppName">–</b><span id="oppScore">0</span>
     <div class="bar"><i id="oppEnergy"></i></div><span id="oppState" class="tag">lebt</span>
   </div>
-  <div class="stage"><canvas id="game" aria-label="Spielfeld von Shady"></canvas></div>
+  <div class="stage"><canvas id="game" aria-label="Spielfeld von Shady"></canvas><button class="tut-skip" id="tutSkip" hidden>Tutorial überspringen</button></div>
   <div class="touchbar"><button class="dashbtn" id="dashBtn">DASH</button></div>
 </div>
 
@@ -51,13 +68,16 @@
     <div>
       <div class="brand">
         <p class="eyebrow">Ein Spiel über Licht und Schatten</p>
-        <h1>Shady</h1>
+        <h1 class="logo" aria-label="Shady">
+          <svg class="logo-mark" viewBox="0 0 48 44" aria-hidden="true"><path class="lm-shadow" d="M12 36Q11 11 26 11Q41 11 40 36Q35.3 42 30.7 36Q26 42 21.3 36Q16.7 42 12 36Z"/><path class="lm-body" d="M6 30Q5 5 20 5Q35 5 34 30Q29.3 36 24.7 30Q20 36 15.3 30Q10.7 36 6 30Z"/><circle cx="15.5" cy="16.5" r="3.2" fill="#F4F6FA"/><circle cx="24.5" cy="16.5" r="3.2" fill="#F4F6FA"/></svg>
+          <span class="logo-word" aria-hidden="true">Shady</span>
+        </h1>
         <p>Du bist ein kleines Schattenwesen. Die Sonne wandert, das Chaos-Rad dreht sich, und nach jeder Stufe wartet ein Boss.</p>
       </div>
       <nav class="menu" aria-label="Menü">
         <button class="btn primary big" data-go="scrModes"><svg><use href="#i-play"/></svg>Spielen<small>Kampagne · Endlos · Täglich</small></button>
         <button class="btn" data-go="scrMulti"><svg><use href="#i-users"/></svg>Mehrspieler<small>Online-Duell</small></button>
-        <button class="btn" data-go="scrWardrobe"><svg><use href="#i-hat"/></svg>Garderobe<small>Skins &amp; Hüte</small></button>
+        <button class="btn" data-go="scrWardrobe"><svg><use href="#i-hat"/></svg>Garderobe<small>Skins, Hüte &amp; Spuren</small></button>
         <button class="btn" data-go="scrAch"><svg><use href="#i-trophy"/></svg>Erfolge &amp; Statistik<small id="achCountMain"></small></button>
         <div class="pair">
           <button class="btn" data-go="scrSettings"><svg><use href="#i-gear"/></svg>Einstellungen</button>
@@ -74,6 +94,12 @@
         <p class="meta" id="dailyMetaMain"></p>
         <button class="btn small center" id="dailyGo">Herausforderung starten</button>
       </div>
+      <div class="daily-card week" id="weeklyCard">
+        <div class="top"><canvas id="weeklyIcon" aria-hidden="true"></canvas><div><p class="eyebrow">Diese Woche</p><h3 id="weeklyName">–</h3></div></div>
+        <p id="weeklyDescMain"></p>
+        <p class="meta" id="weeklyMetaMain"></p>
+        <button class="btn small center" id="weeklyGo">Wochenherausforderung starten</button>
+      </div>
       <p class="foot">Tipp: <kbd>Esc</kbd> pausiert, <kbd>M</kbd> schaltet den Ton</p>
     </div>
   </div>
@@ -89,17 +115,24 @@
       </div>
       <p class="muted" id="diffNote"></p>
     </div>
+    <div class="map-pick">
+      <p class="eyebrow">Karte für Kampagne, Endlos und Boss üben</p>
+      <div class="maps" id="mapGrid" role="group" aria-label="Karte"></div>
+    </div>
     <div class="modes">
       <button class="mode-card" data-mode="campaign"><canvas data-icon="trophy" aria-hidden="true"></canvas><h3>Kampagne</h3><p>10 Stufen und 9 Bosse. Am Ende wartet der Sonnenkern. Besieg ihn und du gewinnst.</p><span class="meta" id="metaCampaign"></span></button>
       <button class="mode-card" data-mode="endless"><canvas data-icon="hourglass" aria-hidden="true"></canvas><h3>Endlos</h3><p>Kein Ende. Jede Stufe wird härter, alle 10 Stufen kommt der Sonnenkern. Wie weit schaffst du es?</p><span class="meta" id="metaEndless"></span></button>
       <button class="mode-card" data-mode="daily"><canvas id="dailyIcon2" aria-hidden="true"></canvas><h3 id="dailyName2">Täglich</h3><p id="dailyDesc2"></p><span class="meta" id="metaDaily"></span></button>
+      <button class="mode-card week" data-mode="weekly"><canvas id="weeklyIcon2" aria-hidden="true"></canvas><h3 id="weeklyName2">Woche</h3><p id="weeklyDesc2"></p><span class="meta" id="metaWeekly"></span></button>
     </div>
     <div class="practice" id="practice">
       <span class="eyebrow">Boss üben</span>
-      <button class="btn small" data-boss="0">Prisma</button>
-      <button class="btn small" data-boss="1">Käferkönigin</button>
-      <button class="btn small" data-boss="2">Sonnenstier</button>
-      <button class="btn small" data-boss="3" id="coreBtn">Sonnenkern</button>
+      <button class="btn small" data-boss="prisma">Prisma</button>
+      <button class="btn small" data-boss="queen">Käferkönigin</button>
+      <button class="btn small" data-boss="bull">Sonnenstier</button>
+      <button class="btn small" data-boss="eater">Schattenfresser</button>
+      <button class="btn small" data-boss="dusk">Nachtmahr</button>
+      <button class="btn small" data-boss="core" id="coreBtn">Sonnenkern</button>
     </div>
   </div>
 </section>
@@ -131,7 +164,7 @@
     <div class="wardrobe">
       <div class="preview"><canvas id="wardCv" aria-hidden="true"></canvas><b id="wardName"></b><p class="muted" id="wardHint">Fahr über ein Teil, um es anzuprobieren.</p></div>
       <div>
-        <div class="tabs" role="tablist"><button role="tab" data-wtab="skin" aria-selected="true">Skins</button><button role="tab" data-wtab="hat" aria-selected="false">Hüte</button></div>
+        <div class="tabs" role="tablist"><button role="tab" data-wtab="skin" aria-selected="true">Skins</button><button role="tab" data-wtab="hat" aria-selected="false">Hüte</button><button role="tab" data-wtab="trail" aria-selected="false">Spuren</button></div>
         <div class="grid" id="wardGrid"></div>
       </div>
     </div>
@@ -174,6 +207,7 @@
     <header class="scr-head"><button class="back" data-back aria-label="Zurück"><svg><use href="#i-back"/></svg></button><h2>Anleitung</h2></header>
     <div class="tabs" role="tablist"><button role="tab" data-htab="rules" aria-selected="true">Regeln</button><button role="tab" data-htab="lex" aria-selected="false">Lexikon</button></div>
     <div class="help" id="helpRules">
+      <button class="btn small" id="tutBtn" style="justify-self:start">Tutorial spielen</button>
       <ul>
         <li><b>Licht kostet Kraft.</b> Im Sonnenlicht sinkt deine Kraftleiste schnell, im Schatten lädt sie langsam wieder auf. Bei null bist du verdampft, außer du hast noch ein Herz.</li>
         <li><b>Die Schatten wandern.</b> Die Sonne zieht im Kreis und wird mit jeder Stufe schneller. Die kleine Sonne am Rand zeigt, woher das Licht kommt.</li>

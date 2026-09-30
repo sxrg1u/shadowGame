@@ -3,17 +3,18 @@
 
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
-const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal' };
+const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
 function freshProfile() {
   return {
     v: 2, wallet: 0, settings: { ...DEF_SETTINGS },
-    best: { campaign: 0, endless: 0, daily: 0 }, top: { campaign: [], endless: [] },
+    best: { campaign: 0, endless: 0, daily: 0, weekly: 0 }, top: { campaign: [], endless: [] },
     stats: { runs: 0, time: 0, points: 0, bosses: 0, prisma: 0, queen: 0, bull: 0, core: 0, bugsDashed: 0, bugs: 0, dews: 0,
              dashes: 0, hits: 0, items: 0, traps: 0, missiles: 0, upgrades: 0, maxLevel: 0, endlessLevel: 0, maxCombo: 0,
              wins: 0, hardWins: 0, duels: 0, duelWins: 0, dailyDone: 0, cleanBoss: 0, longest: 0, bestScore: 0, revives: 0,
-             close: 0, spearKill: 0, maxUpgradesRun: 0 },
-    ach: {}, owned: { skin: ['schatten'], hat: ['none'] }, equip: { skin: 'schatten', hat: 'none' },
-    seen: {}, daily: {}, streak: { last: '', n: 0, best: 0 },
+             close: 0, spearKill: 0, maxUpgradesRun: 0, eater: 0, dusk: 0, weeklyDone: 0, tutorial: 0,
+             lvl_yard: 0, lvl_garden: 0, lvl_roof: 0, lvl_cellar: 0, play_yard: 0, play_garden: 0, play_roof: 0, play_cellar: 0 },
+    ach: {}, owned: { skin: ['schatten'], hat: ['none'], trail: ['none'] }, equip: { skin: 'schatten', hat: 'none', trail: 'none' },
+    seen: {}, daily: {}, weekly: {}, streak: { last: '', n: 0, best: 0 }, tutDone: false,
   };
 }
 function loadProfile() {
@@ -40,6 +41,17 @@ function statMax(k, v) { if (v > (P.stats[k] || 0)) { P.stats[k] = v; achDirty =
 
 function dayKey(d = new Date()) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function yesterdayKey() { const d = new Date(); d.setDate(d.getDate() - 1); return dayKey(d); }
+// Kalenderwoche nach ISO 8601, z. B. „2026-W40“
+function weekKey(d = new Date()) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return t.getUTCFullYear() + '-W' + String(Math.ceil(((t - y0) / 86400000 + 1) / 7)).padStart(2, '0');
+}
+function weekEnds() {
+  const d = new Date(), day = d.getDay() || 7, end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 8 - day);
+  return Math.max(1, Math.ceil((end - d) / 86400000));
+}
 
 // ---------- Schwierigkeit ----------
 const DIFF = {
@@ -66,9 +78,19 @@ const RULES = [
 const RULE_BY = Object.fromEntries(RULES.map(r => [r.id, r]));
 const DAILY_GOAL = 6;   // Stufe, die man erreichen muss
 const DAILY_REWARD = 1500;
+const WEEKLY_GOAL = 10;
+const WEEKLY_REWARD = 5000;
+// Im Keller gibt es keine Sonne, dort ergeben die Sonnen-Regeln keinen Sinn.
+const rulesFor = map => RULES.filter(r => !(map.dark && SUN_RULES.includes(r.id)));
 function dailyInfo(key = dayKey()) {
-  const rule = RULES[hashStr('regel-' + key) % RULES.length];
-  return { key, rule, seed: hashStr('schattenfaenger-' + key) };
+  const map = MAPS[hashStr('karte-' + key) % MAPS.length], pool = rulesFor(map);
+  return { key, map, rule: pool[hashStr('regel-' + key) % pool.length], seed: hashStr('schattenfaenger-' + key) };
+}
+function weeklyInfo(key = weekKey()) {
+  const map = MAPS[hashStr('wochenkarte-' + key) % MAPS.length], pool = rulesFor(map).slice();
+  const a = pool.splice(hashStr('wochenregel-a-' + key) % pool.length, 1)[0];
+  const b = pool[hashStr('wochenregel-b-' + key) % pool.length];
+  return { key, map, rules: [a, b], seed: hashStr('woche-' + key) };
 }
 
 // ---------- Upgrades (Karten nach jedem Boss) ----------
@@ -127,11 +149,25 @@ const ACH = [
   { id: 'fashion', name: 'Modebewusst', icon: 'hat', desc: 'Besitze 6 Skins oder Hüte.', goal: 6, val: () => ownedCount() },
   { id: 'duel', name: 'Duellant', icon: 'decoy', desc: 'Gewinne ein Online-Duell.', goal: 1, val: s => s.duelWins },
   { id: 'traps', name: 'Pechvogel', icon: 'shroom', desc: 'Tappe in 20 Fallen.', goal: 20, val: s => s.traps },
+  { id: 'tutorial', name: 'Schnelllerner', icon: 'calendar', desc: 'Schließe das Tutorial ab.', goal: 1, val: s => s.tutorial },
+  { id: 'eater', name: 'Satt gemacht', icon: 'eater', desc: 'Besiege den Schattenfresser.', goal: 1, val: s => s.eater },
+  { id: 'dusk', name: 'Morgengrauen', icon: 'dusk', desc: 'Besiege den Nachtmahr.', goal: 1, val: s => s.dusk },
+  { id: 'allbosses', name: 'Bossbezwinger', icon: 'prisma', desc: 'Besiege jeden der sechs Bosse mindestens einmal.', goal: 6, val: s => ['prisma', 'queen', 'bull', 'eater', 'dusk', 'core'].filter(k => s[k] > 0).length },
+  { id: 'boss50', name: 'Bossvernichter', icon: 'spear', desc: 'Besiege insgesamt 50 Bosse.', goal: 50, val: s => s.bosses },
+  { id: 'explorer', name: 'Weltenbummler', icon: 'portal', desc: 'Spiel auf allen vier Karten.', goal: 4, val: s => ['yard', 'garden', 'roof', 'cellar'].filter(k => s['play_' + k] > 0).length },
+  { id: 'garden10', name: 'Gärtner', icon: 'seed', desc: 'Erreiche Stufe 10 im Garten.', goal: 10, val: s => s.lvl_garden },
+  { id: 'roof10', name: 'Dachdecker', icon: 'wind', desc: 'Erreiche Stufe 10 auf dem Dach.', goal: 10, val: s => s.lvl_roof },
+  { id: 'cellar10', name: 'Kellerkind', icon: 'flame', desc: 'Erreiche Stufe 10 im Keller.', goal: 10, val: s => s.lvl_cellar },
+  { id: 'weekly1', name: 'Wochenheld', icon: 'trophy', desc: 'Schaffe eine Wochenherausforderung.', goal: 1, val: s => s.weeklyDone },
+  { id: 'weekly3', name: 'Stammgast', icon: 'loot', desc: 'Schaffe drei Wochenherausforderungen.', goal: 3, val: s => s.weeklyDone },
+  { id: 'lvl25', name: 'Unermüdlich', icon: 'hourglass', desc: 'Erreiche Stufe 25 im Endlosmodus.', goal: 25, val: s => s.endlessLevel },
+  { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));
 
 function isOwned(kind, it) {
-  if (P.owned[kind].includes(it.id)) return true;
+  if (!it || !it.id) return false;
+  if ((P.owned[kind] || []).includes(it.id)) return true;
   return !!(it.req && (P.stats[it.req.stat] || 0) >= it.req.n);
 }
 function ownedCount() { return SKINS.filter(s => isOwned('skin', s)).length + HATS.filter(h => isOwned('hat', h)).length - 2; }
