@@ -20,15 +20,15 @@ const MAPS = [
     desc: ['Fackeln wandern durch den ganzen Raum, eine jagt dich. Ihr Licht brennt stärker, und du erholst dich langsamer.', 'Torches roam the whole room and one hunts you. Their light burns harder and you recover more slowly.'],
     feat: [['Keine Sonne, nur Fackeln', 'No sun, only torches'], ['Eine Fackel jagt dich', 'One torch hunts you']],
     pal: { lit: '#F2B45E', tile: '#DE9E4A', shade: '#1F1C27', shadeTile: '#27232F', top: '#3E3845', edge: '#524A58' },
-    dark: true, burnF: 1.3, regenF: 0.7 },
+    dark: true, torches: true, burnF: 1.3, regenF: 0.7 },
   { id: 'station', icon: 'missile', name: ['Bahnhof', 'Station'], unlock: { stat: 'lvl_roof', n: 6 }, cost: 5000, track: 'roof',
-    desc: ['Zwei Gleise queren den Bahnsteig. Züge rasen durch und werfen kurz riesige Schatten. Wer auf den Gleisen steht, wird erwischt.', 'Two tracks cross the platform. Trains race through and briefly cast huge shadows. Stand on the tracks and you get hit.'],
-    feat: [['Züge werfen lange Schatten', 'Trains cast long shadows'], ['Rote Gleise: Zug kommt!', 'Red tracks: train incoming!'], ['Treffer: Schaden und Rückstoss', 'Hit: damage and knockback']],
+    desc: ['Zwei Gleise queren den Bahnhof. Züge fahren ein, halten ein paar Sekunden am Bahnsteig und werfen dabei lange Schatten. Unter den Bahnsteigdächern ist es kühl. Wer beim Ein- oder Ausfahren auf den Gleisen steht, wird erwischt.', 'Two tracks cross the station. Trains pull in, stop at the platform for a few seconds and cast long shadows. It is cool under the platform roofs. Stand on the tracks while a train moves and you get hit.'],
+    feat: [['Züge halten am Bahnsteig', 'Trains stop at the platform'], ['Bahnsteigdächer spenden Schatten', 'Platform roofs give shade'], ['Rote Gleise: Zug kommt oder fährt ab', 'Red tracks: train arriving or leaving'], ['Treffer: Schaden und Rückstoss', 'Hit: damage and knockback']],
     pal: { lit: '#E9D8B4', tile: '#DAC7A0', shade: '#3B4658', shadeTile: '#35404F', top: '#474C5A', edge: '#626878' },
-    tracks: [150, 330], trackH: 34, pillars: 5 },
+    tracks: [150, 330], trackH: 34, pillars: 6 },
   { id: 'ship', icon: 'wind', name: ['Schiffsdeck', 'Ship deck'], unlock: { stat: 'lvl_station', n: 6 }, cost: 6000, track: 'garden',
-    desc: ['Das Schiff schaukelt, und alle Schatten schwingen mit. Die Segel gehen im Takt auf und zu und werfen grosse Schatten.', 'The ship rocks and every shadow swings along. The sails open and close in rhythm and cast big shadows.'],
-    feat: [['Schatten schwingen hin und her', 'Shadows swing back and forth'], ['Segel gehen auf und zu', 'Sails open and close'], ['Das Deck neigt sich', 'The deck tilts']],
+    desc: ['Das Schiff schaukelt, und alle Schatten schwingen mit. Links und rechts ist Wasser, dahinter kommst du nicht. In der Mitte stehen drei Masten mit grossen Segeln und kleinen Topsegeln, die im Takt auf- und zugehen.', 'The ship rocks and every shadow swings along. Water on the left and right, you cannot go past the railing. Three masts in the middle carry big sails and small topsails that open and close in rhythm.'],
+    feat: [['Schatten schwingen hin und her', 'Shadows swing back and forth'], ['Wasser links und rechts', 'Water left and right'], ['Grosse Segel mit Topsegel', 'Big sails with topsails'], ['Das Deck neigt sich', 'The deck tilts']],
     pal: { lit: '#DDAE72', tile: '#C99A5E', shade: '#343B58', shadeTile: '#2F3550', top: '#5B3A22', edge: '#7A5234' },
     pillars: 4, cloudF: 0.8 },
   { id: 'desert', icon: 'noon', name: ['Wüste', 'Desert'], unlock: { stat: 'lvl_ship', n: 6 }, cost: 7000, track: 'yard',
@@ -52,10 +52,10 @@ const MAPS = [
     pal: { lit: '#F0C97A', tile: '#DDB062', shade: '#231B1A', shadeTile: '#2C2221', top: '#4A2E1E', edge: '#6B4430' },
     dark: true, shelves: true, pillars: 7 },
   { id: 'mirror', icon: 'crystal', name: ['Spiegelsaal', 'Hall of mirrors'], unlock: { stat: 'lvl_library', n: 6 }, cost: 12000, track: 'roof',
-    desc: ['Schräge Spiegel an den Wänden werfen das Sonnenlicht zurück. Das Licht kommt aus drei Richtungen, und nur ein schmaler Streifen hinter jeder Säule bleibt ganz dunkel.', 'Angled mirrors on the walls throw the sunlight back. Light comes from three directions, and only a narrow strip behind each pillar stays fully dark.'],
-    feat: [['Licht aus drei Richtungen', 'Light from three directions'], ['Halbschatten brennt halb so stark', 'Half shade burns half as much'], ['Schmale Kernschatten', 'Narrow full shadows']],
-    pal: { lit: '#F3E6CC', tile: '#E3D2B0', shade: '#4A4468', shadeTile: '#433E5F', top: '#6B5C8E', edge: '#8B7BB0' },
-    pillars: 8, noClouds: true, mirrors: 0.5 },
+    desc: ['Keine Sonne, aber Lichtwerfer an den Wänden schicken grelle Strahlen durch den Saal. Die Strahlen prallen an drehenden Spiegeln ab und brennen viel stärker als Sonnenlicht. Säulen halten sie auf.', 'No sun, but light cannons on the walls send bright beams through the hall. The beams bounce off turning mirrors and burn much harder than sunlight. Pillars stop them.'],
+    feat: [['Strahlen statt Sonne', 'Beams instead of sun'], ['Spiegel lenken die Strahlen ab', 'Mirrors deflect the beams'], ['Strahlen brennen fast doppelt so stark', 'Beams burn almost twice as hard'], ['Mehr Strahlen auf höheren Stufen', 'More beams on higher levels']],
+    pal: { lit: '#FFF3C4', tile: '#EADFB0', shade: '#3E3A58', shadeTile: '#38344F', top: '#6B5C8E', edge: '#8B7BB0' },
+    dark: true, beams: true, pillars: 7, noClouds: true, burnF: 1.8 },
   { id: 'moon', icon: 'mond', name: ['Mond', 'Moon'], unlock: { stat: 'lvl_mirror', n: 6 }, cost: 15000, track: 'yard',
     desc: ['Geringe Schwerkraft: Du gleitest und dein Dash trägt viel weiter. Regelmässig geht die Erde auf und wirft ein zweites, bläuliches Licht.', 'Low gravity: you glide and your dash carries much further. The Earth rises regularly and casts a second, bluish light.'],
     feat: [['Du gleitest, der Dash trägt weiter', 'You glide, the dash carries further'], ['Erdlicht brennt halb so stark', 'Earthlight burns half as much']],
@@ -144,7 +144,7 @@ function initMap() {
   const m = S.map;
   S.roofA = rand(0, TAU); S.gust = 0;
   S.torches = [];
-  if (m.dark) for (let i = 0; i < 4; i++) S.torches.push(newTorch(i));
+  if (m.torches) for (let i = 0; i < 4; i++) S.torches.push(newTorch(i));
   // Dekor: Blumen im Garten, Risse im Keller (nur optisch)
   S.deco = [];
   const n = m.id === 'garden' ? 26 : m.id === 'cellar' ? 14 : m.id === 'moon' ? 10 : 0;
@@ -168,7 +168,7 @@ function torchPos(T) {
 function updateMap(dt, sunDt, playing) {
   const m = S.map;
   updateMapFx(dt, sunDt, playing);
-  if (m.dark) {
+  if (m.torches) {
     const want = 4 + (S.level >= 2 ? 1 : 0) + (S.level >= 5 ? 1 : 0);
     while (S.torches.length < want) S.torches.push(newTorch(S.torches.length));
     for (const T of S.torches) {

@@ -66,7 +66,8 @@ const isDuel = () => !!(S && S.cfg.duel);
 const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1);
 const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);
 const dirOf = az => ({ x: Math.cos(az), y: Math.sin(az) });
-const az2 = () => S.az + 2.3;
+// Zweite Sonne dicht neben der ersten: Die Schatten überlappen, hinter jeder Säule bleibt ein Kernschatten zum Verstecken
+const az2 = () => S.az + 0.75;
 const sun2On = () => on('sun2') || ruleOn('twosun');
 const pr = () => (on('shrink') || ruleOn('tiny')) ? 5 : PR;
 const inverted = () => on('invert') || ruleOn('mirror');
@@ -127,12 +128,13 @@ function resolve() {
   const r0 = pr();
   S.p.x = Math.max(r0, Math.min(W - r0, S.p.x));
   S.p.y = Math.max(r0, Math.min(H - r0, S.p.y));
+  mapResolve(r0);
   for (const r of S.pillars) pushOut(r, r0);
 }
 function freeSpot(minFromPlayer, needLight) {
   for (let k = 0; k < 40; k++) {
     const x = rand(22, W - 22), y = rand(22, H - 22);
-    if (inPillar(x, y, 10)) continue;
+    if (inPillar(x, y, 10) || offLimits(x, y)) continue;
     if (Math.hypot(x - S.p.x, y - S.p.y) < minFromPlayer) continue;
     if (needLight && inShadow(x, y)) continue;
     return { x, y };

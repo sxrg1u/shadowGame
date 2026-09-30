@@ -16,10 +16,27 @@ function mapBlocks(r) {
   const near = (c, rr) => Math.hypot(c.x - clampN(c.x, r.x, r.x + r.w), c.y - clampN(c.y, r.y, r.y + r.h)) < rr;
   if (m.wheel && near(m.wheel, m.wheel.r + 20)) return true;
   if (m.carousels) for (const c of m.carousels) if (near(c, c.r + 14)) return true;
-  if (m.id === 'ship' && Math.abs(r.x + r.w / 2 - W / 2) < r.w / 2 + 36) return true;
+  if (m.id === 'ship' && (Math.abs(r.x + r.w / 2 - W / 2) < r.w / 2 + 40 || r.x < DECK_X0 + 8 || r.x + r.w > DECK_X1 - 8)) return true;
+  if (m.beams) { for (const [x, y] of MIRRORS) if (near({ x, y }, 52)) return true; for (const E of EMITTERS) if (near(E, 40)) return true; }
   if (m.id === 'city') for (const [x, y] of CITY_LAMPS) if (near({ x, y }, 16)) return true;
   return false;
 }
+// Schiff: Deck zwischen der Reling, links und rechts Wasser
+const DECK_X0 = 74, DECK_X1 = 406;
+const offLimits = (x, y) => S.map.id === 'ship' && (x < DECK_X0 + 12 || x > DECK_X1 - 12);
+// Zusätzliche Grenzen für die Figur: Reling auf dem Schiff, Spiegelscheiben im Spiegelsaal
+function mapResolve(r0) {
+  const m = S.map;
+  if (m.id === 'ship') S.p.x = Math.max(DECK_X0 + r0, Math.min(DECK_X1 - r0, S.p.x));
+  if (m.beams && S.fx.mirrors) for (const M of S.fx.mirrors) {
+    const [x1, y1, x2, y2] = mirrorEnds(M), d = segDist(S.p.x, S.p.y, x1, y1, x2, y2), min = r0 + 4;
+    if (d >= min) continue;
+    const nx = -Math.sin(M.a), ny = Math.cos(M.a), side = ((S.p.x - M.x) * nx + (S.p.y - M.y) * ny) >= 0 ? 1 : -1;
+    S.p.x += nx * side * (min - d); S.p.y += ny * side * (min - d);
+  }
+}
+const mirrorEnds = M => { const c = Math.cos(M.a) * M.len / 2, s = Math.sin(M.a) * M.len / 2; return [M.x - c, M.y - s, M.x + c, M.y + s]; };
+
 // Säulenformen der neuen Karten; null heisst: die normale Form nehmen
 function mapPillarShape() {
   switch (S.map.id) {
@@ -33,6 +50,10 @@ function mapPillarShape() {
   }
   return null;
 }
+// Spiegelsaal: Spiegel [x, y, Länge, Grundwinkel, Schwenk] und Lichtwerfer an den Wänden
+const MIRRORS = [[360, 112, 74, 0.6, 0.35], [120, 332, 74, -0.7, 0.3], [384, 312, 64, 1.2, 0.4], [104, 150, 64, -1.0, 0.3], [248, 414, 74, 0.1, 0.5]];
+const EMITTERS = [{ x: 0, y: 112, a: 0.12, amp: 0.45, sp: 0.42 }, { x: W, y: 372, a: Math.PI + 0.1, amp: 0.45, sp: 0.37 },
+                  { x: 150, y: 0, a: Math.PI / 2, amp: 0.5, sp: 0.33 }, { x: 340, y: H, a: -Math.PI / 2, amp: 0.5, sp: 0.46 }];
 const CITY_LAMPS = [[60, 184], [180, 296], [300, 184], [420, 296], [120, 70], [360, 60], [110, 420], [370, 424]];
 
 function initMapFx() {
@@ -40,10 +61,16 @@ function initMapFx() {
   S.casters = []; S.vel = { x: 0, y: 0 };
   const fixed = (x, y, d, extra) => Object.assign({ x: x - d / 2, y: y - d / 2, w: d, h: d, round: true, fixed: true, crumble: 0 }, extra);
   const addFixed = r => { S.pillars = S.pillars.filter(q => !overlaps(q, r, 18)); S.pillars.push(r); };
-  if (m.tracks) F.trains = m.tracks.map((y, i) => ({ y, next: rand(3, 5) + i * 3.5, warn: 0, train: null }));
+  if (m.tracks) {
+    F.trains = m.tracks.map((y, i) => ({ y, next: rand(2, 4) + i * 4, warn: 0, train: null }));
+    // Bahnsteigdächer: Stücke mit Lücken, damit man zwischen ihnen wechseln muss
+    F.roofs = [[46, 212, 92, 56], [194, 212, 92, 56], [342, 212, 92, 56], [60, 46, 96, 40], [318, 52, 100, 40], [110, 392, 100, 40], [300, 398, 96, 40]]
+      .map(([x, y, w, h]) => ({ x, y, w, h, tall: 0.7 }));
+  }
   if (m.id === 'ship') {
     F.sway = 0;
-    F.masts = [100, 196, 380].map((y, i) => { addFixed(fixed(W / 2, y, 16, { mast: true })); return { x: W / 2, y, ph: i * 4.6, open: 1 }; });
+    F.masts = [104, 214, 384].map((y, i) => { addFixed(fixed(W / 2, y, 16, { mast: true })); return { x: W / 2, y, ph: i * 4.6, open: 1 }; });
+    S.p.x = W / 2 + 60;
   }
   if (m.id === 'desert') {
     F.dunes = [0, 1, 2].map(i => ({ x: rand(40, W - 40), y: 90 + i * 150 + rand(-25, 25), r: rand(36, 48), vx: (rng() < 0.5 ? -1 : 1) * rand(7, 12) }));
@@ -59,6 +86,7 @@ function initMapFx() {
   }
   if (m.id === 'library') { F.chand = { x: W / 2, y: H / 2, r: 205, ph: 0, warm: true }; F.bookIn = rand(5, 8); F.falls = []; }
   if (m.lowG) { F.earthW = 0; F.earthUp = false; }
+  if (m.beams) { F.mirrors = MIRRORS.map(([x, y, len, a0, sw], i) => ({ x, y, len, a0, sw, a: a0, ph: i * 1.9 })); F.beams = []; }
 }
 
 // ---------- Licht ----------
@@ -78,6 +106,7 @@ function lightHits(L, px, py) {
 }
 function darkLight(px, py) {
   if (on('eclipse')) return 0;
+  if (S.map.beams) return S.fx.beams.some(b => segDist(px, py, b.x1, b.y1, b.x2, b.y2) < BEAM_W) ? 1 : 0;
   for (const L of darkLights()) if (lightHits(L, px, py)) return 1;
   return 0;
 }
@@ -86,7 +115,6 @@ const earthAz = () => S.az + 2.4;
 // Nebenlichter: Spiegel (zwei gedrehte Sonnenstrahlen) und Erdlicht. w = wie stark es brennt.
 function extraLights() {
   const m = S.map;
-  if (m.mirrors) return [{ az: S.az + 0.5, w: m.mirrors }, { az: S.az - 0.5, w: m.mirrors }];
   if (m.lowG && S.fx.earthW > 0.04) return [{ az: earthAz(), w: S.fx.earthW }];
   return NO_LIGHTS;
 }
@@ -119,23 +147,39 @@ function updateMapFx(dt, sunDt, playing) {
   // Bahnhof: Züge kündigen sich mit roten Gleisen an und rasen dann durch
   if (F.trains) for (const T of F.trains) {
     if (T.train) {
-      const tn = T.train; tn.x += tn.dir * tn.v * dt;
-      const rects = carRects(tn);
-      for (const r of rects) {
+      const tn = T.train;
+      if (tn.st === 'in') {   // bremst bis zum Halt am Bahnsteig
+        const rest = (tn.stopX - tn.x) * tn.dir;
+        tn.v = Math.max(30, tn.v0 * Math.sqrt(Math.max(0, rest) / tn.d0));
+        tn.x += tn.dir * Math.min(tn.v * dt, Math.max(0, rest));
+        if (rest <= 1) { tn.x = tn.stopX; tn.v = 0; tn.st = 'stop'; tn.wait = rand(3.5, 5.5); Sound.sfx('block'); }
+      } else if (tn.st === 'stop') {
+        tn.wait -= dt;
+        if (tn.wait < 1.4 && !tn.horn) { tn.horn = true; Sound.sfx('alarm'); }
+        if (tn.wait <= 0) tn.st = 'out';
+      } else { tn.v = Math.min(tn.v0, tn.v + 300 * dt); tn.x += tn.dir * tn.v * dt; }
+      for (const r of carRects(tn)) {
         cast(r);
         if (playing && rectHit(r, S.p.x, S.p.y, pr())) {
-          const base = S.diff.dmg < 1 ? 20 : S.diff.dmg > 1 ? 40 : 30;
-          knock(T.y, m.trackH / 2, tn.dir * 40, tr_('Vom Zug erwischt!', 'Hit by the train!'), base);
+          if (tn.v > 70) {
+            const base = S.diff.dmg < 1 ? 20 : S.diff.dmg > 1 ? 40 : 30;
+            knock(T.y, m.trackH / 2, tn.dir * 30, tr_('Vom Zug erwischt!', 'Hit by the train!'), base);
+          } else {   // stehender Zug: nur wegschieben
+            const side = Math.sign(S.p.y - T.y) || 1;
+            S.p.y = T.y + side * (15 + pr() + 1); S.vel.y = 0;
+          }
         }
-        for (const b of S.bugs) if (rectHit(r, b.x, b.y, 6)) { b.life = 0; sparks(b.x, b.y, COL.bug, 6); }
+        for (const b of S.bugs) if (tn.v > 70 && rectHit(r, b.x, b.y, 6)) { b.life = 0; sparks(b.x, b.y, COL.bug, 6); }
       }
       const tail = tn.x - tn.dir * tn.cars * 94;
-      if (tn.dir > 0 ? tail > W + 30 : tail < -30) { T.train = null; T.next = Math.max(3, rand(6, 10) - lv() * 0.35); }
+      if (tn.st === 'out' && (tn.dir > 0 ? tail > W + 30 : tail < -30)) { T.train = null; T.next = Math.max(3, rand(5, 9) - lv() * 0.3); }
     } else if (T.warn > 0) {
       T.warn -= dt;
       if (T.warn <= 0) {
-        const dir = rng() < 0.5 ? 1 : -1;
-        T.train = { dir, x: dir > 0 ? -10 : W + 10, y: T.y, v: 540 + lv() * 12, cars: 3 + (S.level >= 4 ? 1 : 0), col: pick(['#C3402C', '#2472B3', '#2F7D5B']) };
+        const dir = rng() < 0.5 ? 1 : -1, cars = 3 + (S.level >= 4 ? 1 : 0), len = cars * 94 - 6;
+        const x = dir > 0 ? -10 : W + 10, stopX = dir > 0 ? W / 2 + len / 2 : W / 2 - len / 2;
+        const v0 = 480 + lv() * 12;
+        T.train = { dir, x, y: T.y, v: v0, v0, cars, stopX, d0: Math.abs(stopX - x), st: 'in', col: pick(['#C3402C', '#2472B3', '#2F7D5B']) };
         Sound.sfx('whoosh');
       }
     } else if (playing) {
@@ -144,6 +188,8 @@ function updateMapFx(dt, sunDt, playing) {
     }
   }
 
+  if (F.roofs) for (const r of F.roofs) cast(r);
+
   // Schiffsdeck: Das Schiff schaukelt, die Segel gehen im Takt auf und zu
   if (m.id === 'ship') {
     const sway = 0.34 * Math.sin(S.t * 0.62);
@@ -151,10 +197,10 @@ function updateMapFx(dt, sunDt, playing) {
     if (playing && !S.dash) { S.p.x += Math.sin(S.t * 0.62 + 0.9) * 18 * dt; }
     for (const M of F.masts) {
       const c = ((S.t + M.ph) % 14) / 14;
-      const want = c < 0.43 ? 1 : c < 0.5 ? 1 - (c - 0.43) / 0.07 : c < 0.93 ? 0 : (c - 0.93) / 0.07;
-      M.open = want;
-      const w = 22 + 150 * M.open;
-      if (M.open > 0.05) cast({ x: M.x - w / 2, y: M.y - 8, w, h: 16, tall: 1.5 });
+      M.open = c < 0.55 ? 1 : c < 0.62 ? 1 - (c - 0.55) / 0.07 : c < 0.93 ? 0 : (c - 0.93) / 0.07;
+      // Grosses Segel unten, kleines Topsegel darüber, beide werfen Schatten
+      const w = 26 + 200 * M.open, wt = 20 + 120 * M.open;
+      if (M.open > 0.05) { cast({ x: M.x - w / 2, y: M.y - 10, w, h: 20, tall: 1.8 }); cast({ x: M.x - wt / 2, y: M.y - 40, w: wt, h: 14, tall: 2.2 }); }
     }
   }
 
@@ -256,6 +302,18 @@ function updateMapFx(dt, sunDt, playing) {
     S.pillars = S.pillars.filter(r => !r.books || r.life > 0);
   }
 
+  // Spiegelsaal: Spiegel schwenken, Strahlen prallen an ihnen ab
+  if (m.beams) {
+    for (const M of F.mirrors) M.a = M.a0 + M.sw * Math.sin(S.t * 0.3 + M.ph);
+    const n = Math.min(EMITTERS.length, 2 + Math.floor(S.level / 3));
+    F.beams = [];
+    for (let i = 0; i < n; i++) {
+      const E = EMITTERS[i];
+      E.cur = E.a + E.amp * Math.sin(S.t * E.sp + i * 1.3);
+      castBeam(E.x, E.y, E.cur, F.beams);
+    }
+  }
+
   // Mond: Die Erde geht regelmässig auf und unter
   if (m.lowG) {
     const e = Math.sin(S.t * TAU / 44 - 1.3);
@@ -265,6 +323,29 @@ function updateMapFx(dt, sunDt, playing) {
   }
 }
 const tr_ = (de, en) => tr(de, en);
+
+// Ein Strahl läuft bis zur Wand oder Säule und prallt an Spiegeln ab (höchstens 6-mal)
+const BEAM_W = 8;
+function castBeam(x, y, a, out) {
+  let dx = Math.cos(a), dy = Math.sin(a), left = 1500, last = null;
+  for (let k = 0; k < 7 && left > 1; k++) {
+    let best = Math.min(dx > 1e-9 ? (W - x) / dx : dx < -1e-9 ? -x / dx : Infinity, dy > 1e-9 ? (H - y) / dy : dy < -1e-9 ? -y / dy : Infinity), hitM = null;
+    for (const r of S.pillars) { if (r.glass > 0) continue; const t = pillarEnter(r, x, y, dx, dy); if (t > 0.5 && t < best) best = t; }
+    for (const M of S.fx.mirrors) {
+      if (M === last) continue;
+      const [x1, y1, x2, y2] = mirrorEnds(M), ex = x2 - x1, ey = y2 - y1, den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((x1 - x) * ey - (y1 - y) * ex) / den, u = ((x1 - x) * dy - (y1 - y) * dx) / den;
+      if (t > 0.5 && u >= 0 && u <= 1 && t < best) { best = t; hitM = M; }
+    }
+    best = Math.min(best, left);
+    const x2 = x + dx * best, y2 = y + dy * best;
+    out.push({ x1: x, y1: y, x2, y2 }); left -= best;
+    if (!hitM) break;
+    const nx = -Math.sin(hitM.a), ny = Math.cos(hitM.a), d = dx * nx + dy * ny;
+    dx -= 2 * d * nx; dy -= 2 * d * ny; x = x2; y = y2; last = hitM;
+  }
+}
 
 // ---------- Zeichnen ----------
 // Boden: vor den Schatten (helle Karten) bzw. nach dem Licht (dunkle Karten)
@@ -276,20 +357,42 @@ function drawMapFloor() {
       ctx.fillStyle = 'rgba(70,58,48,.28)'; ctx.fillRect(0, y - h / 2, W, h);
       ctx.fillStyle = 'rgba(92,70,52,.55)';
       for (let x = 4; x < W; x += 16) ctx.fillRect(x, y - h / 2 + 3, 7, h - 6);
-      const warn = T.warn > 0 && Math.floor(T.warn * 8) % 2 === 0;
+      const leaving = T.train && T.train.st === 'stop' && T.train.wait < 1.4;
+      const warn = (T.warn > 0 || leaving) && Math.floor(S.t * 8) % 2 === 0;
       ctx.strokeStyle = warn ? '#E8403C' : '#8A8F9C'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(0, y - 8); ctx.lineTo(W, y - 8); ctx.moveTo(0, y + 8); ctx.lineTo(W, y + 8); ctx.stroke();
       ctx.fillStyle = 'rgba(244,207,99,.9)';
       for (let x = 0; x < W; x += 24) { ctx.fillRect(x, y - h / 2 - 5, 12, 3); ctx.fillRect(x + 12, y + h / 2 + 2, 12, 3); }
     }
+    // Bahnsteigdächer: Pfosten und Fläche, ihr Schatten liegt darüber
+    for (const r of F.roofs) {
+      ctx.fillStyle = 'rgba(71,76,90,.18)'; ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.fillStyle = '#474C5A';
+      for (const [px, py] of [[r.x + 6, r.y + 6], [r.x + r.w - 6, r.y + 6], [r.x + 6, r.y + r.h - 6], [r.x + r.w - 6, r.y + r.h - 6]]) { ctx.beginPath(); ctx.arc(px, py, 3.5, 0, TAU); ctx.fill(); }
+    }
   }
   if (m.id === 'ship') {
     ctx.strokeStyle = 'rgba(90,55,30,.28)'; ctx.lineWidth = 1; ctx.beginPath();
-    for (let y = 10; y < H; y += 20) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
-    for (let y = 10, i = 0; y < H; y += 20, i++) for (let x = (i % 3) * 53; x < W; x += 160) { ctx.moveTo(x + .5, y); ctx.lineTo(x + .5, y + 20); }
+    for (let y = 10; y < H; y += 20) { ctx.moveTo(DECK_X0, y + .5); ctx.lineTo(DECK_X1, y + .5); }
+    for (let y = 10, i = 0; y < H; y += 20, i++) for (let x = DECK_X0 + (i % 3) * 53; x < DECK_X1; x += 160) { ctx.moveTo(x + .5, y); ctx.lineTo(x + .5, y + 20); }
     ctx.stroke();
-    ctx.fillStyle = '#6B4428'; ctx.fillRect(0, 0, W, 7); ctx.fillRect(0, H - 7, W, 7); ctx.fillRect(0, 0, 7, H); ctx.fillRect(W - 7, 0, 7, H);
-    ctx.fillStyle = '#8A5A34'; for (let x = 20; x < W; x += 40) { ctx.fillRect(x, 0, 5, 7); ctx.fillRect(x, H - 7, 5, 7); }
+    // Wasser links und rechts, mit Wellen
+    for (const [x0, x1] of [[0, DECK_X0 - 8], [DECK_X1 + 8, W]]) {
+      const g = ctx.createLinearGradient(x0, 0, x1, 0);
+      g.addColorStop(0, '#2B6F9E'); g.addColorStop(1, '#1F5A85');
+      ctx.fillStyle = g; ctx.fillRect(x0, 0, x1 - x0, H);
+      ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.5; ctx.beginPath();
+      for (let y = 12; y < H; y += 26) for (let x = x0 + 6; x < x1 - 14; x += 26) {
+        const o = Math.sin(S.t * 1.6 + y * 0.1 + x) * 3, yy = y + ((x / 26) % 2) * 12;
+        ctx.moveTo(x, yy + o); ctx.quadraticCurveTo(x + 6, yy - 4 + o, x + 12, yy + o);
+      }
+      ctx.stroke();
+    }
+    // Reling
+    for (const x of [DECK_X0 - 8, DECK_X1]) {
+      ctx.fillStyle = '#6B4428'; ctx.fillRect(x, 0, 8, H);
+      ctx.fillStyle = '#8A5A34'; for (let y = 10; y < H; y += 34) ctx.fillRect(x - 1, y, 10, 6);
+    }
   }
   if (m.id === 'desert') {
     ctx.strokeStyle = 'rgba(160,110,50,.22)'; ctx.lineWidth = 1.2; ctx.beginPath();
@@ -316,12 +419,15 @@ function drawMapFloor() {
     ctx.fillStyle = 'rgba(120,30,40,.22)'; ctx.fillRect(150, 170, 180, 140);
     ctx.strokeStyle = 'rgba(244,207,99,.25)'; ctx.lineWidth = 2; ctx.strokeRect(156, 176, 168, 128);
   }
-  if (m.mirrors) {
-    for (const [x, y, w, h] of [[0, 60, 7, 120], [0, 300, 7, 120], [W - 7, 60, 7, 120], [W - 7, 300, 7, 120], [60, 0, 120, 7], [300, 0, 120, 7], [60, H - 7, 120, 7], [300, H - 7, 120, 7]]) {
-      const g = ctx.createLinearGradient(x, y, x + w, y + h);
-      g.addColorStop(0, '#CFD8E6'); g.addColorStop(0.5, '#FFFFFF'); g.addColorStop(1, '#AAB6CA');
-      ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  // Spiegelsaal: die Lichtstrahlen, aussen weich, innen grell
+  if (m.beams && !on('eclipse')) {
+    ctx.save(); ctx.lineCap = 'round';
+    for (const [wd, col] of [[BEAM_W * 3.2, 'rgba(255,236,160,.18)'], [BEAM_W * 1.8, 'rgba(255,240,180,.55)'], [BEAM_W * 0.7, 'rgba(255,255,245,.95)']]) {
+      ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.beginPath();
+      for (const b of F.beams) { ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); }
+      ctx.stroke();
     }
+    ctx.restore();
   }
   if (m.lowG) {
     for (const d of S.deco) {
@@ -431,12 +537,35 @@ function drawMapTop() {
     }
   }
   if (m.id === 'ship') for (const M of F.masts) {
-    const w = 22 + 150 * M.open;
-    ctx.strokeStyle = '#4A2E1A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(M.x - 80, M.y); ctx.lineTo(M.x + 80, M.y); ctx.stroke();
-    ctx.fillStyle = 'rgba(248,242,226,' + (0.55 + 0.35 * M.open) + ')'; ctx.strokeStyle = '#B8A888'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(M.x - w / 2, M.y - 7); ctx.quadraticCurveTo(M.x, M.y - 7 - 8 * M.open * Math.sin(S.t * 1.3 + M.ph), M.x + w / 2, M.y - 7);
-    ctx.lineTo(M.x + w / 2, M.y + 7); ctx.quadraticCurveTo(M.x, M.y + 7 + 6 * M.open, M.x - w / 2, M.y + 7); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Grosses Segel am Mast, kleines Topsegel darüber
+    const sail = (y, w, h, yard) => {
+      ctx.strokeStyle = '#4A2E1A'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(M.x - yard, y); ctx.lineTo(M.x + yard, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(248,242,226,' + (0.6 + 0.35 * M.open) + ')'; ctx.strokeStyle = '#B8A888'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(M.x - w / 2, y - h / 2); ctx.quadraticCurveTo(M.x, y - h / 2 - 9 * M.open * Math.sin(S.t * 1.3 + M.ph), M.x + w / 2, y - h / 2);
+      ctx.lineTo(M.x + w / 2, y + h / 2); ctx.quadraticCurveTo(M.x, y + h / 2 + 7 * M.open, M.x - w / 2, y + h / 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    };
+    sail(M.y, 26 + 200 * M.open, 20, 108);
+    sail(M.y - 33, 20 + 120 * M.open, 14, 66);
+    ctx.strokeStyle = '#4A2E1A'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(M.x, M.y - 33); ctx.stroke();
     ctx.fillStyle = '#4A2E1A'; ctx.beginPath(); ctx.arc(M.x, M.y, 5, 0, TAU); ctx.fill();
+  }
+  if (m.beams) {
+    for (const M of F.mirrors) {
+      const [x1, y1, x2, y2] = mirrorEnds(M);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#4B4466'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      const g = ctx.createLinearGradient(x1, y1, x2, y2); g.addColorStop(0, '#AAB6CA'); g.addColorStop(0.5, '#FFFFFF'); g.addColorStop(1, '#CFD8E6');
+      ctx.strokeStyle = g; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      ctx.fillStyle = '#6B5C8E'; ctx.beginPath(); ctx.arc(M.x, M.y, 4, 0, TAU); ctx.fill();
+    }
+    // Lichtwerfer an den Wänden; noch nicht aktive bleiben grau
+    const n = Math.min(EMITTERS.length, 2 + Math.floor(S.level / 3));
+    EMITTERS.forEach((E, i) => {
+      ctx.save(); ctx.translate(Math.max(8, Math.min(W - 8, E.x)), Math.max(8, Math.min(H - 8, E.y))); ctx.rotate(E.cur ?? E.a);
+      ctx.fillStyle = '#2B2F3A'; ctx.fillRect(-9, -8, 16, 16);
+      ctx.fillStyle = i < n ? '#FFF3C4' : '#5B6376'; ctx.beginPath(); ctx.arc(7, 0, 5, 0, TAU); ctx.fill();
+      ctx.restore();
+    });
   }
   if (m.id === 'desert') for (const d of F.dunes) {
     const g = ctx.createRadialGradient(d.x - d.r * 0.3, d.y - d.r * 0.3, 2, d.x, d.y, d.r);
@@ -499,7 +628,6 @@ function drawMapTop() {
 // Himmel: Spiegelsonnen und Erde am Rand
 function drawMapSky() {
   const m = S.map;
-  if (m.mirrors && !on('eclipse')) for (const L of extraLights()) { ctx.globalAlpha = 0.55; drawSun(L.az, 0.7); ctx.globalAlpha = 1; }
   if (m.lowG && S.fx.earthW > 0.02) {
     const d = dirOf(earthAz()), k = Math.min((W / 2 - 18) / Math.max(Math.abs(d.x), 1e-6), (H / 2 - 18) / Math.max(Math.abs(d.y), 1e-6));
     const x = W / 2 - d.x * k, y = H / 2 - d.y * k, a = Math.min(1, S.fx.earthW * 2);
@@ -554,9 +682,10 @@ function mapPreviewExtra(c, m, w, h) {
       break;
     case 'ship':
       c.strokeStyle = 'rgba(90,55,30,.35)'; c.lineWidth = 1; c.beginPath(); for (let y = u; y < h; y += u) { c.moveTo(0, y); c.lineTo(w, y); } c.stroke();
-      c.fillStyle = 'rgba(248,242,226,.95)'; c.fillRect(w * 0.3, h * 0.18, w * 0.4, u * 0.8);
-      c.fillStyle = '#4A2E1A'; c.beginPath(); c.arc(w * 0.5, h * 0.18 + u * 0.4, u * 0.35, 0, TAU); c.fill();
-      c.fillStyle = '#6B4428'; c.fillRect(0, 0, w, u * 0.25); c.fillRect(0, h - u * 0.25, w, u * 0.25);
+      c.fillStyle = '#2B6F9E'; c.fillRect(0, 0, u * 2.2, h); c.fillRect(w - u * 2.2, 0, u * 2.2, h);
+      c.fillStyle = '#6B4428'; c.fillRect(u * 2.2, 0, u * 0.3, h); c.fillRect(w - u * 2.5, 0, u * 0.3, h);
+      c.fillStyle = 'rgba(248,242,226,.95)'; c.fillRect(w * 0.24, h * 0.2, w * 0.52, u * 0.9); c.fillRect(w * 0.35, h * 0.07, w * 0.3, u * 0.6);
+      c.fillStyle = '#4A2E1A'; c.beginPath(); c.arc(w * 0.5, h * 0.2 + u * 0.45, u * 0.35, 0, TAU); c.fill();
       break;
     case 'desert':
       c.fillStyle = '#EBC57E'; c.beginPath(); c.ellipse(w * 0.78, h * 0.3, u * 2, u * 1.6, 0, 0, TAU); c.fill();
@@ -584,7 +713,12 @@ function mapPreviewExtra(c, m, w, h) {
       break;
     }
     case 'mirror':
-      for (const [x, y, ww, hh] of [[0, h * 0.2, u * 0.3, h * 0.3], [w - u * 0.3, h * 0.5, u * 0.3, h * 0.3], [w * 0.3, 0, w * 0.3, u * 0.3]]) { c.fillStyle = '#EEF2F8'; c.fillRect(x, y, ww, hh); }
+      c.lineCap = 'round';
+      for (const [wd, col] of [[u * 0.9, 'rgba(255,240,180,.35)'], [u * 0.3, '#FFFBEA']]) {
+        c.strokeStyle = col; c.lineWidth = wd; c.beginPath();
+        c.moveTo(0, h * 0.25); c.lineTo(w * 0.72, h * 0.3); c.lineTo(w * 0.3, h * 0.95); c.moveTo(w, h * 0.7); c.lineTo(w * 0.2, h * 0.6); c.stroke();
+      }
+      c.strokeStyle = '#EEF2F8'; c.lineWidth = u * 0.35; c.beginPath(); c.moveTo(w * 0.69, h * 0.16); c.lineTo(w * 0.75, h * 0.44); c.stroke();
       break;
     case 'moon':
       c.fillStyle = 'rgba(60,66,84,.2)'; for (const [x, y, r] of [[0.15, 0.2, 1], [0.85, 0.75, 1.2], [0.5, 0.85, 0.7]]) { c.beginPath(); c.ellipse(w * x, h * y, u * r, u * r * 0.7, 0, 0, TAU); c.fill(); }

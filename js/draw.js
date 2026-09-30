@@ -268,7 +268,12 @@ function draw() {
     CC.el('yard'); ctx.fillStyle = COL.lit; ctx.fillRect(-10, -10, W + 20, H + 20);
     CC.el('tile'); tiles(COL.tile);
     CC.el('floor'); drawMapFloor();
-    if (sun2On()) { shadeRegion(pillarShadows(S.az), 0.5, 0); shadeRegion(pillarShadows(az2()), 0.5, 1); }
+    if (sun2On()) {
+      // Einzelschatten nur angedeutet, wo sich beide überlappen, ist voller Schatten
+      const half = ruleOn('twosun') ? 0.5 : 0.3;
+      shadeRegion(pillarShadows(S.az), half, 0); shadeRegion(pillarShadows(az2()), half, 1);
+      ctx.save(); ctx.beginPath(); pillarShadows(az2())(); ctx.clip(); shadeRegion(pillarShadows(S.az), 1, 4); ctx.restore();
+    }
     else if (extraLights().length) drawMultiShadow();
     else shadeRegion(pillarShadows(S.az), 1, 0);
     if (S.clouds.length) shadeRegion(() => { for (const c of S.clouds) { ctx.moveTo(c.x + c.rx, c.y); ctx.ellipse(c.x, c.y, c.rx, c.ry, 0, 0, TAU); } }, 1, 2);
