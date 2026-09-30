@@ -32,7 +32,8 @@ function reset(mode, cfg) {
         bubble: 0, inv: 0, dash: null, dashCd: 0, dashMax: 1.1, charges: 1, face: { x: 1, y: 0 }, trailT: 0, shieldMax: 5, shieldGen: 20,
         boss: null, shots: [], lasers: [], bossKills: 0, bossClean: true,
         saws: [], missiles: [], vortex: null, decoy: null, lucky: 0,
-        run: { hits: 0, newAch: [], newItems: [], dailyDone: false }, closeArmed: false, beatT: 0,
+        anchor: null, anchorCd: 0, parry: 0, parryCd: 0, parryFx: 0,
+        run: { hits: 0, newAch: [], newItems: [], dailyDone: false, jumps: 0, parries: 0 }, closeArmed: false, beatT: 0,
         pickT: 0, winT: 0, duelWinT: 0, incoming: [], countT: 0, countShown: 0, spots: [], torches: [], deco: [], trailFx: 0, tut: null };
   S.energy = maxEnergy();
   if (ruleOn('rush')) S.levelIn = 6;
@@ -163,6 +164,51 @@ function dash(tx, ty) {
   S.charges--; S.trailT = 0;
   if (S.dashCd <= 0) S.dashCd = S.dashMax = dashCdMax();
   stat('dashes'); Sound.sfx('dash');
+}
+
+// ---------- Schattenanker ----------
+// Einmal drücken setzt einen Anker, nochmal drücken springt zu ihm zurück. Danach muss er sich erst wieder aufladen.
+const ANCHOR_LIFE = 8, ANCHOR_CD = 6, ANCHOR_FADE_CD = 2;
+function anchor() {
+  if (S.mode !== 'play') return;
+  if (S.anchor) {
+    const A = S.anchor;
+    sparks(S.p.x, S.p.y, '#C9B8FF', 12);
+    S.p.x = A.x; S.p.y = A.y; S.dash = null; S.inv = Math.max(S.inv, 0.25);
+    S.anchor = null; S.anchorCd = ANCHOR_CD;
+    resolve(); sparks(S.p.x, S.p.y, '#6D5BD0', 16);
+    S.run.jumps++; stat('anchorJumps'); Sound.sfx('portal');
+  } else if (S.anchorCd <= 0) {
+    S.anchor = { x: S.p.x, y: S.p.y, life: ANCHOR_LIFE };
+    Sound.sfx('anchor');
+  } else Sound.sfx('deny');
+}
+
+// ---------- Spiegel (Parade) ----------
+// Kurzes Zeitfenster: Wer genau im richtigen Moment drückt, schlägt Lichtkugeln zurück, blockt Laser und Funken,
+// wirft Sägen ab und kontert den Ansturm von Stier und Kern. Klappt es, lädt der Spiegel sofort wieder. Daneben gedrückt heißt volle Abklingzeit.
+const PARRY_WIN = 0.2, PARRY_CD = 1.5, PARRY_OK_CD = 0.35;
+function parry() {
+  if (S.mode !== 'play') return;
+  if (S.parry > 0 || S.parryCd > 0) { Sound.sfx('deny'); return; }
+  S.parry = PARRY_WIN; S.parryCd = PARRY_CD;
+  Sound.sfx('parryUp');
+}
+function parried(x, y, text) {
+  S.parryCd = Math.min(S.parryCd, PARRY_OK_CD); S.parryFx = 0.35;
+  S.shake = Math.max(S.shake, 0.2);
+  sparks(x, y, COL.gold, 12); sparks(S.p.x, S.p.y, COL.white, 6);
+  flash(text || tr('Pariert!', 'Parried!'), COL.gold);
+  S.run.parries++; stat('parries'); Sound.sfx('parry');
+}
+// Zurückgeschlagene Lichtkugel trifft den Boss
+function reflectHit(B, s) {
+  s.life = 0;
+  if (B.inv > 0 || B.enter > 0 || B.state === 'fade' || B.state === 'appear') { sparks(s.x, s.y, COL.gold, 6); return; }
+  B.hp -= 1; B.inv = 0.5; B.spearHit = false;
+  sparks(B.x, B.y, COL.gold, 16); S.shake = Math.max(S.shake, 0.35);
+  flash(tr('Zurückgeschlagen!', 'Sent back!'), COL.gold);
+  stat('reflectHits'); Sound.sfx('bossHit');
 }
 
 // ---------- Bosse ----------
@@ -319,6 +365,7 @@ function updateBoss(dt, ef) {
   const B = S.boss;
   B.t += dt;
   if (B.inv > 0) B.inv -= dt;
+  if (B.touchParried > 0) B.touchParried -= dt;
   if (B.enter > 0) { B.enter -= dt; return; }
   B.time -= dt;
   if (B.tame) { B.x += Math.cos(B.t * 0.7) * 30 * dt; B.y += Math.sin(B.t * 0.9) * 30 * dt; }
@@ -348,7 +395,10 @@ function updateBoss(dt, ef) {
       sparks(B.x, B.y, COL.white, 18);
       flash(dmg > 1 ? tr('Volltreffer ×', 'Critical hit ×') + dmg + '!' : tr('Treffer!', 'Hit!'), '#5FBE90');
       Sound.sfx('bossHit');
-    } else if (!on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
+    } else if (S.parry > 0) {
+      if (B.state === 'charge') { B.state = 'stun'; B.stun = 2; parried(B.x, B.y, tr('Ansturm gekontert!', 'Charge countered!')); }
+      else if (!B.touchParried) { B.touchParried = 0.6; parried(B.x, B.y); }
+    } else if (!(B.touchParried > 0) && !on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
     S.p.x = B.x + dx / d * (B.r + pr() + 14); S.p.y = B.y + dy / d * (B.r + pr() + 14);
     resolve();
   }
@@ -612,6 +662,14 @@ function update(dt) {
     if (S.dashCd <= 0) { S.charges++; S.dashCd = S.charges < maxCharges() ? (S.dashMax = dashCdMax()) : 0; }
   }
   if (S.inv > 0) S.inv -= dt;
+  if (S.parry > 0) S.parry -= dt;
+  if (S.parryCd > 0) S.parryCd -= dt;
+  if (S.parryFx > 0) S.parryFx -= dt;
+  if (S.anchorCd > 0) S.anchorCd -= dt;
+  if (S.anchor) {
+    S.anchor.life -= dt;
+    if (S.anchor.life <= 0) { S.anchor = null; S.anchorCd = ANCHOR_FADE_CD; flash(tr('Anker verblasst', 'Anchor faded'), '#98A1B4'); }
+  }
   if (on('wind')) {
     S.p.x += S.wind.x * dt; S.p.y += S.wind.y * dt;
     if (Math.random() < dt * 40) S.parts.push({ x: fx(0, W), y: fx(0, H), vx: S.wind.x * 4, vy: S.wind.y * 4, life: 0.35, streak: true });
@@ -708,7 +766,7 @@ function update(dt) {
     m.warn -= dt * (ef > 0 ? 1 : 0);
     if (m.warn <= 0) {
       m.done = true; S.shake = Math.max(S.shake, 0.3); sparks(m.x, m.y, COL.hot, 14); Sound.sfx('boom');
-      if (dist(m, S.p) < m.r + pr() && !on('shield')) hit(22, tr('Funkentreffer!', 'Spark hit!'));
+      if (dist(m, S.p) < m.r + pr() && !on('shield')) { if (S.parry > 0) parried(S.p.x, S.p.y, tr('Funken abgewehrt!', 'Spark blocked!')); else hit(22, tr('Funkentreffer!', 'Spark hit!')); }
       const gx = Math.floor(m.x / CELL), gy = Math.floor(m.y / CELL);
       if (!S.hot.some(h => h.gx === gx && h.gy === gy)) S.hot.push({ gx, gy, warn: 0, life: 4 });
     }
@@ -736,15 +794,28 @@ function update(dt) {
     else {
       L.life -= dt; L.a += L.spin * dt * ef;
       const len = rayLen(L.x, L.y, L.a, L.len);
-      if (segDist(S.p.x, S.p.y, L.x, L.y, L.x + Math.cos(L.a) * len, L.y + Math.sin(L.a) * len) < pr() + 4) hit(15, 'Laser!');
+      if (segDist(S.p.x, S.p.y, L.x, L.y, L.x + Math.cos(L.a) * len, L.y + Math.sin(L.a) * len) < pr() + 4) {
+        if (S.parry > 0 || L.blocked > 0) { if (!(L.blocked > 0)) { L.blocked = 0.5; parried(S.p.x, S.p.y, tr('Laser geblockt!', 'Laser blocked!')); } }
+        else hit(15, 'Laser!');
+      }
+      if (L.blocked > 0) L.blocked -= dt;
     }
   }
   S.lasers = S.lasers.filter(L => L.life > 0);
 
   // Lichtkugeln
   for (const s of S.shots) {
-    s.x += s.vx * dt * ef; s.y += s.vy * dt * ef; s.life -= dt;
+    const sf = s.ref ? 1 : ef;   // zurückgeschlagene Kugeln fliegen auch bei Frost weiter
+    s.x += s.vx * dt * sf; s.y += s.vy * dt * sf; s.life -= dt;
     if (s.x < -20 || s.x > W + 20 || s.y < -20 || s.y > H + 20 || inPillar(s.x, s.y, 0)) s.life = 0;
+    else if (s.ref) { if (S.boss && dist(s, S.boss) < S.boss.r + 5) reflectHit(S.boss, s); }
+    else if (S.parry > 0 && dist(s, S.p) < pr() + 14) {
+      // Zurück zum Boss, sonst einfach umdrehen
+      const T = S.boss && S.boss.enter <= 0 ? S.boss : { x: s.x - s.vx, y: s.y - s.vy };
+      const dx = T.x - s.x, dy = T.y - s.y, d = Math.hypot(dx, dy) || 1, v = Math.max(260, Math.hypot(s.vx, s.vy) * 2);
+      s.vx = dx / d * v; s.vy = dy / d * v; s.ref = true; s.life = 3;
+      parried(s.x, s.y);
+    }
     else if (dist(s, S.p) < pr() + 5) {
       if (S.dash) { if (up('blade')) { s.life = 0; sparks(s.x, s.y, '#C9B8FF', 6); S.score += pts(10); } }
       else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(12, tr('Lichtkugel!', 'Light orb!')); }
@@ -763,6 +834,12 @@ function update(dt) {
     s.y += s.vy * dt * ef;
     if (s.y < 12 || s.y > H - 12 || inPillar(s.x, s.y, 6)) { s.y -= s.vy * dt * ef; s.vy = -s.vy; }
     if (dist(s, S.p) < pr() + 11) {
+      if (S.parry > 0 && !on('spikes') && !(S.dash && up('blade'))) {
+        const dx = s.x - S.p.x, dy = s.y - S.p.y, d = Math.hypot(dx, dy) || 1, v = Math.hypot(s.vx, s.vy);
+        s.vx = dx / d * v; s.vy = dy / d * v; s.x = S.p.x + dx / d * (pr() + 14); s.y = S.p.y + dy / d * (pr() + 14);
+        parried(s.x, s.y, tr('Säge abgewehrt!', 'Saw deflected!'));
+        continue;
+      }
       if (on('spikes') || (S.dash && up('blade'))) { s.life = 0; sparks(s.x, s.y, '#DDE3EC', 14); const p = pts(30); flash(tr('Säge zerbrochen +', 'Saw destroyed +') + p, '#B8C0CF'); S.score += p; Sound.sfx('bossHit'); }
       else if (Math.random() < dt * 20) sparks(s.x, s.y, COL.sun, 3);
       if (s.life > 0 && !on('shield')) hit(15, tr('Säge!', 'Saw!'));
@@ -784,7 +861,8 @@ function update(dt) {
     if (S.decoy && dist(m, S.decoy) < 12) boom = true;
     if (!boom && dist(m, S.p) < pr() + 8) {
       boom = true;
-      if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash(tr('Rakete zerstört +', 'Missile destroyed +') + p, '#5FBE90'); stat('missiles'); }
+      if (S.parry > 0) { const p = pts(25); S.score += p; parried(m.x, m.y, tr('Rakete gekontert +', 'Missile countered +') + p); stat('missiles'); }
+      else if (S.dash || on('spikes')) { const p = pts(25); S.score += p; flash(tr('Rakete zerstört +', 'Missile destroyed +') + p, '#5FBE90'); stat('missiles'); }
       else if (!on('shield')) hit(20, tr('Rakete!', 'Missile!'));
     }
     if (boom) { m.dead = true; sparks(m.x, m.y, COL.hot, 16); S.shake = Math.max(S.shake, 0.25); Sound.sfx('boom'); }

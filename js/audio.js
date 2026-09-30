@@ -93,6 +93,9 @@ const Sound = (() => {
     pickup() { tone({ f: 523, to: 1046, type: 'square', d: 0.14, v: 0.06, lp: 2400 }); tone({ f: 1568, type: 'sine', d: 0.18, v: 0.05, t: 0.07 }); },
     trap() { tone({ f: 420, to: 110, type: 'sawtooth', d: 0.35, v: 0.09, lp: 1400 }); tone({ f: 440, to: 115, type: 'sawtooth', d: 0.35, v: 0.05, lp: 1400, det: 30 }); },
     hurt() { tone({ f: 200, to: 60, type: 'square', d: 0.22, v: 0.14, lp: 900 }); noise({ ft: 'lowpass', f: 600, d: 0.14, v: 0.22 }); },
+    anchor() { tone({ f: 180, to: 90, type: 'sine', d: 0.3, v: 0.14 }); tone({ f: 720, type: 'triangle', d: 0.12, v: 0.05, t: 0.04 }); },
+    parryUp() { noise({ ft: 'highpass', f: 5000, d: 0.06, v: 0.08 }); tone({ f: 1100, type: 'triangle', d: 0.06, v: 0.05 }); },
+    parry() { tone({ f: 1760, to: 2640, type: 'triangle', d: 0.14, v: 0.12 }); tone({ f: 880, type: 'sine', d: 0.3, v: 0.08 }); noise({ f: 6000, d: 0.05, v: 0.12, q: 3 }); },
     block() { tone({ f: 1320, to: 880, type: 'sine', d: 0.22, v: 0.11 }); tone({ f: 1980, type: 'sine', d: 0.1, v: 0.05 }); },
     boss() { tone({ f: 55, type: 'sawtooth', d: 1.1, v: 0.16, lp: 500, a: 0.05 }); tone({ f: 58.3, type: 'sawtooth', d: 1.1, v: 0.12, lp: 500, a: 0.05 }); tone({ f: 110, to: 82, type: 'square', d: 0.9, v: 0.05, lp: 700, t: 0.15 }); noise({ ft: 'lowpass', f: 300, d: 0.7, v: 0.28 }); },
     bossHit() { tone({ f: 520, to: 140, type: 'square', d: 0.16, v: 0.12, lp: 2000 }); noise({ f: 2400, d: 0.08, v: 0.18, q: 2 }); },
@@ -133,7 +136,7 @@ const Sound = (() => {
     gulp() { tone({ f: 190, to: 55, type: 'sine', d: 0.35, v: 0.3 }); noise({ ft: 'lowpass', f: 700, to: 120, d: 0.3, v: 0.2 }); },
     whoosh() { noise({ f: 350, to: 2200, gl: 0.25, d: 0.5, v: 0.14, q: 1.5 }); },
   };
-  const GAP = { laser: 0.12, hurt: 0.1, sizzle: 0.35, dew: 0.03, boom: 0.06, click: 0.03, bossHit: 0.05, block: 0.08, chirp: 0.3, pickup: 0.05, pop: 0.03, whoosh: 0.1 };
+  const GAP = { laser: 0.12, hurt: 0.1, sizzle: 0.35, dew: 0.03, boom: 0.06, click: 0.03, bossHit: 0.05, block: 0.08, parry: 0.05, deny: 0.15, chirp: 0.3, pickup: 0.05, pop: 0.03, whoosh: 0.1 };
   function sfx(name, arg) {
     if (!ac || ac.state !== 'running' || P.settings.muted || !P.settings.sfx) return;
     const now = ac.currentTime;

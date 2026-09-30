@@ -7,7 +7,9 @@ const TUT_STEPS = [
   ['Tautropfen liegen immer in der Sonne. Schnapp dir den Tropfen!', 'Dew drops always lie in the sun. Grab the drop!'],
   ['Dash: Shift, Leertaste, Rechtsklick oder der DASH-Knopf. Probier es aus!', 'Dash: Shift, Space, right-click or the DASH button. Try it!'],
   ['Ein Lichtkäfer! Beim Dash bist du unverwundbar. Dashe durch ihn hindurch!', 'A light bug! You are invulnerable while dashing. Dash right through it!'],
-  ['Bosse verletzt nur ein Dash. Dashe zweimal in Prisma!', 'Only a dash hurts bosses. Dash into Prisma twice!'],
+  ['Schattenanker: Drück E (oder ANKER), lauf ein Stück weg und drück E nochmal. Du springst zurück zum Anker!', 'Shadow anchor: press E (or ANCHOR), walk away a bit and press E again. You jump back to the anchor!'],
+  ['Spiegel: Drück Q (oder SPIEGEL) genau, bevor dich eine Lichtkugel trifft. Schlag 2 Kugeln zurück!', 'Mirror: press Q (or MIRROR) right before a light orb hits you. Send 2 orbs back!'],
+  ['Bosse verletzt ein Dash. Dashe zweimal in Prisma!', 'A dash hurts bosses. Dash into Prisma twice!'],
   ['Nach jedem Boss wählst du ein Upgrade. So spielt sich jede Runde anders.', 'After every boss you pick an upgrade. That makes every run different.'],
   ['Geschafft! Jetzt kennst du alles Wichtige. Viel Glück da draußen!', 'Done! You know the essentials. Good luck out there!'],
 ];
@@ -20,7 +22,7 @@ function startTutorial() {
 function tutNext() {
   const T = S.tut;
   T.step++; T.t = 0; T.target = null;
-  T.d0 = P.stats.dashes || 0; T.b0 = P.stats.bugsDashed || 0;
+  T.d0 = P.stats.dashes || 0; T.b0 = P.stats.bugsDashed || 0; T.j0 = S.run.jumps; T.p0 = S.run.parries;
   Sound.sfx('level');
 }
 function tutFinish(skipped) {
@@ -72,6 +74,19 @@ function tutUpdate(dt) {
       T.target = T.bug;
       break;
     case 5:
+      if (S.run.jumps > T.j0) tutNext();
+      break;
+    case 6:
+      // Eine langsame Lichtkugel nach der anderen, jeweils von einer Seite auf die Figur gezielt
+      T.shotIn = (T.shotIn ?? 0.8) - dt;
+      if (T.shotIn <= 0 && !S.shots.some(q => !q.ref)) {
+        const e = edgePoint(), dx = S.p.x - e.x, dy = S.p.y - e.y, d = Math.hypot(dx, dy) || 1;
+        S.shots.push({ x: e.x, y: e.y, vx: dx / d * 120, vy: dy / d * 120, life: 8 });
+        T.shotIn = 1;
+      }
+      if (S.run.parries - T.p0 >= 2) { S.shots = []; tutNext(); }
+      break;
+    case 7:
       if (!T.boss) {
         T.boss = true;
         spawnBoss(BOSSES[0]);
@@ -80,10 +95,10 @@ function tutUpdate(dt) {
       T.target = S.boss;
       if (!S.boss && S.pickT > 0) tutNext();
       break;
-    case 6:
+    case 8:
       if (S.upList.length) tutNext();
       break;
-    case 7:
+    case 9:
       if (T.t > 3.2) tutFinish(false);
       break;
   }
