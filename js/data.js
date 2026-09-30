@@ -205,6 +205,7 @@ const ACH = [
   { id: 'mapwin3', name: 'Kartenkenner', icon: 'trophy', desc: 'Gewinne die Kampagne auf 3 verschiedenen Karten.', goal: 3, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
   { id: 'mapwinall', name: 'Weltmeister', icon: 'sonnenkrone', desc: 'Gewinne die Kampagne auf allen 12 Karten.', goal: 12, val: s => Object.keys(s).filter(k => k.startsWith('win_') && s[k] > 0).length },
   { id: 'trails5', name: 'Spurensucher', icon: 'sparkle', desc: 'Besitze 5 Spuren.', goal: 5, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
+  { id: 'trails15', name: 'Spurenkönig', icon: 'sparkle', desc: 'Besitze 15 Spuren.', goal: 15, val: () => TRAILS.filter(t => t.id !== 'none' && isOwned('trail', t)).length },
 ];
 const ACH_BY = Object.fromEntries(ACH.map(a => [a.id, a]));
 

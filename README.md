@@ -212,7 +212,8 @@ Die 20 Karten: Schnelldash, Schattenspur, Zäher Schatten, Lange Schatten, Extra
 
 - **18 Skins**, von Mitternacht und Moos bis Regenbogen, Eis und Lava.
 - **20 Hüte**, zum Beispiel Zylinder, Piratenhut, Wikingerhelm und Kochmütze.
-- **10 Spuren**, die hinter deiner Figur herziehen: Funken, Blasen, Herzen, Noten, Sternschnuppe, Regenbogen, Schattenecho, Blätter, Feuer, Mondstaub.
+- **24 Spuren**, die hinter deiner Figur herziehen: Funken, Blasen, Herzen, Noten, Sternschnuppe, Regenbogen, Rauch, Schneeflocken, Tautropfen, Pixel, Blitze, Konfetti, Glitzer, Schattenecho, Blätter, Feuer, Mondstaub, Wellen, Sandkörner, Dampf, Neon, Buchseiten, Lichtstrahlen, Erdlicht.
+- In der Garderobe bleibt die Figur beim Scrollen stehen, nur die Liste bewegt sich. Auf allen Bildschirmen bleiben der Kopf mit dem Zurück-Knopf und die Reiter oben.
 
 Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen:
 
@@ -229,6 +230,13 @@ Manche Teile kaufst du mit Punkten vom Konto. Andere gibt es nur für Leistungen
 | Spur Blätter | Stufe 6 im Garten erreichen |
 | Spur Feuer | 10 Bosse besiegen |
 | Spur Mondstaub | Den Nachtmahr zweimal besiegen |
+| Spur Wellen | Stufe 6 auf dem Schiffsdeck |
+| Spur Sandkörner | Stufe 6 in der Wüste |
+| Spur Dampf | Stufe 6 im Bahnhof |
+| Spur Neon | Stufe 6 in der Stadt bei Nacht |
+| Spur Buchseiten | Stufe 6 in der Bibliothek |
+| Spur Lichtstrahlen | Stufe 6 im Spiegelsaal |
+| Spur Erdlicht | Stufe 6 auf dem Mond |
 | Skin Wochenheld, Hut Lorbeerkranz | Eine Wochenherausforderung schaffen |
 
 ## Erfolge und Statistik

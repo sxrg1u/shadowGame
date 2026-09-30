@@ -443,3 +443,22 @@ input.text{font:700 var(--fs-body) var(--body);padding:10px 12px;border-radius:8
   .hud,.opp{background:var(--panel)}
   button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline-width:4px}
 }
+
+/* ---------- Feste Bereiche beim Scrollen ---------- */
+/* Der Kopf mit dem Zurück-Knopf bleibt ganz oben stehen (top: -24px gleicht den Innenabstand des Bildschirms aus),
+   sein Hintergrund reicht bis an die Ränder des Panels. */
+.panel{--pad-x:28px;--pad-y:28px}
+@media (max-width:560px){.panel{--pad-x:16px;--pad-y:20px}}
+.scr-head{position:sticky;top:-24px;z-index:4;background:var(--panel);padding:var(--pad-y) 0 10px;margin:calc(-1 * var(--pad-y)) 0 -10px;border-radius:16px 16px 0 0;
+  box-shadow:0 0 0 var(--pad-x) var(--panel);clip-path:inset(0 calc(-1 * var(--pad-x)) -6px calc(-1 * var(--pad-x)) round 16px 16px 0 0)}
+/* Reiter (Skins/Hüte/Spuren, Erfolge/Statistik, Regeln/Lexikon) bleiben direkt unter dem Kopf */
+.panel .tabs{position:sticky;top:calc(var(--pad-y) + 30px);z-index:3;background:var(--panel)}
+/* Garderobe: Die Figur bleibt links stehen, nur die Liste scrollt */
+.wardrobe .preview{position:sticky;top:calc(var(--pad-y) + 42px)}
+@media (max-width:720px){
+  .wardrobe .preview{top:calc(var(--pad-y) + 30px);z-index:3;background:var(--panel);grid-template-columns:88px minmax(0,1fr);column-gap:12px;align-items:center;max-width:none;padding:4px 0 10px;
+    box-shadow:0 0 0 var(--pad-x) var(--panel);clip-path:inset(0 calc(-1 * var(--pad-x)) -4px calc(-1 * var(--pad-x)))}
+  .wardrobe .preview canvas{width:88px;grid-row:span 2}
+  .wardrobe .preview #wardHint{font-size:var(--fs-small)}
+  .wardrobe .tabs{top:calc(var(--pad-y) + 132px)}
+}
