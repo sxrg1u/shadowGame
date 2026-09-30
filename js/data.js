@@ -1,6 +1,21 @@
 'use strict';
 // Profil, Schwierigkeit, Regeln, Upgrades, Erfolge
 
+// ---------- Debug-Start (nur für automatische Screenshots) ----------
+// ?debug=1 startet direkt eine Runde mit festem Zufall und fester Bildrate, z. B.
+// ?debug=1&event=colorchaos&level=5&seed=7&boss=queen&mode=endless&diff=normal&lang=de&flashes=1&frames=120&map=cellar (screen=menu zeigt das Hauptmenü).
+// Nach „frames“ Bildern bleibt das Bild stehen. Ohne ?debug=1 ändert sich nichts. Im Debug-Modus wird nie gespeichert.
+const DEBUG = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('debug') !== '1') return null;
+  const num = (k, d) => { const v = parseInt(q.get(k), 10); return Number.isFinite(v) ? v : d; };
+  const d = { seed: num('seed', 1) >>> 0, level: Math.max(1, num('level', 1)), frames: num('frames', 1e9), event: q.get('event'), boss: q.get('boss'),
+              mode: q.get('mode') || 'endless', diff: q.get('diff') || 'normal', lang: q.get('lang'), flashes: q.get('flashes'), screen: q.get('screen') || 'play', map: q.get('map'),
+              frame: 0, left: 0, done: false };
+  Math.random = mulberry32(d.seed ^ 0x9E3779B9);   // auch Effekte würfeln reproduzierbar
+  return d;
+})();
+
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
 const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
@@ -32,9 +47,17 @@ function loadProfile() {
   }
   return p;
 }
-let P = loadProfile();
+let P = DEBUG ? freshProfile() : loadProfile();
 if (!P.settings.name) P.settings.name = 'Shady' + (10 + Math.floor(Math.random() * 90));
-function save() { try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) {} }
+if (DEBUG) {
+  const s = P.settings;
+  s.muted = true; s.shake = false;
+  if (DEBUG.lang) s.lang = DEBUG.lang;
+  if (DEBUG.flashes) s.flashes = DEBUG.flashes !== '0';
+  if (['easy', 'normal', 'hard'].includes(DEBUG.diff)) s.diff = DEBUG.diff;
+  P.tutDone = true;
+}
+function save() { if (DEBUG) return; try { localStorage.setItem(STORE, JSON.stringify(P)); } catch (e) {} }
 let achDirty = false;
 function stat(k, n = 1) { P.stats[k] = (P.stats[k] || 0) + n; achDirty = true; }
 function statMax(k, v) { if (v > (P.stats[k] || 0)) { P.stats[k] = v; achDirty = true; } }
@@ -54,10 +77,11 @@ function weekEnds() {
 }
 
 // ---------- Schwierigkeit ----------
+// cc: Farbchaos wirkt so viele Stufen schwächer (−) oder stärker (+)
 const DIFF = {
-  easy: { name: 'Leicht', burn: 0.75, dmg: 0.7, pts: 0.75, note: 'Sonne und Treffer tun weniger weh. 75 % Punkte.' },
-  normal: { name: 'Normal', burn: 1, dmg: 1, pts: 1, note: 'So ist das Spiel gedacht.' },
-  hard: { name: 'Schwer', burn: 1.25, dmg: 1.3, pts: 1.3, note: 'Mehr Hitze, härtere Treffer. 130 % Punkte.' },
+  easy: { name: 'Leicht', burn: 0.75, dmg: 0.7, pts: 0.75, cc: -1, note: 'Sonne und Treffer tun weniger weh. 75 % Punkte.' },
+  normal: { name: 'Normal', burn: 1, dmg: 1, pts: 1, cc: 0, note: 'So ist das Spiel gedacht.' },
+  hard: { name: 'Schwer', burn: 1.25, dmg: 1.3, pts: 1.3, cc: 1, note: 'Mehr Hitze, härtere Treffer. 130 % Punkte.' },
 };
 
 // ---------- Tägliche Herausforderung ----------

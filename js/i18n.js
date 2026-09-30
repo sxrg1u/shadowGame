@@ -54,6 +54,7 @@ const EN = {
     missile: ['Homing missiles', 'Chaos wheel: they chase you in curves. −20. Lure them into a pillar or dash through.'],
     vortex: ['Light vortex', 'Chaos wheel: pulls you in for 5 s, out of your shade.'],
     glass: ['Glass pillars', 'Chaos wheel: half of the pillars turn transparent for 5 s and cast no shadow.'],
+    colorchaos: ['Color chaos', 'Chaos wheel: all colors go haywire and change several times per second. Gets worse with every level. Purely visual. With "Bright flashes" off it stays gentle.'],
     prisma: ['Prisma', 'From level 2, then every 5 levels. Floats around the yard and fires spinning lasers in all directions.'],
     queen: ['Beetle Queen', 'From level 3, then every 5 levels. Circles the middle, fires rings of light orbs and summons bugs.'],
     bull: ['Sun Bull', 'From level 4, then every 5 levels. Aims with a red line and charges. Smashes pillars. After hitting the wall he is dazed, and a dash counts double.'],
@@ -156,7 +157,7 @@ const EN = {
   rar: { c: 'Common', r: 'Rare', e: 'Epic' },
   ev: { 'Mittagssonne': 'High noon', 'Zweite Sonne': 'Second sun', 'Sturmböe': 'Gale', 'Käferschwarm': 'Bug swarm', 'Sonnenfunken': 'Solar sparks', 'Erdbeben': 'Earthquake', 'Blitzlicht': 'Flashbang',
         'Leuchtturm': 'Lighthouse', 'Elstern': 'Magpies', 'Honigregen': 'Honey rain', 'Lasergitter': 'Laser grid', 'Laserturm': 'Laser turret', 'Sägeblätter': 'Saw blades', 'Suchraketen': 'Homing missiles',
-        'Lichtwirbel': 'Light vortex', 'Glassäulen': 'Glass pillars', 'Beuteregen': 'Loot rain', 'Mondfinsternis': 'Eclipse', 'Tauregen': 'Dew rain' },
+        'Lichtwirbel': 'Light vortex', 'Glassäulen': 'Glass pillars', 'Beuteregen': 'Loot rain', 'Mondfinsternis': 'Eclipse', 'Tauregen': 'Dew rain', 'Farbchaos': 'Color chaos' },
 };
 const evLabel = k => (LANG === 'en' && EN.ev[k]) || k;
 const bossLabel = type => { const e = BOSS_INFO.find(x => x[0] === type); return e ? e[1] : type; };
@@ -229,7 +230,7 @@ const STATIC_EN = {
   'Musik': 'Music', 'Lautstärke der Hintergrundmusik': 'Background music volume', 'Effekte': 'Effects', 'Lautstärke der Geräusche': 'Sound effects volume',
   'Ton an': 'Sound on', 'Taste': 'Key', 'schaltet jederzeit um': 'toggles it at any time',
   'Bildschirmwackeln': 'Screen shake', 'Bei Treffern, Beben und Explosionen': 'On hits, quakes and explosions',
-  'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht und Donner werden abgedämpft': 'Off: flashbang and thunder are toned down',
+  'Grelle Blitze': 'Bright flashes', 'Aus: Blitzlicht, Donner und Farbchaos werden abgedämpft': 'Off: flashbang, thunder and color chaos are toned down',
   'Sprache': 'Language', 'Sprache des Spiels': 'Game language',
   'Design': 'Theme', 'Hell, dunkel oder wie dein System': 'Light, dark or like your system', 'System': 'System', 'Hell': 'Light', 'Dunkel': 'Dark',
   'Spielername': 'Player name', 'Für Duelle und die Bestenliste': 'For duels and the leaderboard',
@@ -245,7 +246,7 @@ const STATIC_EN = {
   'Upgrades.': 'Upgrades.',
   'Nach jedem besiegten Boss ziehst du drei Karten und nimmst eine. So spielt sich jede Runde anders.': 'After every defeated boss you draw three cards and pick one. That makes every run play differently.',
   'Chaos-Rad.': 'Chaos wheel.',
-  'Alle paar Sekunden wird ein Ereignis ausgelost, meistens ein gemeines, manchmal ein gutes.': 'Every few seconds an event is drawn, mostly a nasty one, sometimes a good one.',
+  'Alle paar Sekunden wird ein Ereignis ausgelöst, meistens ein gemeines, manchmal ein gutes.': 'Every few seconds an event is drawn, mostly a nasty one, sometimes a good one.',
   'Punkte.': 'Points.',
   '10 pro Sekunde, dazu Tau, Kombos und Boss-Siege. Nach jeder Runde landen deine Punkte auf dem Konto. Damit kaufst du Skins und Hüte. Manche gibt es nur für Boss-Siege.': '10 per second, plus dew, combos and boss victories. After every run your points go to your balance. You use them to buy skins and hats. Some can only be earned by beating bosses.',
   'Letzte Kraft.': 'Last stand.',

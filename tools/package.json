@@ -1,0 +1,13 @@
+{
+  "name": "shady-tools",
+  "private": true,
+  "description": "Hilfsskripte für Shady. Das Spiel selbst braucht nichts davon.",
+  "type": "module",
+  "scripts": {
+    "screenshots": "node screenshots.mjs"
+  },
+  "devDependencies": {
+    "gifenc": "^1.0.3",
+    "playwright": "^1.63.0"
+  }
+}

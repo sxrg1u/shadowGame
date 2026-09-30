@@ -401,7 +401,7 @@ function toMenu() {
   Sound.music('menu'); Sound.setLevel(0);
 }
 function pause() {
-  if (!S || S.mode !== 'play' || topScr()) return;
+  if (!S || S.mode !== 'play' || topScr() || DEBUG) return;   // Debug-Runden laufen auch ohne Fokus weiter
   if (!isDuel()) S.mode = 'pause';
   resetTo('scrPause');
 }
@@ -850,7 +850,11 @@ function drawHero(id, skin, hat, t, trail) {
 }
 let last = performance.now();
 function loop(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (DEBUG) {   // feste Bildrate, nach „frames“ Bildern bleibt alles stehen
+    if (DEBUG.left <= 0) { DEBUG.done = DEBUG.frame > 0; requestAnimationFrame(loop); return; }
+    DEBUG.left--; DEBUG.frame++; DEBUG.done = false; dt = 1 / 60; now = DEBUG.frame * 1000 / 60;
+  }
   if (S.mode === 'pick') {
     if (pickTimer > 0) {
       pickTimer -= dt;
@@ -858,6 +862,7 @@ function loop(now) {
       if (pickTimer <= 0) choose(0);
     }
   } else if (S.mode !== 'pause') update(dt);
+  CC.frame();
   draw();
   Net.tick(dt);
   if (achDirty) checkAch();
@@ -889,6 +894,8 @@ function setLang(l) {
   while (keysD.length > 40) delete P.daily[keysD.shift()];
   for (const k of ['skin', 'hat', 'trail']) if (!isOwned(k, ({ skin: SKIN_BY, hat: HAT_BY, trail: TRAIL_BY })[k][P.equip[k]])) P.equip[k] = k === 'skin' ? 'schatten' : 'none';
   if (!MAP_BY[P.settings.map]) P.settings.map = 'yard';
+  // Wer schon vor dem Tutorial gespielt hat, wird nicht mehr automatisch hineingeschickt.
+  if (!P.tutDone && P.stats.runs > 0) P.tutDone = true;
   applyTheme(); setLang(P.settings.lang);
   reset('ready');
   const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum');
@@ -896,5 +903,25 @@ function setLang(l) {
   else resetTo('scrMain');
   Sound.music('menu');
   checkAch(); save();
+  if (DEBUG) debugStart();
   requestAnimationFrame(loop);
 })();
+
+// Debug-Start (siehe DEBUG oben): Runde mit fester Stufe, optional Boss und Ereignis. Die Figur ist unverwundbar,
+// damit sie beim Stillstehen nicht verdampft. Die Zeit läuft erst los, wenn die Schriften geladen sind.
+function debugStart() {
+  if (DEBUG.screen !== 'menu') {
+    startRun({ mode: DEBUG.mode, diff: P.settings.diff, seed: DEBUG.seed, map: MAP_BY[DEBUG.map] ? DEBUG.map : 'yard' });
+    S.level = DEBUG.level - 1; S.grace = 1e9; Sound.setLevel(S.level);
+    const b = DEBUG.boss && (DEBUG.boss === 'core' ? CORE : BOSSES.find(x => x.type === DEBUG.boss));
+    if (b) spawnBoss(b);
+    const ev = DEBUG.event && EVENTS.find(e => e.id === DEBUG.event || e.name === DEBUG.event);
+    if (ev) startEvent(ev);
+    hud();
+  }
+  const go = () => { if (!DEBUG.frame && !DEBUG.left) DEBUG.left = DEBUG.frames; };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(go);
+  setTimeout(go, 4000);
+  window.shadyDebug = { get frame() { return DEBUG.frame; }, get done() { return DEBUG.done; }, advance(n) { DEBUG.left += n; DEBUG.done = false; } };
+}
+

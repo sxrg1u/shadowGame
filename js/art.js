@@ -85,6 +85,7 @@ const BAD = [
   ['missile','Suchraketen','Chaos-Rad: Verfolgen dich in Kurven. −20. Lock sie gegen eine Säule oder dashe hindurch.'],
   ['vortex','Lichtwirbel','Chaos-Rad: Zieht dich 5 s lang zu sich, raus aus deinem Schatten.'],
   ['glass','Glassäulen','Chaos-Rad: Die Hälfte der Säulen wird 5 s lang durchsichtig und wirft keinen Schatten.'],
+  ['colorchaos','Farbchaos','Chaos-Rad: Alle Farben geraten durcheinander und wechseln mehrmals pro Sekunde. Wird mit jeder Stufe schlimmer. Rein optisch. Mit „Grelle Blitze“ aus bleibt es sanft.'],
 ];
 const BOSS_INFO = [
   ['prisma','Prisma','Ab Stufe 2, danach alle 5 Stufen. Schwebt übers Feld und schießt drehende Laser in alle Richtungen.'],
@@ -187,6 +188,8 @@ function icon(c, k) {
     case 'vortex': c.strokeStyle = COL.sun; c.lineWidth = 2; c.beginPath(); for (let i = 0; i < 40; i++) { const a = i * 0.45, r = i * 0.28; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.stroke(); break;
     case 'glass': c.fillStyle = 'rgba(190,225,255,.7)'; c.strokeStyle = '#6FA8D6'; c.lineWidth = 2; c.fillRect(-10, -10, 20, 20); c.strokeRect(-10, -10, 20, 20);
       c.strokeStyle = '#fff'; c.beginPath(); c.moveTo(-6, 4); c.lineTo(4, -6); c.moveTo(-2, 7); c.lineTo(7, -2); c.stroke(); break;
+    case 'colorchaos': for (let i = 0; i < 6; i++) { c.fillStyle = `hsl(${i * 137 % 360} 85% 55%)`; c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, 11, i * TAU / 6 + i * 0.2, (i + 1) * TAU / 6 + 0.2); c.closePath(); c.fill(); }
+      c.fillStyle = COL.body; c.beginPath(); c.arc(0, 0, 3.5, 0, TAU); c.fill(); break;
     case 'flame': c.fillStyle = '#E2572B'; c.beginPath(); c.moveTo(0, -12); c.quadraticCurveTo(10, -2, 7, 5); c.quadraticCurveTo(4, 11, 0, 11); c.quadraticCurveTo(-4, 11, -7, 5); c.quadraticCurveTo(-10, -2, 0, -12); c.fill();
       c.fillStyle = COL.gold; c.beginPath(); c.moveTo(0, -3); c.quadraticCurveTo(5, 3, 3, 7); c.quadraticCurveTo(0, 10, -3, 7); c.quadraticCurveTo(-5, 3, 0, -3); c.fill(); break;
     case 'trophy': c.fillStyle = COL.gold; c.strokeStyle = '#8A5A00'; c.lineWidth = 1.3; c.lineJoin = 'round';
@@ -413,6 +416,7 @@ function drawCreature(c, x, y, R, o) {
     else { c.beginPath(); c.arc(x + s * ex, y - R * 0.22, er, 0, TAU); c.fill(); }
   }
   if (o.hat && o.hat !== 'none') {
+    if (o.ccHat) CC.el(o.ccHat);   // Farbchaos: der Hut ist ein eigenes Element
     c.globalAlpha = a0 * Math.max(alpha, 0.6);
     drawHat(c, o.hat, x, y - R - 1.4 * k + wob * 0.3, k, t);
   }
@@ -678,7 +682,7 @@ function creatureCanvas(skin, hat, size, el, t, trail) {
   const cc = sizeCanvas(c, size, size);
   cc.clearRect(0, 0, size, size);
   const R = size * 0.26;
-  if (trail) drawTrailSample(cc, trail, size / 2 - R * 0.6, size * 0.6 + R * 0.5, R / 10, t ?? 1.1);
+  if (trail) drawTrailSample(cc, trail, size / 2 - R * 0.4, size * 0.62 + R * 0.4, R / 6.5, t ?? 1.1);
   drawCreature(cc, size / 2 + (trail && trail !== 'none' ? R * 0.35 : 0), size * 0.6, R, { skin, hat, t: t ?? 1.1, wob: 0 });
   return c;
 }

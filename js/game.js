@@ -53,7 +53,11 @@ function reset(mode, cfg) {
 const on = k => (S.E[k] || 0) > 0;
 const ruleOn = id => S.rules.has(id);
 const up = k => S.up[k] || 0;
-const lv = () => Math.min(S.level, 14);
+// Wie stark jede Stufe das Spiel härter macht (1 = die ursprüngliche Steigerung). Gilt für Sonne, Hitze, Gegner, Bosse und
+// das Tempo des Chaos-Rads, nicht für Punkte, Bossreihenfolge, freigeschaltete Ereignisse oder Farbchaos.
+const RAMP = 0.7;
+const dl = () => S.level * RAMP;              // Schwierigkeit der aktuellen Stufe
+const lv = () => Math.min(S.level, 14) * RAMP;
 const isDuel = () => !!(S && S.cfg.duel);
 const omega = () => (0.3 + lv() * 0.05) * (ruleOn('clouds') ? 1.6 : 1);
 const shadowLen = () => (95 + 45 * Math.sin(S.sunT * 0.35)) * S.noonF * (1 + 0.2 * up('longshadow')) * (ruleOn('summer') ? 0.65 : ruleOn('night') ? 1.4 : 1);
@@ -170,7 +174,7 @@ function bossFor(level) {
 function spawnBoss(b) {
   b = b || bossFor(S.level);
   const core = b.type === 'core', final = core && S.cfg.mode === 'campaign';
-  let hp = core ? 12 + Math.floor(S.level * 0.4) : 3 + Math.floor(S.level * 0.7);
+  let hp = core ? 12 + Math.floor(dl() * 0.4) : 3 + Math.floor(dl() * 0.7);
   if (ruleOn('rush')) hp = Math.max(2, hp - 1);
   const time = final ? Infinity : core ? 35 : 20;
   const x = S.p.x < W / 2 ? W - 70 : 70, y = S.p.y < H / 2 ? H - 70 : 70;
@@ -253,7 +257,7 @@ function bullAct(B, dt, ef, v) {
     }
   } else if (B.state === 'stun') {
     B.stun -= dt;
-    if (B.stun <= 0) { B.state = 'aim'; B.aim = Math.max(0.6, 1.2 - S.level * 0.05); }
+    if (B.stun <= 0) { B.state = 'aim'; B.aim = Math.max(0.6, 1.2 - dl() * 0.05); }
   } else { B.state = 'aim'; B.aim = 1.2; }
 }
 // Schattenfresser: frisst Schatten in seiner Aura, verschlingt die Säule, die dir am nächsten ist, und ist danach satt und träge.
@@ -287,7 +291,7 @@ function eaterAct(B, dt, ef) {
 }
 // Nachtmahr: verdunkelt den Hof. Die Sonne brennt nicht mehr, dafür jagen dich Lichtflecken und man sieht wenig.
 function duskAct(B, dt, ef) {
-  const n = 2 + Math.min(2, Math.floor(S.level / 6));
+  const n = 2 + Math.min(2, Math.floor(dl() / 6));
   B.spotIn -= dt * ef;
   if (S.spots.length < n && B.spotIn <= 0) { S.spots.push({ x: B.x, y: B.y, r: 34, warn: 1, life: 10 }); B.spotIn = 2.4; }
   B.tp -= dt;
@@ -316,8 +320,8 @@ function updateBoss(dt, ef) {
   if (B.enter > 0) { B.enter -= dt; return; }
   B.time -= dt;
   if (B.tame) { B.x += Math.cos(B.t * 0.7) * 30 * dt; B.y += Math.sin(B.t * 0.9) * 30 * dt; }
-  else if (B.type === 'prisma') prismaAct(B, dt, ef, 3 + Math.min(3, Math.floor(S.level / 3)), 3.4, 0.5 + lv() * 0.03);
-  else if (B.type === 'queen') queenAct(B, dt, ef, 10 + Math.min(6, S.level), 2.4, 115);
+  else if (B.type === 'prisma') prismaAct(B, dt, ef, 3 + Math.min(3, Math.floor(dl() / 3)), 3.4, 0.5 + lv() * 0.03);
+  else if (B.type === 'queen') queenAct(B, dt, ef, 10 + Math.min(6, Math.floor(dl())), 2.4, 115);
   else if (B.type === 'bull') bullAct(B, dt, ef, 380 + lv() * 15);
   else if (B.type === 'eater') eaterAct(B, dt, ef);
   else if (B.type === 'dusk') duskAct(B, dt, ef);
@@ -358,7 +362,7 @@ const EVENTS = [
   { name: 'Käferschwarm', min: 1, run() { const e = edgePoint(); for (let i = 0; i < 5; i++) S.bugs.push({ x: e.x + rand(-30, 30), y: e.y + rand(-30, 30), life: 12, ph: rand(0, 6) }); } },
   { name: 'Sonnenfunken', min: 0, run() {
       S.meteors.push({ x: S.p.x, y: S.p.y, r: 30, warn: 1.3 });
-      for (let i = 0; i < 2 + Math.min(S.level, 8); i++) S.meteors.push({ x: rand(30, W - 30), y: rand(30, H - 30), r: 30, warn: 1.5 + i * 0.35 });
+      for (let i = 0; i < 2 + Math.min(Math.floor(dl()), 8); i++) S.meteors.push({ x: rand(30, W - 30), y: rand(30, H - 30), r: 30, warn: 1.5 + i * 0.35 });
     } },
   { name: 'Erdbeben', min: 2, run() {
       const n = S.pillars.length; S.pillars = [];
@@ -373,7 +377,7 @@ const EVENTS = [
   { name: 'Elstern', min: 0, run() { for (let i = 0; i < 2; i++) { const e = edgePoint(); S.magpies.push({ ...e, life: 11, carry: 0, target: null, ph: rand(0, 6) }); } Sound.sfx('chirp'); } },
   { name: 'Honigregen', min: 0, run() { for (let i = 0; i < 3; i++) { const s = freeSpot(40, false); if (s) S.honey.push({ x: s.x, y: s.y, r: rand(24, 34), life: 10 }); } } },
   { name: 'Lasergitter', min: 0, run() {
-      const n = 3 + Math.min(4, S.level);
+      const n = 3 + Math.min(4, Math.floor(dl()));
       for (let i = 0; i < n; i++) {
         if (rng() < 0.5) S.lasers.push({ x: -10, y: rand(25, H - 25), a: 0, len: W + 20, warn: 1.1 + i * 0.18, life: 0.7, spin: 0 });
         else S.lasers.push({ x: rand(25, W - 25), y: -10, a: Math.PI / 2, len: H + 20, warn: 1.1 + i * 0.18, life: 0.7, spin: 0 });
@@ -388,10 +392,12 @@ const EVENTS = [
         S.saws.push({ x: Math.max(14, Math.min(W - 14, e.x)), y: Math.max(14, Math.min(H - 14, e.y)), vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 8 }); }
     } },
   { name: 'Suchraketen', min: 1, run() {
-      for (let i = 0; i < 2 + Math.min(3, Math.floor(S.level / 3)); i++) { const e = edgePoint(); S.missiles.push({ x: e.x, y: e.y, a: Math.atan2(S.p.y - e.y, S.p.x - e.x), life: 7 }); }
+      for (let i = 0; i < 2 + Math.min(3, Math.floor(dl() / 3)); i++) { const e = edgePoint(); S.missiles.push({ x: e.x, y: e.y, a: Math.atan2(S.p.y - e.y, S.p.x - e.x), life: 7 }); }
     } },
   { name: 'Lichtwirbel', min: 0, run() { const s = freeSpot(120, false) || { x: W / 2, y: H / 2 }; S.vortex = { x: s.x, y: s.y, life: 5 }; } },
   { name: 'Glassäulen', min: 1, run() { for (const r of S.pillars) if (rng() < 0.5) r.glass = 5; } },
+  // Rein optisch, siehe CC in draw.js. Kommt mit steigender Stufe etwas häufiger und hält etwas länger.
+  { name: 'Farbchaos', id: 'colorchaos', min: 0, weight: () => CC.weight(), run() { S.E.colorchaos = Math.max(S.E.colorchaos || 0, CC.duration()); } },
   { name: 'Beuteregen', good: true, min: 0, run() {
       for (let i = 0; i < 3; i++) { const s = freeSpot(50, false); if (s) S.items.push({ x: s.x, y: s.y, kind: pick(['umbrella', 'crystal', 'bubble', 'star', 'magnet', 'boots', 'spikes', 'decoy', 'frost']), life: 9 }); }
     } },
@@ -402,7 +408,16 @@ function spinWheel() {
   const wantGood = S.lucky > 0 || rng() < 0.25 + 0.12 * up('lucky');
   if (S.lucky > 0) S.lucky--;
   const pool = EVENTS.filter(e => e.min <= S.level && (wantGood ? e.good : !e.good) && !(e.skip && e.skip()));
-  const ev = pick(pool.length ? pool : EVENTS);
+  startEvent(pickEvent(pool.length ? pool : EVENTS));
+}
+// Wie pick(), aber ein Ereignis mit weight() darf öfter drankommen (Standard: Gewicht 1)
+function pickEvent(pool) {
+  let tot = 0; for (const e of pool) tot += e.weight ? e.weight() : 1;
+  let r = rng() * tot;
+  for (const e of pool) { r -= e.weight ? e.weight() : 1; if (r < 0) return e; }
+  return pool[pool.length - 1];
+}
+function startEvent(ev) {
   ev.run();
   S.banner = { text: evLabel(ev.name), good: !!ev.good, t: 2.2 };
   Sound.sfx('wheel', !!ev.good);
@@ -613,7 +628,7 @@ function update(dt) {
 
   // Chaos-Rad und Angriffe aus dem Duell
   if (!calm) S.eventIn -= dt;
-  if (S.eventIn <= 0) { spinWheel(); S.eventIn = ruleOn('chaos') ? 3 : Math.max(3.5, 8 - S.level * 0.5); }
+  if (S.eventIn <= 0) { spinWheel(); S.eventIn = ruleOn('chaos') ? 3 : Math.max(3.5, 8 - dl() * 0.5); }
   if (S.incoming.length && !S.banner) receiveAttack(S.incoming.shift());
 
   // Wolken
@@ -644,7 +659,7 @@ function update(dt) {
   // Heiße Fliesen
   if (!calm) S.hotIn -= dt;
   if (S.hotIn <= 0) {
-    if (S.hot.length < Math.min(12, 2 + S.level)) {
+    if (S.hot.length < Math.min(12, 2 + Math.floor(dl()))) {
       for (let k = 0; k < 20; k++) {
         const gx = Math.floor(rand(0, W / CELL)), gy = Math.floor(rand(0, H / CELL));
         const cx = gx * CELL + CELL / 2, cy = gy * CELL + CELL / 2;
@@ -652,7 +667,7 @@ function update(dt) {
         S.hot.push({ gx, gy, warn: 1.5, life: 6 }); break;
       }
     }
-    S.hotIn = Math.max(1.2, 3.5 - S.level * 0.35);
+    S.hotIn = Math.max(1.2, 3.5 - dl() * 0.35);
   }
   for (const h of S.hot) { if (h.warn > 0) h.warn -= dt; else h.life -= dt; }
   S.hot = S.hot.filter(h => h.life > 0);
@@ -785,8 +800,8 @@ function update(dt) {
   // Lichtkäfer
   if (!calm) S.bugIn -= dt;
   if (S.bugIn <= 0) {
-    if (S.bugs.length < Math.min(10, 2 + S.level) * (ruleOn('bugs') ? 2 : 1)) { const e = edgePoint(); S.bugs.push({ x: e.x, y: e.y, life: 12, ph: rand(0, 6) }); }
-    S.bugIn = Math.max(2.2, 5.5 - S.level * 0.5) / (ruleOn('bugs') ? 3 : 1);
+    if (S.bugs.length < Math.min(10, 2 + Math.floor(dl())) * (ruleOn('bugs') ? 2 : 1)) { const e = edgePoint(); S.bugs.push({ x: e.x, y: e.y, life: 12, ph: rand(0, 6) }); }
+    S.bugIn = Math.max(2.2, 5.5 - dl() * 0.5) / (ruleOn('bugs') ? 3 : 1);
   }
   for (const b of S.bugs) {
     b.life -= dt;
