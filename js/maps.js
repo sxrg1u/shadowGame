@@ -97,17 +97,18 @@ function initMap() {
   for (let i = 0; i < n; i++) S.deco.push({ x: fx(8, W - 8), y: fx(8, H - 8), k: Math.floor(fx(0, 3)), s: fx(0.7, 1.2) });
 }
 // Fackeln wandern auf verschlungenen Bahnen quer durch den Keller, auch durch die Mitte. Es gibt keinen Platz, der immer dunkel bleibt.
+const TORCH_GAP = 130;   // so viel Abstand halten Fackeln voneinander
 function newTorch(i) {
   const T = { s: 0, dir: i % 2 ? 1 : -1, r: 125, ph: fx(0, 6), x: 0, y: 0,
               wx: 1 + (i % 3) * 0.35, wy: 1.3 + ((i + 1) % 3) * 0.3, px: i * 2.1, py: i * 1.3 + 0.7 };
   // nicht direkt neben der Figur anfangen
-  for (let k = 0; k < 40; k++) { T.s = fx(0, 40); torchPos(T); if (!S.p || Math.hypot(T.x - S.p.x, T.y - S.p.y) > 210) break; }
+  for (let k = 0; k < 40; k++) { T.s = fx(0, 40); torchPos(T); if ((!S.p || Math.hypot(T.x - S.p.x, T.y - S.p.y) > 210) && (k > 30 || S.torches.every(U => Math.hypot(T.x - U.x, T.y - U.y) > TORCH_GAP))) break; }
   return T;
 }
 function torchPos(T) {
   const a = W / 2 - 22;
-  T.x = W / 2 + a * Math.sin(T.wx * T.s + T.px);
-  T.y = H / 2 + a * Math.sin(T.wy * T.s + T.py);
+  T.x = Math.max(14, Math.min(W - 14, W / 2 + a * Math.sin(T.wx * T.s + T.px) + (T.ox || 0)));
+  T.y = Math.max(14, Math.min(H - 14, H / 2 + a * Math.sin(T.wy * T.s + T.py) + (T.oy || 0)));
 }
 function updateMap(dt, sunDt, playing) {
   const m = S.map;
@@ -120,7 +121,18 @@ function updateMap(dt, sunDt, playing) {
         if (d > 30) { T.x += dx / d * v; T.y += dy / d * v; }
         continue;
       }
-      T.s += T.dir * (0.17 + lv() * 0.024) * sunDt; torchPos(T);
+      T.s += T.dir * (0.17 + lv() * 0.024) * sunDt;
+      // Fackeln weichen einander aus, damit nie zwei auf demselben Fleck stehen
+      T.ox = (T.ox || 0) * (1 - Math.min(1, 0.5 * dt)); T.oy = (T.oy || 0) * (1 - Math.min(1, 0.5 * dt));
+      for (const U of S.torches) {
+        if (U === T) continue;
+        let dx = T.x - U.x, dy = T.y - U.y, d = Math.hypot(dx, dy);
+        if (d >= TORCH_GAP) continue;
+        if (d < 1) { dx = Math.cos(T.ph); dy = Math.sin(T.ph); d = 1; }
+        const f = Math.min(TORCH_GAP - d, 260 * dt + (TORCH_GAP - d) * 4 * dt);
+        T.ox += dx / d * f; T.oy += dy / d * f;
+      }
+      torchPos(T);
     }
   }
   if (m.wind) {
