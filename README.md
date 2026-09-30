@@ -136,6 +136,12 @@ Nach jeder Stufe kommt ein Boss. Ihn verletzen ein Dash oder eine Lichtkugel, di
 | **Nachtmahr** | Verdunkelt alles. Die Sonne brennt dann nicht mehr, dafür jagen dich Lichtflecken, und du siehst nur wenig. |
 | **Sonnenkern** | Der Endboss. Kämpft in drei Phasen: erst Laser, dann Kugelringe, zum Schluss stürmt er los. |
 
+**Wut-Phase:** Ab halben Leben wird jeder Boss außer dem Sonnenkern wütend. Er ist 35 % schneller, greift öfter an und feuert zusätzlich Fächer aus drei Glutkugeln auf dich. Der Sonnenstier schießt wütend beim Aufprall an der Wand einen Kugelring.
+
+**Glutkugeln:** Rot umrandete Kugeln mit dunklem Kern. Der Spiegel wirkt nicht gegen sie, du musst ausweichen oder hindurchdashen. Käferkönigin, Schattenfresser, Nachtmahr und Sonnenkern mischen sie unter ihre normalen Lichtkugeln, du musst also blitzschnell entscheiden: parieren oder ausweichen.
+
+**Anker-Jäger:** Läuft ein Boss über deinen Schattenanker, zertritt er ihn, und der Anker muss neu laden. Der Schattenfresser jagt den Anker gezielt und heilt sich um ein Leben, wenn er ihn frisst. Du kannst ihn so aber auch weglocken.
+
 ## Chaos-Rad
 
 Alle paar Sekunden löst das Chaos-Rad eines von 20 Ereignissen aus. Meistens ist es gemein, manchmal gut:
@@ -228,7 +234,7 @@ Wer lieber echte Musikstücke hören will, legt sie in den Ordner [`assets/music
 - Auf dem Dach zeigt der Pfeil oben rechts, wohin der Wind dich schiebt.
 - Lock Suchraketen gegen eine Säule.
 - Setz den Anker im Schatten, bevor du ins Licht läufst. Wird es eng, bist du mit einem Tastendruck zurück.
-- Gegen die Käferkönigin lohnt sich der Spiegel: Jede zurückgeschlagene Kugel ist ein Treffer, ohne dass du nah ran musst.
+- Gegen die Käferkönigin lohnt sich der Spiegel: Jede zurückgeschlagene Kugel ist ein Treffer, ohne dass du nah ran musst. Aber Vorsicht vor den roten Glutkugeln.
 - Der Magnet zieht auch Fallen an, also Vorsicht in der Nähe von Säuretropfen.
 - Schattenspur und Zäher Schatten zusammen machen jeden Dash zu einem kleinen Schattenweg.
 

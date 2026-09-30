@@ -212,6 +212,7 @@ function reflectHit(B, s) {
 }
 
 // ---------- Bosse ----------
+const RAGE_SPEED = 1.35;   // so viel schneller ist ein wütender Boss
 const BOSSES = [{ type: 'prisma', name: 'Prisma' }, { type: 'queen', name: 'Käferkönigin' }, { type: 'bull', name: 'Sonnenstier' },
                 { type: 'eater', name: 'Schattenfresser' }, { type: 'dusk', name: 'Nachtmahr' }];
 const CORE = { type: 'core', name: 'Sonnenkern' };
@@ -275,7 +276,7 @@ function queenAct(B, dt, ef, n, every, speed) {
   B.atk -= dt * ef;
   if (B.atk <= 0) {
     const a0 = rand(0, TAU);
-    for (let i = 0; i < n; i++) { const aa = a0 + i * TAU / n; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * speed, vy: Math.sin(aa) * speed, life: 6 }); }
+    for (let i = 0; i < n; i++) { const aa = a0 + i * TAU / n; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * speed, vy: Math.sin(aa) * speed, life: 6, hard: i % 3 === 0 }); }
     B.ring = (B.ring || 0) + 1;
     if (B.ring % 2 === 0) for (let i = 0; i < 2; i++) S.bugs.push({ x: B.x, y: B.y, life: 10, ph: rand(0, 6) });
     B.atk = every;
@@ -298,9 +299,9 @@ function bullAct(B, dt, ef, v) {
     if (B.x < B.r || B.x > W - B.r || B.y < B.r || B.y > H - B.r) {
       B.x = Math.max(B.r, Math.min(W - B.r, B.x)); B.y = Math.max(B.r, Math.min(H - B.r, B.y));
       B.state = 'stun'; B.stun = 1.5; S.shake = 0.5; sparks(B.x, B.y, COL.white, 14); Sound.sfx('boom');
-      if (B.type === 'core') {
+      if (B.type === 'core' || B.rage) {
         const a0 = rand(0, TAU);
-        for (let k = 0; k < 10; k++) { const aa = a0 + k * TAU / 10; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 120, vy: Math.sin(aa) * 120, life: 5 }); }
+        for (let k = 0; k < 10; k++) { const aa = a0 + k * TAU / 10; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 120, vy: Math.sin(aa) * 120, life: 5, hard: k % 2 === 0 }); }
       }
     }
   } else if (B.state === 'stun') {
@@ -312,7 +313,7 @@ function bullAct(B, dt, ef, v) {
 function eaterAct(B, dt, ef) {
   B.aura = 64 + Math.sin(B.t * 3) * 5 + (B.state === 'gulp' ? 14 : 0) + Math.min(20, lv() * 1.5);
   if (B.state === 'move') {
-    const T = S.decoy || S.p, dx = T.x - B.x, dy = T.y - B.y, d = Math.hypot(dx, dy) || 1, v = (50 + lv() * 3) * ef;
+    const T = S.decoy || S.anchor || S.p, dx = T.x - B.x, dy = T.y - B.y, d = Math.hypot(dx, dy) || 1, v = (50 + lv() * 3) * ef;   // hungrig auf deinen Anker
     if (d > 24) { B.x += dx / d * v * dt; B.y += dy / d * v * dt; }
     B.atk -= dt * ef;
     if (B.atk <= 0) {
@@ -321,7 +322,7 @@ function eaterAct(B, dt, ef) {
       B.volley = (B.volley || 0) + 1;
       if (B.volley % 2 === 0) {
         const a = Math.atan2(S.p.y - B.y, S.p.x - B.x);
-        for (let k = -2; k <= 2; k++) { const aa = a + k * 0.24; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 135, vy: Math.sin(aa) * 135, life: 5 }); }
+        for (let k = -2; k <= 2; k++) { const aa = a + k * 0.24; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 135, vy: Math.sin(aa) * 135, life: 5, hard: k === 0 }); }
       }
       if (prey) { B.state = 'gulp'; B.gulp = 0.9; B.prey = prey; Sound.sfx('gulpWarn'); } else B.atk = 1.2;
     }
@@ -357,7 +358,7 @@ function duskAct(B, dt, ef) {
   B.atk -= dt * ef;
   if (B.atk <= 0 && B.state === 'move') {
     const a0 = rand(0, TAU);
-    for (let k = 0; k < 12; k++) { const aa = a0 + k * TAU / 12; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 105, vy: Math.sin(aa) * 105, life: 6 }); }
+    for (let k = 0; k < 12; k++) { const aa = a0 + k * TAU / 12; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 105, vy: Math.sin(aa) * 105, life: 6, hard: k % 4 === 0 }); }
     B.atk = 3.8; Sound.sfx('whoosh');
   }
 }
@@ -368,6 +369,21 @@ function updateBoss(dt, ef) {
   if (B.touchParried > 0) B.touchParried -= dt;
   if (B.enter > 0) { B.enter -= dt; return; }
   B.time -= dt;
+  // Wut-Phase: Ab halben Leben wird jeder Boss (außer dem Kern mit seinen eigenen Phasen) schneller und feuert Glutkugel-Fächer
+  if (!B.rage && !B.tame && B.type !== 'core' && B.hp > 0 && B.hp <= B.maxHp / 2) {
+    B.rage = true; B.rageAtk = 1.5; B.time = Math.max(B.time, 8);
+    S.banner = { text: bossLabel(B.type) + tr(' ist wütend!', ' is enraged!'), good: false, t: 1.8, head: tr('WUT', 'RAGE') };
+    S.shake = 0.7; sparks(B.x, B.y, COL.warn, 24); Sound.sfx('phase');
+  }
+  if (B.rage) {
+    ef *= RAGE_SPEED;
+    B.rageAtk -= dt * ef;
+    if (B.rageAtk <= 0 && !['charge', 'stun', 'gulp', 'fade', 'appear'].includes(B.state)) {
+      const a = Math.atan2(S.p.y - B.y, S.p.x - B.x);
+      for (let k = -1; k <= 1; k++) { const aa = a + k * 0.3; S.shots.push({ x: B.x, y: B.y, vx: Math.cos(aa) * 150, vy: Math.sin(aa) * 150, life: 5, hard: true }); }
+      B.rageAtk = 3.2; Sound.sfx('whoosh');
+    }
+  }
   if (B.tame) { B.x += Math.cos(B.t * 0.7) * 30 * dt; B.y += Math.sin(B.t * 0.9) * 30 * dt; }
   else if (B.type === 'prisma') prismaAct(B, dt, ef, 3 + Math.min(3, Math.floor(dl() / 3)), 3.4, 0.5 + lv() * 0.03);
   else if (B.type === 'queen') queenAct(B, dt, ef, 10 + Math.min(6, Math.floor(dl())), 2.4, 115);
@@ -401,6 +417,13 @@ function updateBoss(dt, ef) {
     } else if (!(B.touchParried > 0) && !on('shield')) hit(20, tr('Boss-Treffer!', 'Boss hit!'));
     S.p.x = B.x + dx / d * (B.r + pr() + 14); S.p.y = B.y + dy / d * (B.r + pr() + 14);
     resolve();
+  }
+  // Anker-Jäger: Wer über deinen Anker läuft, zertritt ihn. Der Fresser frisst ihn und heilt sich.
+  if (S.anchor && B.state !== 'fade' && B.state !== 'appear' && dist(B, S.anchor) < B.r + 10) {
+    sparks(S.anchor.x, S.anchor.y, '#C9B8FF', 14);
+    if (B.type === 'eater') { B.hp = Math.min(B.maxHp, B.hp + 1); flash(tr('Der Fresser frisst deinen Anker! +1 Leben', 'The Eater devours your anchor! +1 life'), '#C9B8FF'); Sound.sfx('gulp'); }
+    else { flash(tr('Der Boss zertritt deinen Anker!', 'The boss crushes your anchor!'), COL.warn); Sound.sfx('boom'); }
+    S.anchor = null; S.anchorCd = ANCHOR_CD;
   }
   if (B.hp <= 0) defeatBoss(B);
   else if (B.time <= 0) { S.boss = null; flash(tr('Der Boss zieht ab', 'The boss leaves'), '#98A1B4'); Sound.music(gameTrack()); S.spots = []; }
@@ -809,7 +832,7 @@ function update(dt) {
     s.x += s.vx * dt * sf; s.y += s.vy * dt * sf; s.life -= dt;
     if (s.x < -20 || s.x > W + 20 || s.y < -20 || s.y > H + 20 || inPillar(s.x, s.y, 0)) s.life = 0;
     else if (s.ref) { if (S.boss && dist(s, S.boss) < S.boss.r + 5) reflectHit(S.boss, s); }
-    else if (S.parry > 0 && dist(s, S.p) < pr() + 14) {
+    else if (S.parry > 0 && !s.hard && dist(s, S.p) < pr() + 14) {
       // Zurück zum Boss, sonst einfach umdrehen
       const T = S.boss && S.boss.enter <= 0 ? S.boss : { x: s.x - s.vx, y: s.y - s.vy };
       const dx = T.x - s.x, dy = T.y - s.y, d = Math.hypot(dx, dy) || 1, v = Math.max(260, Math.hypot(s.vx, s.vy) * 2);
@@ -818,7 +841,7 @@ function update(dt) {
     }
     else if (dist(s, S.p) < pr() + 5) {
       if (S.dash) { if (up('blade')) { s.life = 0; sparks(s.x, s.y, '#C9B8FF', 6); S.score += pts(10); } }
-      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(12, tr('Lichtkugel!', 'Light orb!')); }
+      else { s.life = 0; sparks(s.x, s.y, COL.bug, 6); if (!on('shield')) hit(s.hard ? 16 : 12, s.hard ? tr('Glutkugel!', 'Ember orb!') : tr('Lichtkugel!', 'Light orb!')); }
     }
   }
   S.shots = S.shots.filter(s => s.life > 0);

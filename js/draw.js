@@ -589,6 +589,12 @@ function draw() {
   // Lichtkugeln
   for (const [n, s] of S.shots.entries()) {
     CC.el('shot', n);
+    if (s.hard) {   // Glutkugel: lässt sich nicht parieren
+      const g = 0.5 + 0.5 * Math.sin(S.t * 18 + n);
+      ctx.fillStyle = 'rgba(214,40,40,' + (0.3 + 0.25 * g) + ')'; ctx.beginPath(); ctx.arc(s.x, s.y, 10 + g * 2, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3A0A12'; ctx.strokeStyle = '#FF3B3B'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5.5, 0, TAU); ctx.fill(); ctx.stroke();
+      continue;
+    }
     ctx.fillStyle = s.ref ? 'rgba(201,184,255,.5)' : 'rgba(255,227,107,.45)'; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.fill();
     ctx.fillStyle = s.ref ? '#FFFFFF' : '#FFF6D0'; ctx.strokeStyle = s.ref ? '#6D5BD0' : COL.sun; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, TAU); ctx.fill(); ctx.stroke();
   }
@@ -600,6 +606,10 @@ function draw() {
     if (B.state === 'aim' && B.enter <= 0) {
       ctx.strokeStyle = 'rgba(232,64,64,' + (0.4 + 0.4 * Math.sin(S.t * 25)) + ')'; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
       ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(B.tx, B.ty); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (B.rage) {
+      const g = 0.5 + 0.5 * Math.sin(S.t * 10);
+      ctx.fillStyle = 'rgba(232,64,64,' + (0.18 + 0.17 * g) + ')'; ctx.beginPath(); ctx.arc(B.x, B.y, B.r + 12 + g * 5, 0, TAU); ctx.fill();
     }
     ctx.save(); ctx.translate(B.x, B.y);
     const sc = B.enter > 0 ? Math.max(0.05, 1 - B.enter) : 1; ctx.scale(sc, sc);
@@ -670,7 +680,7 @@ function draw() {
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
       CC.el('bossBar');
-      textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
+      textOut(bossLabel(B.type) + (B.state === 'stun' ? tr(' · benommen', ' · dazed') : B.rage ? tr(' · wütend', ' · enraged') : ''), W / 2, 24, '#F4CF63', '800 12px "Unbounded", "Arial Black", sans-serif', 'center');
       ctx.fillStyle = 'rgba(20,24,33,.85)'; ctx.fillRect(bx - 2, by - 2, bw + 4, 14);
       ctx.fillStyle = COL.warn; ctx.fillRect(bx, by, bw * Math.max(0, B.hp) / B.maxHp, 8);
       if (isFinite(B.maxTime)) {
