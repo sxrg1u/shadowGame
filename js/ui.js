@@ -47,9 +47,25 @@ function toast(head, text, iconKey, canvasEl) {
   const h = document.createElement('span'); h.textContent = head;
   const b = document.createElement('b'); b.textContent = text;
   d.append(h, b); el.appendChild(d); box.appendChild(el);
-  while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => el.classList.add('out'), 3300);
-  setTimeout(() => el.remove(), 3750);
+  const live = [...box.children].filter(c => !c.classList.contains('out'));
+  while (live.length > 3) dismissToast(live.shift());
+  setTimeout(() => dismissToast(el), 3300);
+}
+// Ein Hinweis geht mit eigener Animation und gibt seinen Platz sofort frei, ein neuer muss nicht warten.
+function dismissToast(el) {
+  if (!el.isConnected || el.classList.contains('out')) return;
+  el.classList.add('out');
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+  setTimeout(() => el.remove(), 500);
+}
+// Zustandsmeldungen des Spiels fuer Screenreader (Parade, Schild, Upgrade, Boss ...), gleiche Meldung nicht doppelt
+let srLast = '', srAt = 0, srT = 0;
+function announce(text) {
+  const el = $('srLive'), now = performance.now();
+  if (!el || !text || (text === srLast && now - srAt < 1500)) return;
+  srLast = text; srAt = now;
+  clearTimeout(srT); el.textContent = '';
+  srT = setTimeout(() => { el.textContent = text; }, 50);
 }
 function checkAch() {
   achDirty = false;
@@ -76,9 +92,26 @@ const screens = [...document.querySelectorAll('.screen')];
 let stack = [];
 const topScr = () => stack[stack.length - 1];
 const RENDER = {};
+// Abbild eines Bildschirms, der gerade verschwindet: blendet aus, waehrend der naechste schon bedienbar ist
+function leave(el) {
+  const c = el.cloneNode(true);
+  c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+  c.hidden = false; c.inert = true; c.setAttribute('aria-hidden', 'true'); c.classList.add('leaving');
+  const from = el.querySelectorAll('canvas'), to = c.querySelectorAll('canvas');
+  from.forEach((f, i) => { const d = to[i]; if (!d || !f.width) return; d.width = f.width; d.height = f.height; d.getContext('2d').drawImage(f, 0, 0); });
+  document.body.appendChild(c);
+  const done = () => c.remove();
+  const panel = c.querySelector('.panel');
+  if (panel) panel.addEventListener('animationend', done, { once: true });
+  setTimeout(done, 400);
+}
 function show(noFocus) {
   const t = topScr();
-  for (const s of screens) s.hidden = s.id !== t;
+  for (const s of screens) {
+    const hide = s.id !== t;
+    if (hide && !s.hidden) leave(s);
+    s.hidden = hide;
+  }
   if (t && RENDER[t]) RENDER[t]();
   document.body.classList.toggle('menu', !S || S.mode === 'ready');
   keys.clear(); if (S) S.target = null;
@@ -311,6 +344,8 @@ RENDER.scrSettings = () => {
   $('setSound').checked = !s.muted;
   $('setShake').checked = s.shake;
   $('setFlash').checked = s.flashes;
+  $('setHaptics').checked = s.haptics;
+  $('setHaptics').closest('.set-row').hidden = !Haptics.can;
   $('setName').value = s.name;
   for (const b of $('themeSeg').children) b.setAttribute('aria-pressed', String(b.dataset.themeSet === s.theme));
   for (const b of $('langSeg').children) b.setAttribute('aria-pressed', String(b.dataset.langSet === LANG));
@@ -768,6 +803,7 @@ $('setMusic').addEventListener('change', save);
 $('setSound').addEventListener('change', e => { P.settings.muted = !e.target.checked; Sound.init(); Sound.volumes(); updateMuteBtn(); save(); });
 $('setShake').addEventListener('change', e => { P.settings.shake = e.target.checked; save(); });
 $('setFlash').addEventListener('change', e => { P.settings.flashes = e.target.checked; save(); });
+$('setHaptics').addEventListener('change', e => { P.settings.haptics = e.target.checked; save(); if (e.target.checked) Haptics.play('block'); });
 $('themeSeg').addEventListener('click', e => { const b = e.target.closest('[data-theme-set]'); if (!b) return; P.settings.theme = b.dataset.themeSet; applyTheme(); save(); RENDER.scrSettings(); });
 $('langSeg').addEventListener('click', e => { const b = e.target.closest('[data-lang-set]'); if (!b) return; setLang(b.dataset.langSet); save(); Sound.sfx('click'); });
 const setName = v => { const n = cleanName(v); if (n) { P.settings.name = n; save(); } };
@@ -829,7 +865,11 @@ window.addEventListener('pagehide', () => { save(); Net.send({ t: 'bye' }); });
 document.addEventListener('pointerdown', () => Sound.init(), { capture: true });
 
 cv.addEventListener('contextmenu', e => e.preventDefault());
-$('dashBtn').addEventListener('click', () => dash());
+// Dash reagiert wie Anker und Spiegel schon beim Antippen. Ein Klick ohne Zeiger (Tastatur) loest ihn weiterhin aus.
+$('dashBtn').addEventListener('pointerdown', e => { e.preventDefault(); dash(); });
+$('dashBtn').addEventListener('click', e => { if (e.detail === 0) dash(); });
+// Damit :active auf iOS sofort greift
+document.addEventListener('touchstart', () => {}, { passive: true });
 // Anker und Spiegel reagieren schon beim Antippen, beim Spiegel zählt jede Millisekunde
 $('anchorBtn').addEventListener('pointerdown', e => { e.preventDefault(); anchor(); });
 $('parryBtn').addEventListener('pointerdown', e => { e.preventDefault(); parry(); });
@@ -855,7 +895,7 @@ function drawHero(id, skin, hat, t, trail) {
 }
 let last = performance.now();
 function loop(now) {
-  let dt = Math.min(0.05, (now - last) / 1000); last = now;
+  let dt = Math.min(0.05, (now - last) / 1000) * SLOW; last = now;
   if (DEBUG) {   // feste Bildrate, nach „frames“ Bildern bleibt alles stehen
     if (DEBUG.left <= 0) { DEBUG.done = DEBUG.frame > 0; requestAnimationFrame(loop); return; }
     DEBUG.left--; DEBUG.frame++; DEBUG.done = false; dt = 1 / 60; now = DEBUG.frame * 1000 / 60;
@@ -903,6 +943,8 @@ function setLang(l) {
   // Wer schon vor dem Tutorial gespielt hat, wird nicht mehr automatisch hineingeschickt.
   if (!P.tutDone && P.stats.runs > 0) P.tutDone = true;
   applyTheme(); setLang(P.settings.lang);
+  // Auf hohen Bildschirmen liegen die Herausforderungen gleich offen, sonst sind sie eine Zeile und klappen auf
+  if (matchMedia('(min-height:1000px)').matches && matchMedia('(min-width:781px)').matches) { $('dailyCard').open = true; $('weeklyCard').open = true; }
   reset('ready');
   const qp = new URLSearchParams(location.search), q = qp.get('room') || qp.get('raum');
   if (q) { Net.pendingCode = q.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5); stack = ['scrMain', 'scrMulti']; show(); }

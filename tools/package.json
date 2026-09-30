@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "screenshots": "node screenshots.mjs",
-    "tutorial-test": "node tutorial-test.mjs"
+    "tutorial-test": "node tutorial-test.mjs",
+    "motion-check": "node motion-check.mjs"
   },
   "devDependencies": {
     "gifenc": "^1.0.3",

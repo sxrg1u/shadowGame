@@ -217,10 +217,13 @@ Die Verbindung läuft direkt zwischen den Browsern (WebRTC über [PeerJS](https:
 - **Sprache:** Das Spiel startet auf Englisch und lässt sich auf Deutsch umstellen. Die Wahl wird gespeichert.
 - **Lautstärke** getrennt für Musik und Effekte, dazu Stummschalten.
 - **Bildschirmwackeln** an oder aus.
+- **Vibration** bei Treffern, Paraden und Ankersprung (nur auf Geräten, die das können).
 - **Grelle Blitze** abdämpfen, für empfindliche Augen.
 - **Design:** hell, dunkel oder wie das System.
 - **Spielername** für das Online-Duell.
 - **Fortschritt zurücksetzen.**
+
+Das Spiel folgt den Systemeinstellungen für **weniger Bewegung** (kurze Überblendungen statt Federn und Gleiten), **weniger Transparenz** (kein Weichzeichner, deckende Flächen) und **mehr Kontrast** (kräftigere Rahmen und Linien). Alle Schriftgrössen sind in `rem`, eine grössere Systemschrift vergrössert also auch das Spiel. Zustandsmeldungen wie „Pariert!“ werden zusätzlich für Screenreader angesagt.
 
 Fortschritt, Punktekonto, Garderobe, Erfolge und Einstellungen liegen im `localStorage` deines Browsers. Sie bleiben also auf diesem Gerät und in diesem Browser.
 
@@ -293,6 +296,16 @@ Das Tutorial automatisch mit echten Tastendrücken durchspielen und prüfen:
 ```bash
 npm run tutorial-test
 ```
+
+Bewegung Bild für Bild prüfen (Bildschirmwechsel, Hinweise, Upgrade-Karten, Anker, Dash und Spiegel bei verlangsamter Zeit). Die Bilder und ein Kontaktbogen landen in `tools/out/motion/`:
+
+```bash
+npm run motion-check                 # alle Szenarien, Faktor 0.1
+npm run motion-check -- screens      # nur eines: screens, toast, cards, game
+npm run motion-check -- --reduced    # mit „weniger Bewegung“
+```
+
+Das Spiel selbst läuft mit `?slow=0.25` auf einem Viertel der Geschwindigkeit.
 
 ### Debug-Start
 

@@ -18,9 +18,12 @@ const DEBUG = (() => {
   return d;
 })();
 
+// ?slow=0.25 laesst das Spiel mit einem Viertel der Geschwindigkeit laufen, um Bewegung Bild fuer Bild zu pruefen (tools/motion-check.mjs).
+const SLOW = (() => { const v = parseFloat(new URLSearchParams(location.search).get('slow')); return v > 0 && v < 1 ? v : 1; })();
+
 // ---------- Profil (localStorage) ----------
 const STORE = 'schattenfaenger-profil-v2';
-const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
+const DEF_SETTINGS = { lang: 'en', music: 0.55, sfx: 0.8, muted: false, shake: true, haptics: true, flashes: true, theme: 'system', name: '', diff: 'normal', map: 'yard' };
 function freshProfile() {
   return {
     v: 2, wallet: 0, settings: { ...DEF_SETTINGS },

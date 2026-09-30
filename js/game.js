@@ -98,7 +98,7 @@ function lightAt(px, py) {
 }
 const inShadow = (px, py) => lightAt(px, py) === 0;
 
-function flash(text, color) { S.msg = { text, color, t: 1.6 }; }
+function flash(text, color) { S.msg = { text, color, t: 1.6 }; if (typeof announce === 'function') announce(text); }
 function sparks(x, y, color, n) { for (let i = 0; i < n; i++) S.parts.push({ x, y, vx: fx(-90, 90), vy: fx(-90, 90), life: fx(0.3, 0.6), spark: color }); }
 // Treffer: Dash und kurze Unverwundbarkeit schützen, das Blasenschild fängt ab
 function hit(amount, text, extra) {

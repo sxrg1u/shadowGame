@@ -61,6 +61,7 @@
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="sr-only" id="srLive" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <!-- Hauptmenü -->
 <section class="screen" id="scrMain" hidden aria-label="Hauptmenü">
@@ -88,18 +89,22 @@
     <div class="side">
       <canvas class="hero" id="heroCv" aria-hidden="true"></canvas>
       <div class="chip-wallet" style="justify-self:start"><span>Punktekonto</span><b id="walletMain">0</b></div>
-      <div class="daily-card" id="dailyCard">
-        <div class="top"><canvas id="dailyIcon" aria-hidden="true"></canvas><div><p class="eyebrow">Heute</p><h3 id="dailyName">–</h3></div></div>
-        <p id="dailyDescMain"></p>
-        <p class="meta" id="dailyMetaMain"></p>
-        <button class="btn small center" id="dailyGo">Herausforderung starten</button>
-      </div>
-      <div class="daily-card week" id="weeklyCard">
-        <div class="top"><canvas id="weeklyIcon" aria-hidden="true"></canvas><div><p class="eyebrow">Diese Woche</p><h3 id="weeklyName">–</h3></div></div>
-        <p id="weeklyDescMain"></p>
-        <p class="meta" id="weeklyMetaMain"></p>
-        <button class="btn small center" id="weeklyGo">Wochenherausforderung starten</button>
-      </div>
+      <details class="daily-card" id="dailyCard">
+        <summary><canvas id="dailyIcon" aria-hidden="true"></canvas><div><p class="eyebrow">Heute</p><h3 id="dailyName">–</h3></div></summary>
+        <div class="body">
+          <p id="dailyDescMain"></p>
+          <p class="meta" id="dailyMetaMain"></p>
+          <button class="btn small center" id="dailyGo">Herausforderung starten</button>
+        </div>
+      </details>
+      <details class="daily-card week" id="weeklyCard">
+        <summary><canvas id="weeklyIcon" aria-hidden="true"></canvas><div><p class="eyebrow">Diese Woche</p><h3 id="weeklyName">–</h3></div></summary>
+        <div class="body">
+          <p id="weeklyDescMain"></p>
+          <p class="meta" id="weeklyMetaMain"></p>
+          <button class="btn small center" id="weeklyGo">Wochenherausforderung starten</button>
+        </div>
+      </details>
       <p class="foot">Tipp: <kbd>Esc</kbd> pausiert, <kbd>M</kbd> schaltet den Ton</p>
     </div>
   </div>
@@ -192,6 +197,7 @@
       <label class="set-row"><span><b>Effekte</b><small>Lautstärke der Geräusche</small></span><input type="range" id="setSfx" min="0" max="100"></label>
       <label class="set-row"><span><b>Ton an</b><small>Taste <kbd>M</kbd> schaltet jederzeit um</small></span><input type="checkbox" class="switch" id="setSound"></label>
       <label class="set-row"><span><b>Bildschirmwackeln</b><small>Bei Treffern, Beben und Explosionen</small></span><input type="checkbox" class="switch" id="setShake"></label>
+      <label class="set-row"><span><b>Vibration</b><small>Kurzes Feedback bei Treffern, Paraden und Ankersprung</small></span><input type="checkbox" class="switch" id="setHaptics"></label>
       <label class="set-row"><span><b>Grelle Blitze</b><small>Aus: Blitzlicht, Donner und Farbchaos werden abgedämpft</small></span><input type="checkbox" class="switch" id="setFlash"></label>
       <div class="set-row"><span><b>Sprache</b><small>Sprache des Spiels</small></span><div class="seg" id="langSeg" role="group" aria-label="Sprache"><button data-lang-set="en">English</button><button data-lang-set="de">Deutsch</button></div></div>
       <div class="set-row"><span><b>Design</b><small>Hell, dunkel oder wie dein System</small></span><div class="seg" id="themeSeg" role="group" aria-label="Design"><button data-theme-set="system">System</button><button data-theme-set="light">Hell</button><button data-theme-set="dark">Dunkel</button></div></div>

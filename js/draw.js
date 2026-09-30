@@ -45,6 +45,7 @@ function drawSun(az, scale) {
   ctx.save(); ctx.translate(sx, sy); ctx.rotate(S.t); sunShape(ctx, 0, 0, 9 * scale); ctx.restore();
 }
 const MONO = '700 13px "JetBrains Mono", monospace';
+const KEY_HINTS = !(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 
 // ---------- Farbchaos (Chaos-Rad) ----------
 // Stärke je Stufe. [a, b]: Wert auf Stufe 1–2 und ab Stufe „full“, dazwischen linear.
@@ -469,6 +470,8 @@ function draw() {
   if (Net.inMatch && O && O.alive && O.dx != null && S.mode !== 'ready') {
     CC.el('ghost');
     drawCreature(ctx, O.dx, O.dy, PR, { skin: O.skin, hat: O.hat, t: S.t + 1.3, alpha: 0.42, eyeAlpha: 0.6, ccHat: 'ghostHat' });
+    // Gestrichelter Ring: Der Gegner-Geist ist auch ohne Farbunterschied von Ankern und Spiegel-Effekten zu trennen
+    ctx.strokeStyle = 'rgba(233,227,255,.8)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(O.dx, O.dy, PR + 6, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
     ctx.globalAlpha = 0.85;
     textOut(O.name, O.dx, O.dy - 24, '#E9E3FF', '700 10px "JetBrains Mono", monospace', 'center');
     ctx.globalAlpha = 1;
@@ -592,11 +595,16 @@ function draw() {
     if (s.hard) {   // Glutkugel: lässt sich nicht parieren
       const g = 0.5 + 0.5 * Math.sin(S.t * 18 + n);
       ctx.fillStyle = 'rgba(214,40,40,' + (0.3 + 0.25 * g) + ')'; ctx.beginPath(); ctx.arc(s.x, s.y, 10 + g * 2, 0, TAU); ctx.fill();
-      ctx.fillStyle = '#3A0A12'; ctx.strokeStyle = '#FF3B3B'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5.5, 0, TAU); ctx.fill(); ctx.stroke();
+      // Kein Kreis, sondern ein drehender Stachelstern: Die Glutkugel faellt auch ohne Farbe als Gefahr auf
+      ctx.save(); ctx.translate(s.x, s.y); ctx.rotate(S.t * 4 + n);
+      ctx.fillStyle = '#3A0A12'; ctx.strokeStyle = '#FF3B3B'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+      for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, r = i % 2 ? 4.5 : 9; ctx[i ? 'lineTo' : 'moveTo'](Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
       continue;
     }
     ctx.fillStyle = s.ref ? 'rgba(201,184,255,.5)' : 'rgba(255,227,107,.45)'; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.fill();
     ctx.fillStyle = s.ref ? '#FFFFFF' : '#FFF6D0'; ctx.strokeStyle = s.ref ? '#6D5BD0' : COL.sun; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 5, 0, TAU); ctx.fill(); ctx.stroke();
+    if (s.ref) { ctx.setLineDash([3, 3]); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, TAU); ctx.stroke(); ctx.setLineDash([]); }
   }
 
   // Boss
@@ -672,11 +680,13 @@ function draw() {
     CC.el('text');
     textOut(tr('Stufe ', 'Level ') + (S.level + 1) + tag, 12, 22, COL.white, MONO);
     if (S.energy < 20) textOut(tr('Letzte Kraft: Zeitlupe', 'Last stand: slow motion'), W - 12, H - 68, COL.warn, MONO, 'right');
-    const aTxt = S.anchor ? tr('Anker ', 'Anchor ') + S.anchor.life.toFixed(1) + tr(' s · E springt', ' s · E jumps') : S.anchorCd > 0 ? tr('Anker ', 'Anchor ') + S.anchorCd.toFixed(1) + ' s' : tr('Anker bereit', 'Anchor ready');
+    // Mit Tastatur steht die Taste vor jeder Faehigkeit, auf dem Handy gibt es Knoepfe darunter
+    const kE = KEY_HINTS ? 'E · ' : '', kQ = KEY_HINTS ? 'Q · ' : '', kD = KEY_HINTS ? 'Shift · ' : '';
+    const aTxt = S.anchor ? kE + tr('Anker ', 'Anchor ') + S.anchor.life.toFixed(1) + tr(' s · springt', ' s · jump') : S.anchorCd > 0 ? kE + tr('Anker ', 'Anchor ') + S.anchorCd.toFixed(1) + ' s' : kE + tr('Anker bereit', 'Anchor ready');
     textOut(aTxt, W - 12, H - 50, S.anchor ? '#C9B8FF' : S.anchorCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
-    textOut(S.parryCd > 0 ? tr('Spiegel ', 'Mirror ') + S.parryCd.toFixed(1) + ' s' : tr('Spiegel bereit', 'Mirror ready'), W - 12, H - 32, S.parryCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
+    textOut(S.parryCd > 0 ? kQ + tr('Spiegel ', 'Mirror ') + S.parryCd.toFixed(1) + ' s' : kQ + tr('Spiegel bereit', 'Mirror ready'), W - 12, H - 32, S.parryCd > 0 ? '#98A1B4' : '#FFFFFF', MONO, 'right');
     const ready = S.charges > 0;
-    textOut(ready ? (maxCharges() > 1 ? 'Dash ×' + S.charges : tr('Dash bereit', 'Dash ready')) : 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
+    textOut(ready ? (maxCharges() > 1 ? kD + 'Dash ×' + S.charges : kD + tr('Dash bereit', 'Dash ready')) : kD + 'Dash ' + S.dashCd.toFixed(1) + ' s', W - 12, H - 14, ready ? '#FFFFFF' : '#98A1B4', MONO, 'right');
     if (S.boss) {
       const B = S.boss, bw = 220, bx = (W - bw) / 2, by = 30;
       CC.el('bossBar');
